@@ -11,6 +11,7 @@
 ### What Works
 
 - **Counter** — Tap the orb to increment. Shows current dhikr's individual count + daily progress ring
+- **Undo** — Undo banner appears for 5 seconds after each tap. Can undo the last increment (data-backed via `recentEvents`)
 - **Preset switching** — Switching presets shows that preset's own count (per-dhikr counting)
 - **Streaks** — App tracks consecutive days of any activity. Streak multiplier: x3 (3+ days), x4 (7+ days), x5 (30+ days)
 - **Rewards** — Flame-streak badge, milestone count badges (10, 100, 500, 1000), milestone labels
@@ -27,9 +28,7 @@
 ### What's Broken / Known Issues
 
 1. **Lock screen widget removed** — User preferred not to use it. `ZikrWidgetExtension/` directory still exists with all code intact. Can be restored by re-adding the target in `project.pbxproj`.
-2. **No physical device verification since redesign** — Last confirmed working on physical iPhone was before the full UI redesign. Needs user validation.
-3. **Circles tab hidden** — Firebase Community feature is not wired up. The Circles tab was removed from navigation. To re-enable: add it back to `RootView.swift` and implement `FirebaseCommunityRepository`.
-4. **No App Store distribution** — Physical device signing requires Xcode automatic signing + user trusting the developer profile on-device (Settings → General → VPN & Device Management).
+2. **Circles tab hidden** — Firebase Community feature is not wired up. The Circles tab was removed from navigation. To re-enable: add it back to `RootView.swift` and implement `FirebaseCommunityRepository`.
 
 ---
 
@@ -90,7 +89,9 @@ open Zikr.xcodeproj
 
 ## Next Steps (Manual)
 
-- [ ] **Validate on physical iPhone** — Confirm the redesigned UI + dark mode + per-dhikr counting works correctly
+- [ ] **Session timer** — Add `sessionStartTime` to track active session duration
+- [ ] **Custom dhikr CRUD UI** — Add swipe-to-edit/delete UI in SettingsView for custom presets
+- [ ] **Localization strings** — Create `Localizable.strings` + `ZikrStrings.swift` wrapper for all UI text
 - [ ] **Re-add lock screen widget** — Restore `ZikrWidgetExtension/` files and add target back to `project.pbxproj`
 - [ ] **Re-enable Circles tab** — Implement Firebase integration and add tab back to `RootView.swift`
 - [ ] **App Store** — Create App Store listing, set up App Store Connect, archive for distribution
@@ -103,10 +104,11 @@ open Zikr.xcodeproj
 - Complete UI redesign: royal blue (#1E3A8A) + gold (#D4A017) + ivory (#FAF8F5)
 - **Dark mode** — Full system dark mode support: deep navy (#0A1628) backgrounds, ivory text, dark card surfaces. `ZikrColors` environment struct drives adaptive colors across all views. Follows iPhone system setting (Settings → Display & Brightness or Control Center).
 - Per-dhikr counter: switching presets shows individual preset count
-- Removed +10 lock screen button (user preference: 1 tap = 1 recitation)
 - Added haptics on orb tap
 - Added streak multiplier explanation below x3/x4/x5 pill
 - Removed Circles tab (Firebase not configured)
-- Renamed "kill-streak" badge → "flame-streak"
+- Renamed "kill-streak" → "flame-streak" (App Store friendly)
 - **Lock screen widget removed** — Widget extension target removed from project. `ZikrWidgetExtension/` code still exists. Live Activity (Dynamic Island) still works.
+- Added undo/reset for accidental counts — 5-second undo banner with undo button (data-backed via `recentEvents`)
+- Added `updatePreset()` and `deletePreset()` to store (starter presets protected from deletion)
 - 4/4 tests passing
