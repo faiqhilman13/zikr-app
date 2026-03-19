@@ -116,6 +116,44 @@ public final class SharedZikrStore: @unchecked Sendable {
     }
 
     @discardableResult
+    public func undoLastIncrement() -> ZikrAppState {
+        mutate { state in
+            guard let lastEvent = state.recentEvents.first else { return }
+            state.recentEvents.removeFirst()
+            state.today.counts[lastEvent.presetID, default: 0] -= lastEvent.amount
+            state.today.totalCount -= lastEvent.amount
+            if state.today.totalCount < state.dailyGoal.targetCount {
+                state.today.goalCompleted = false
+                state.today.completedAt = nil
+            }
+        }
+    }
+
+    @discardableResult
+    public func updatePreset(id: String, title: String, arabic: String, transliteration: String) -> ZikrAppState {
+        mutate { state in
+            guard let index = state.presets.firstIndex(where: { $0.id == id }) else { return }
+            state.presets[index].title = title.trimmingCharacters(in: .whitespacesAndNewlines)
+            state.presets[index].arabic = arabic.trimmingCharacters(in: .whitespacesAndNewlines)
+            state.presets[index].transliteration = transliteration.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+    }
+
+    @discardableResult
+    public func deletePreset(id: String) -> ZikrAppState {
+        mutate { state in
+            let starterIDs = ["salawat", "tahlil", "tasbih", "takbir", "tahmid"]
+            guard !starterIDs.contains(id) else { return }
+            guard let index = state.presets.firstIndex(where: { $0.id == id }) else { return }
+            state.presets.remove(at: index)
+            if state.selectedPresetID == id {
+                state.selectedPresetID = state.presets.first?.id ?? "salawat"
+            }
+            state.today.counts.removeValue(forKey: id)
+        }
+    }
+
+    @discardableResult
     private func mutate(_ transform: (inout ZikrAppState) -> Void) -> ZikrAppState {
         lock.lock()
         defer { lock.unlock() }

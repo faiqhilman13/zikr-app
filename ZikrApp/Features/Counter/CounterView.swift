@@ -5,6 +5,9 @@ import ZikrCore
 struct CounterView: View {
     @ObservedObject var viewModel: ZikrAppViewModel
     @Environment(\.zikrColors) var colors
+    @State private var undoPresetID: String?
+    @State private var undoAmount: Int = 0
+    @State private var undoTimer: Timer?
 
     var body: some View {
         NavigationStack {
@@ -13,6 +16,9 @@ struct CounterView: View {
 
                 ScrollView {
                     VStack(spacing: 24) {
+                        if undoPresetID != nil {
+                            undoBanner
+                        }
                         progressCard
                         tapOrb
                         quickAddRow
@@ -25,6 +31,63 @@ struct CounterView: View {
             .navigationTitle("Zikr")
             .toolbarBackground(colors.navBackground, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
+        }
+        .onDisappear {
+            undoTimer?.invalidate()
+        }
+    }
+
+    private var undoBanner: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "arrow.uturn.backward.circle.fill")
+                .foregroundStyle(ZikrPalette.gold)
+            Text(undoBannerText)
+                .font(.subheadline)
+                .foregroundStyle(colors.textPrimary)
+            Spacer()
+            Button("Undo") {
+                viewModel.undoLastIncrement()
+                dismissUndo()
+            }
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(ZikrPalette.royalBlue)
+            Button {
+                dismissUndo()
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.caption)
+                    .foregroundStyle(colors.textSecondary)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(colors.surface)
+                .shadow(color: ZikrPalette.royalBlue.opacity(0.08), radius: 8, x: 0, y: 2)
+        )
+    }
+
+    private var undoBannerText: String {
+        guard let id = undoPresetID else { return "" }
+        let presetName = viewModel.state.presets.first { $0.id == id }?.title ?? "dhikr"
+        return "+\(undoAmount) \(presetName)"
+    }
+
+    private func dismissUndo() {
+        undoTimer?.invalidate()
+        undoTimer = nil
+        withAnimation(.easeOut(duration: 0.25)) {
+            undoPresetID = nil
+        }
+    }
+
+    private func scheduleUndoDismiss() {
+        undoTimer?.invalidate()
+        undoTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: false) { _ in
+            Task { @MainActor in
+                dismissUndo()
+            }
         }
     }
 
@@ -135,6 +198,9 @@ struct CounterView: View {
         Button {
             let generator = UIImpactFeedbackGenerator(style: .light)
             generator.impactOccurred()
+            undoPresetID = viewModel.selectedPreset.id
+            undoAmount = 1
+            scheduleUndoDismiss()
             viewModel.increment()
         } label: {
             ZStack {
@@ -180,6 +246,9 @@ struct CounterView: View {
         Button {
             let generator = UIImpactFeedbackGenerator(style: .light)
             generator.impactOccurred()
+            undoPresetID = viewModel.selectedPreset.id
+            undoAmount = 1
+            scheduleUndoDismiss()
             viewModel.increment(by: 1)
         } label: {
             HStack(spacing: 8) {

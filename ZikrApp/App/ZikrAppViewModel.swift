@@ -132,6 +132,27 @@ final class ZikrAppViewModel: ObservableObject {
         }
     }
 
+    func undoLastIncrement() {
+        state = store.undoLastIncrement()
+        Task {
+            await refreshLiveActivity()
+        }
+    }
+
+    func updatePreset(id: String, title: String, arabic: String, transliteration: String) {
+        state = store.updatePreset(id: id, title: title, arabic: arabic, transliteration: transliteration)
+        Task {
+            await refreshLiveActivity()
+        }
+    }
+
+    func deletePreset(id: String) {
+        state = store.deletePreset(id: id)
+        Task {
+            await refreshLiveActivity()
+        }
+    }
+
     func refreshCircles() async {
         guard state.hasCompletedOnboarding else { return }
         do {
