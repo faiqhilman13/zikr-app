@@ -3,6 +3,7 @@ import ZikrCore
 
 struct HistoryView: View {
     @ObservedObject var viewModel: ZikrAppViewModel
+    @Environment(\.colorScheme) var colorScheme
     @Environment(\.zikrColors) var colors
 
     // Last 7 days for the bar chart (oldest → newest)
@@ -54,6 +55,15 @@ struct HistoryView: View {
                 }
             }
             .navigationTitle("History")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Image("symbol")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(height: 54)
+                }
+            }
             .toolbarBackground(colors.navBackground, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
         }
@@ -241,10 +251,10 @@ struct HistoryView: View {
                             ForEach(day.counts.sorted(by: { $0.key < $1.key }), id: \.key) { entry in
                                 Text("\(title(for: entry.key)): \(entry.value)")
                                     .font(.caption2)
-                                    .foregroundStyle(ZikrPalette.royalBlue)
+                                    .foregroundStyle(colorScheme == .dark ? Color.gray.opacity(0.7) : ZikrPalette.royalBlue)
                                     .padding(.horizontal, 8)
                                     .padding(.vertical, 3)
-                                    .background(ZikrPalette.royalBlue.opacity(0.12), in: Capsule())
+                                    .background((colorScheme == .dark ? Color.gray.opacity(0.7) : ZikrPalette.royalBlue).opacity(0.12), in: Capsule())
                             }
                         }
                     }

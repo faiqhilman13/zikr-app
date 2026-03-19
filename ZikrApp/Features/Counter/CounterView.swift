@@ -4,6 +4,7 @@ import ZikrCore
 
 struct CounterView: View {
     @ObservedObject var viewModel: ZikrAppViewModel
+    @Environment(\.colorScheme) var colorScheme
     @Environment(\.zikrColors) var colors
     @State private var undoPresetID: String?
     @State private var undoAmount: Int = 0
@@ -33,7 +34,15 @@ struct CounterView: View {
                     .padding(20)
                 }
             }
-            .navigationTitle("Zikr")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Image("symbol")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(height: 54)
+                }
+            }
             .toolbarBackground(colors.navBackground, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
         }
@@ -303,7 +312,7 @@ struct CounterView: View {
                     .foregroundStyle(ZikrPalette.gold)
                 Text("Add count")
                     .font(.subheadline.weight(.medium))
-                    .foregroundStyle(ZikrPalette.royalBlue)
+                    .foregroundStyle(colorScheme == .dark ? .white : ZikrPalette.royalBlue)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
@@ -342,7 +351,7 @@ struct CounterView: View {
                     .foregroundStyle(colors.textPrimary)
                 Text(preset.arabic)
                     .font(.system(size: 15, weight: .medium, design: .serif))
-                    .foregroundStyle(ZikrPalette.royalBlue)
+                    .foregroundStyle(colorScheme == .dark ? Color.gray.opacity(0.7) : ZikrPalette.royalBlue)
                     .lineLimit(1)
                 Text(preset.transliteration)
                     .font(.caption2)

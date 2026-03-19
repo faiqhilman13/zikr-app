@@ -163,6 +163,15 @@ struct SettingsView: View {
                 .background(colors.background)
             }
             .navigationTitle("Settings")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Image("symbol")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(height: 54)
+                }
+            }
             .toolbarBackground(colors.navBackground, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
             .sheet(item: $editingPreset) { preset in
