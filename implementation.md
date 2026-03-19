@@ -18,7 +18,7 @@
 - **Streaks** — App tracks consecutive days of any activity. Streak multiplier: x3 (3+ days), x4 (7+ days), x5 (30+ days)
 - **Rewards** — Flame-streak badge, milestone count badges (10, 100, 500, 1000), milestone labels
 - **Haptics** — Light impact haptic fires on every orb tap
-- **History** — Calendar heatmap showing activity days in current month
+- **History** — Weekly bar chart (last 7 days), stats row (Today / Best Streak / All Time), and 35-day calendar heatmap with goal-completion color coding
 - **Settings** — Toggle haptics, reset all data, app version
 - **Onboarding** — 4-step intro flow with preset selection
 - **Theme** — Royal blue (#1E3A8A) + gold (#D4A017) + ivory (#FAF8F5) with full dark mode support
@@ -117,3 +117,8 @@ open Zikr.xcodeproj
 - Added custom dhikr CRUD UI in Settings — list of custom presets with swipe-to-edit sheet and swipe-to-delete confirmation alert
 - Added localization infrastructure — `Localizable.strings` with all UI keys + `ZikrStrings.swift` helper enum
 - 4/4 tests passing
+
+### 2026-03-19 (session 2)
+- **History view rebuilt** — replaced plain list with three new sections: weekly bar chart (last 7 days, gold highlight for today), stats row (Today / Best Streak / All Time), 35-day calendar heatmap (grey = none, blue = started, gold = goal met, today ring). Daily log list retained below.
+- **Orb transliteration fix** — long transliterations (e.g. Salawat) now wrap to 2 lines inside the orb instead of overflowing. Arabic font size slightly reduced (30→28pt) and VStack spacing tightened to keep "Tap" label visible.
+- **App Store assets** — `AppStoreAssets/` added: 5 AI-generated marketing screenshots (9:16, 2K) and full App Store listing copy (`app_store_listing.md`) with title, subtitle, description, keywords, review notes.

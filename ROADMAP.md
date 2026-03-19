@@ -109,8 +109,8 @@ Ship `Zikr` to the App Store as a polished iPhone app for daily dhikr tracking, 
 ### Store Assets
 
 - [ ] Create app icon set
-- [ ] Prepare iPhone screenshots
-- [ ] Write App Store title, subtitle, description, keywords, and promotional text
+- [x] Prepare iPhone screenshots — 5 AI-generated marketing screenshots in `AppStoreAssets/screenshots/`
+- [x] Write App Store title, subtitle, description, keywords, and promotional text — see `AppStoreAssets/app_store_listing.md`
 - [ ] Add privacy policy URL
 - [ ] Add support URL
 
@@ -131,6 +131,7 @@ Ship `Zikr` to the App Store as a polished iPhone app for daily dhikr tracking, 
 - [ ] Add more unit tests for streak rollover, reward unlocks, and reminders
 - [ ] Add UI tests for onboarding, counting, and settings
 - [x] Validate widget and Live Activity update paths (widget removed, Live Activity pending device test)
+- [x] History view — weekly bar chart, stats row, 35-day calendar heatmap
 - [ ] Validate fresh install, returning user, and day rollover flows
 - [ ] Validate dark mode transitions on device
 

@@ -264,18 +264,21 @@ struct CounterView: View {
                     .frame(width: 220, height: 220)
                     .shadow(color: ZikrPalette.gold.opacity(0.4), radius: 20, x: 0, y: 8)
 
-                VStack(spacing: 8) {
+                VStack(spacing: 5) {
                     Text(viewModel.selectedPreset.title)
                         .font(.headline)
                         .foregroundStyle(ZikrPalette.ivory)
                     Text(viewModel.selectedPreset.arabic)
-                        .font(.system(size: 30, weight: .semibold, design: .serif))
+                        .font(.system(size: 28, weight: .semibold, design: .serif))
                         .foregroundStyle(Color.white)
                         .multilineTextAlignment(.center)
                         .frame(width: 160)
                     Text(viewModel.selectedPreset.transliteration)
                         .font(.caption)
                         .foregroundStyle(ZikrPalette.ivory.opacity(0.85))
+                        .multilineTextAlignment(.center)
+                        .lineLimit(2)
+                        .frame(width: 160)
                     Text("Tap")
                         .font(.caption2.weight(.semibold))
                         .foregroundStyle(ZikrPalette.goldPale)
