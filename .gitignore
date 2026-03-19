@@ -1,0 +1,17 @@
+.DS_Store
+*.xcuserstate
+*.xcworkspace
+xcuserdata/
+DerivedData/
+.build/
+Packages/
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM/
+build/
+Pods/
+*.xcodeproj/project.xcworkspace/
+*.xcodeproj/xcuserdata/
+Carthage/
+Archives/
