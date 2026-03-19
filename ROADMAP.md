@@ -20,13 +20,13 @@ Ship `Zikr` to the App Store as a polished iPhone app for daily dhikr tracking, 
 - [x] Haptics on orb tap (`UIImpactFeedbackGenerator(.light)`)
 - [x] Per-dhikr stats — switching presets shows individual preset count
 - [x] Add reset/undo safeguards for accidental counts — undo banner appears for 5s after each tap with undo button
-- [ ] Add session timer / active session state if needed
+- [x] Add session timer / active session state — tracks elapsed time since first tap, displayed below stats row
 
 ### Dhikr Presets
 
 - [x] Built-in presets: salawat, tahlil, tasbih, takbir, tahmid
-- [x] Improve custom dhikr creation/edit/delete — addCustomPreset, updatePreset, deletePreset (starter presets protected)
-- [ ] Add localization-ready strings for dhikr labels and UI copy
+- [x] Improve custom dhikr creation/edit/delete — addCustomPreset, updatePreset, deletePreset (starter presets protected). Full CRUD UI in Settings with swipe-to-edit sheet and swipe-to-delete with confirmation.
+- [x] Add localization-ready strings for dhikr labels and UI copy — `Localizable.strings` with all keys + `ZikrStrings.swift` helper enum
 
 ### Daily Goal + Rewards
 

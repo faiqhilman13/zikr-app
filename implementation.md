@@ -12,7 +12,9 @@
 
 - **Counter** — Tap the orb to increment. Shows current dhikr's individual count + daily progress ring
 - **Undo** — Undo banner appears for 5 seconds after each tap. Can undo the last increment (data-backed via `recentEvents`)
+- **Session timer** — Tracks elapsed time since first tap of the day. Displays "Session: Xm Ys" below stats row. Resets automatically on day rollover.
 - **Preset switching** — Switching presets shows that preset's own count (per-dhikr counting)
+- **Custom dhikr CRUD** — Settings shows list of custom presets with edit (sheet) and swipe-to-delete (confirmation alert). Starter presets protected.
 - **Streaks** — App tracks consecutive days of any activity. Streak multiplier: x3 (3+ days), x4 (7+ days), x5 (30+ days)
 - **Rewards** — Flame-streak badge, milestone count badges (10, 100, 500, 1000), milestone labels
 - **Haptics** — Light impact haptic fires on every orb tap
@@ -29,6 +31,8 @@
 
 1. **Lock screen widget removed** — User preferred not to use it. `ZikrWidgetExtension/` directory still exists with all code intact. Can be restored by re-adding the target in `project.pbxproj`.
 2. **Circles tab hidden** — Firebase Community feature is not wired up. The Circles tab was removed from navigation. To re-enable: add it back to `RootView.swift` and implement `FirebaseCommunityRepository`.
+3. **Localization infrastructure ready, strings not yet applied** — `Localizable.strings` and `ZikrStrings.swift` are in place. Existing UI strings are still hardcoded English; migrate them to `ZikrStrings.*` to enable localization.
+4. **No App Store distribution** — Physical device signing requires Xcode automatic signing + user trusting the developer profile on-device (Settings → General → VPN & Device Management).
 
 ---
 
@@ -40,7 +44,8 @@ ZikrApp/
 │   ├── ZikrApp.swift              — @main entry point
 │   ├── RootView.swift             — TabView (Counter, Rewards, History, Settings)
 │   ├── ZikrAppViewModel.swift     — ObservableObject, bridges UI to ZikrCore
-│   └── DhikrTheme.swift           — ZikrPalette colors, ZikrColors semantic colors, badge/theme configs
+│   │   ├── DhikrTheme.swift           — ZikrPalette colors, ZikrColors semantic colors, badge/theme configs
+│   │   └── ZikrStrings.swift          — Localization helper enum wrapping NSLocalizedString
 ├── Features/
 │   ├── Counter/CounterView.swift  — Main counting UI
 │   ├── Rewards/RewardsView.swift  — Streak + milestone badges
@@ -89,9 +94,6 @@ open Zikr.xcodeproj
 
 ## Next Steps (Manual)
 
-- [ ] **Session timer** — Add `sessionStartTime` to track active session duration
-- [ ] **Custom dhikr CRUD UI** — Add swipe-to-edit/delete UI in SettingsView for custom presets
-- [ ] **Localization strings** — Create `Localizable.strings` + `ZikrStrings.swift` wrapper for all UI text
 - [ ] **Re-add lock screen widget** — Restore `ZikrWidgetExtension/` files and add target back to `project.pbxproj`
 - [ ] **Re-enable Circles tab** — Implement Firebase integration and add tab back to `RootView.swift`
 - [ ] **App Store** — Create App Store listing, set up App Store Connect, archive for distribution
@@ -111,4 +113,7 @@ open Zikr.xcodeproj
 - **Lock screen widget removed** — Widget extension target removed from project. `ZikrWidgetExtension/` code still exists. Live Activity (Dynamic Island) still works.
 - Added undo/reset for accidental counts — 5-second undo banner with undo button (data-backed via `recentEvents`)
 - Added `updatePreset()` and `deletePreset()` to store (starter presets protected from deletion)
+- Added session timer — tracks elapsed time since first tap of the day, displayed below stats row
+- Added custom dhikr CRUD UI in Settings — list of custom presets with swipe-to-edit sheet and swipe-to-delete confirmation alert
+- Added localization infrastructure — `Localizable.strings` with all UI keys + `ZikrStrings.swift` helper enum
 - 4/4 tests passing
