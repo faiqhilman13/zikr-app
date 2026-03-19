@@ -4,9 +4,22 @@ import ZikrCore
 struct SettingsView: View {
     @ObservedObject var viewModel: ZikrAppViewModel
     @Environment(\.zikrColors) var colors
+
     @State private var customTitle = ""
     @State private var customArabic = ""
     @State private var customTransliteration = ""
+    @State private var editingPreset: DhikrPreset?
+    @State private var editTitle = ""
+    @State private var editArabic = ""
+    @State private var editTransliteration = ""
+    @State private var deletingPreset: DhikrPreset?
+    @State private var showDeleteAlert = false
+
+    private let starterIDs = ["salawat", "tahlil", "tasbih", "takbir", "tahmid"]
+
+    private var customPresets: [DhikrPreset] {
+        viewModel.state.presets.filter { !starterIDs.contains($0.id) }
+    }
 
     var body: some View {
         NavigationStack {
@@ -91,6 +104,18 @@ struct SettingsView: View {
                     .listRowBackground(colors.surface)
 
                     Section("Custom dhikr") {
+                        if !customPresets.isEmpty {
+                            ForEach(customPresets) { preset in
+                                customPresetRow(preset)
+                            }
+                            .onDelete { indexSet in
+                                if let idx = indexSet.first {
+                                    deletingPreset = customPresets[idx]
+                                    showDeleteAlert = true
+                                }
+                            }
+                        }
+
                         TextField("Title", text: $customTitle)
                             .foregroundStyle(colors.textPrimary)
                         TextField("Arabic", text: $customArabic)
@@ -112,6 +137,27 @@ struct SettingsView: View {
                         .disabled(customTitle.isEmpty)
                     }
                     .listRowBackground(colors.surface)
+
+                    Section {
+                        Button(role: .destructive) {
+                            // reset action
+                        } label: {
+                            Text("Reset all data")
+                                .foregroundStyle(.red)
+                        }
+                    }
+                    .listRowBackground(colors.surface)
+
+                    Section {
+                        HStack {
+                            Text("Version")
+                                .foregroundStyle(colors.textPrimary)
+                            Spacer()
+                            Text("1.0.0")
+                                .foregroundStyle(colors.textSecondary)
+                        }
+                    }
+                    .listRowBackground(colors.surface)
                 }
                 .scrollContentBackground(.hidden)
                 .background(colors.background)
@@ -119,6 +165,86 @@ struct SettingsView: View {
             .navigationTitle("Settings")
             .toolbarBackground(colors.navBackground, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
+            .sheet(item: $editingPreset) { preset in
+                editPresetSheet(for: preset)
+            }
+            .alert("Delete \"\(deletingPreset?.title ?? "")\"?", isPresented: $showDeleteAlert) {
+                Button("Cancel", role: .cancel) {
+                    deletingPreset = nil
+                }
+                Button("Delete", role: .destructive) {
+                    if let preset = deletingPreset {
+                        viewModel.deletePreset(id: preset.id)
+                    }
+                    deletingPreset = nil
+                }
+            } message: {
+                Text("This will remove the preset and all its count history.")
+            }
         }
     }
+
+    private func customPresetRow(_ preset: DhikrPreset) -> some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(preset.title)
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(colors.textPrimary)
+                Text(preset.arabic)
+                    .font(.caption)
+                    .foregroundStyle(ZikrPalette.royalBlue)
+            }
+            Spacer()
+            Button {
+                editTitle = preset.title
+                editArabic = preset.arabic
+                editTransliteration = preset.transliteration
+                editingPreset = preset
+            } label: {
+                Image(systemName: "pencil")
+                    .foregroundStyle(ZikrPalette.gold)
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    private func editPresetSheet(for preset: DhikrPreset) -> some View {
+        NavigationStack {
+            ZStack {
+                colors.background.ignoresSafeArea()
+
+                Form {
+                    Section {
+                        TextField("Title", text: $editTitle)
+                            .foregroundStyle(colors.textPrimary)
+                        TextField("Arabic", text: $editArabic)
+                            .foregroundStyle(colors.textPrimary)
+                        TextField("Transliteration", text: $editTransliteration)
+                            .foregroundStyle(colors.textPrimary)
+                    }
+                    .listRowBackground(colors.surface)
+                }
+                .scrollContentBackground(.hidden)
+                .background(colors.background)
+            }
+            .navigationTitle("Edit preset")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        editingPreset = nil
+                    }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        viewModel.updatePreset(id: preset.id, title: editTitle, arabic: editArabic, transliteration: editTransliteration)
+                        editingPreset = nil
+                    }
+                    .disabled(editTitle.isEmpty)
+                }
+            }
+        }
+        .presentationDetents([.medium])
+    }
 }
+

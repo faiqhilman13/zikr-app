@@ -8,6 +8,8 @@ struct CounterView: View {
     @State private var undoPresetID: String?
     @State private var undoAmount: Int = 0
     @State private var undoTimer: Timer?
+    @State private var sessionElapsed: TimeInterval = 0
+    @State private var sessionTimer: Timer?
 
     var body: some View {
         NavigationStack {
@@ -24,6 +26,9 @@ struct CounterView: View {
                         quickAddRow
                         presetScroller
                         statsRow
+                        if !sessionTimerLabel.isEmpty {
+                            sessionTimerCard
+                        }
                     }
                     .padding(20)
                 }
@@ -34,6 +39,19 @@ struct CounterView: View {
         }
         .onDisappear {
             undoTimer?.invalidate()
+            sessionTimer?.invalidate()
+        }
+        .onChange(of: viewModel.sessionStartTime) { _, newValue in
+            if newValue != nil {
+                startSessionTimer()
+            } else {
+                stopSessionTimer()
+            }
+        }
+        .onAppear {
+            if viewModel.sessionStartTime != nil {
+                startSessionTimer()
+            }
         }
     }
 
@@ -89,6 +107,32 @@ struct CounterView: View {
                 dismissUndo()
             }
         }
+    }
+
+    private func startSessionTimer() {
+        sessionTimer?.invalidate()
+        sessionElapsed = viewModel.sessionStartTime.map { Date().timeIntervalSince($0) } ?? 0
+        sessionTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
+            Task { @MainActor in
+                sessionElapsed = viewModel.sessionStartTime.map { Date().timeIntervalSince($0) } ?? 0
+            }
+        }
+    }
+
+    private func stopSessionTimer() {
+        sessionTimer?.invalidate()
+        sessionTimer = nil
+        sessionElapsed = 0
+    }
+
+    private var sessionTimerLabel: String {
+        guard sessionElapsed > 0 else { return "" }
+        let mins = Int(sessionElapsed) / 60
+        let secs = Int(sessionElapsed) % 60
+        if mins > 0 {
+            return "\(mins)m \(secs)s"
+        }
+        return "\(secs)s"
     }
 
     private var streakLabel: String {
@@ -350,6 +394,27 @@ struct CounterView: View {
         .padding(.vertical, 16)
         .background(
             RoundedRectangle(cornerRadius: 14)
+                .fill(colors.surface)
+                .shadow(color: ZikrPalette.royalBlue.opacity(0.05), radius: 6, x: 0, y: 2)
+        )
+    }
+
+    private var sessionTimerCard: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "clock.fill")
+                .foregroundStyle(ZikrPalette.gold)
+            Text("Session")
+                .font(.subheadline)
+                .foregroundStyle(colors.textSecondary)
+            Text(sessionTimerLabel)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(colors.textPrimary)
+            Spacer()
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
                 .fill(colors.surface)
                 .shadow(color: ZikrPalette.royalBlue.opacity(0.05), radius: 6, x: 0, y: 2)
         )

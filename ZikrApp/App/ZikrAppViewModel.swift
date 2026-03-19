@@ -20,6 +20,8 @@ final class ZikrAppViewModel: ObservableObject {
     private let notificationScheduler: NotificationScheduler
     private let liveActivityManager: LiveActivityManager
     private var hasBootstrapped = false
+    private var currentSessionDate: String = ""
+    var sessionStartTime: Date?
 
     init(
         store: SharedZikrStore = SharedZikrStore(),
@@ -53,6 +55,11 @@ final class ZikrAppViewModel: ObservableObject {
     }
 
     func reloadFromStore() async {
+        let todayKey = DayKey.string(from: Date(), calendar: Calendar.current)
+        if currentSessionDate != todayKey {
+            sessionStartTime = nil
+            currentSessionDate = todayKey
+        }
         state = store.snapshot()
         await notificationScheduler.requestAuthorizationIfNeeded()
         await refreshNotifications()
@@ -61,6 +68,9 @@ final class ZikrAppViewModel: ObservableObject {
     }
 
     func increment(by amount: Int = 1) {
+        if sessionStartTime == nil {
+            sessionStartTime = Date()
+        }
         state = store.incrementSelectedDhikr(by: amount)
         Task {
             await refreshNotifications()

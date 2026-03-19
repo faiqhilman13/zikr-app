@@ -1,0 +1,91 @@
+/* Navigation */
+"nav.zikr" = "Zikr";
+"nav.counter" = "Counter";
+"nav.rewards" = "Rewards";
+"nav.history" = "History";
+"nav.settings" = "Settings";
+
+/* Counter */
+"counter.of" = "of %@";
+"counter.remaining" = "%@ remaining";
+"counter.goal_reached" = "Goal reached";
+"counter.total_today" = "Total today: %@";
+"counter.tap" = "Tap";
+"counter.add_count" = "Add count";
+"counter.switch_dhikr" = "Switch dhikr";
+"counter.session" = "Session";
+"counter.today" = "Today";
+"counter.level" = "Level";
+"counter.streak" = "Streak";
+"counter.build_streak" = "Build your streak";
+"counter.day_streak" = "%d day streak";
+"counter.days_streak" = "%d+ day streak";
+"counter.bonus" = "bonus";
+
+/* Undo */
+"undo.banner" = "+%d %@";
+"undo.button" = "Undo";
+"undo.dismiss" = "";
+
+/* Rewards */
+"rewards.title" = "Rewards";
+"rewards.streak_multiplier" = "Streak Multiplier";
+"rewards.xp" = "%d XP";
+"rewards.level" = "Level %d";
+"rewards.flame_streak" = "Flame Streak";
+"rewards.milestone" = "Milestone";
+"rewards.badges" = "Badges";
+"rewards.unlocked" = "Unlocked";
+"rewards.locked" = "Locked";
+
+/* History */
+"history.title" = "History";
+"history.this_month" = "This Month";
+"history.no_activity" = "No activity yet";
+
+/* Settings */
+"settings.title" = "Settings";
+"settings.daily_goal" = "Daily goal";
+"settings.counts" = "counts";
+"settings.reminders" = "Reminders";
+"settings.daily_reminder" = "Daily reminder";
+"settings.smart_nudges" = "Smart nudges";
+"settings.prayer_reminders" = "After prayer reminders";
+"settings.time" = "Time";
+"settings.lock_screen" = "Lock screen";
+"settings.live_activity" = "Live Activity";
+"settings.track_from_lock" = "Track your dhikr from the iPhone lock screen.";
+"settings.custom_dhikr" = "Custom dhikr";
+"settings.title_placeholder" = "Title";
+"settings.arabic_placeholder" = "Arabic";
+"settings.transliteration_placeholder" = "Transliteration";
+"settings.add_preset" = "Add preset";
+"settings.edit_preset" = "Edit preset";
+"settings.delete_preset" = "Delete";
+"settings.delete_confirm" = "Delete \"%@\"?";
+"settings.delete_confirm_message" = "This will remove the preset and all its count history.";
+"settings.cancel" = "Cancel";
+"settings.save" = "Save";
+"settings.reset_data" = "Reset all data";
+"settings.haptics" = "Haptics";
+"settings.version" = "Version";
+
+/* Onboarding */
+"onboarding.welcome" = "Welcome to Zikr";
+"onboarding.subtitle" = "Track your daily dhikr with streaks, rewards, and friends.";
+"onboarding.name_title" = "What's your name?";
+"onboarding.name_placeholder" = "Your name";
+"onboarding.goal_title" = "Set your daily goal";
+"onboarding.goal_subtitle" = "How many counts per day?";
+"onboarding.preset_title" = "Choose your dhikr";
+"onboarding.preset_subtitle" = "Pick the dhikr you want to track.";
+"onboarding.start" = "Start counting";
+"onboarding.skip" = "Skip";
+
+/* Presets */
+"preset.salawat" = "Salawat";
+"preset.tahlil" = "Tahlil";
+"preset.tasbih" = "Tasbih";
+"preset.takbir" = "Takbir";
+"preset.tahmid" = "Alhamdulillah";
+"preset.custom" = "Custom";
