@@ -14,6 +14,7 @@ struct SettingsView: View {
     @State private var editTransliteration = ""
     @State private var deletingPreset: DhikrPreset?
     @State private var showDeleteAlert = false
+    @State private var targetInputs: [String: String] = [:]
 
     private let starterIDs = ["salawat", "tahlil", "tasbih", "takbir", "tahmid"]
 
@@ -27,27 +28,26 @@ struct SettingsView: View {
                 colors.background.ignoresSafeArea()
 
                 Form {
-                    Section {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Daily goal")
+                    Section(header: Text("Daily targets").font(.subheadline.weight(.semibold)).foregroundStyle(colors.textPrimary).textCase(nil)) {
+                        ForEach(viewModel.state.presets) { preset in
+                            presetTargetRow(preset)
+                        }
+                        Divider()
+                            .listRowSeparator(.hidden)
+                        HStack {
+                            Text("Total")
                                 .font(.subheadline.weight(.semibold))
                                 .foregroundStyle(colors.textPrimary)
-                            HStack {
+                            Spacer()
+                            HStack(alignment: .bottom, spacing: 4) {
                                 Text("\(viewModel.state.dailyGoal.targetCount)")
-                                    .font(.system(size: 28, weight: .bold, design: .serif))
+                                    .font(.system(size: 24, weight: .bold, design: .serif))
                                     .foregroundStyle(ZikrPalette.royalBlue)
                                 Text("counts")
+                                    .font(.caption)
                                     .foregroundStyle(colors.textSecondary)
+                                    .padding(.bottom, 2)
                             }
-                            Slider(
-                                value: Binding(
-                                    get: { Double(viewModel.state.dailyGoal.targetCount) },
-                                    set: { viewModel.updateDailyGoal(Int($0)) }
-                                ),
-                                in: 33...2000,
-                                step: 33
-                            )
-                            .tint(ZikrPalette.gold)
                         }
                         .padding(.vertical, 4)
                     }
@@ -191,6 +191,55 @@ struct SettingsView: View {
                 Text("This will remove the preset and all its count history.")
             }
         }
+    }
+
+    private func presetTargetRow(_ preset: DhikrPreset) -> some View {
+        let currentTarget = viewModel.state.dailyGoal.perPresetTargets[preset.id] ?? 0
+        let inputText = Binding<String>(
+            get: { targetInputs[preset.id] ?? "\(currentTarget)" },
+            set: { targetInputs[preset.id] = $0 }
+        )
+        return VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Text(preset.title)
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(colors.textPrimary)
+                Spacer()
+                TextField("0", text: inputText)
+                    .font(.system(size: 16, weight: .semibold, design: .serif))
+                    .foregroundStyle(ZikrPalette.royalBlue)
+                    .multilineTextAlignment(.trailing)
+                    .keyboardType(.numberPad)
+                    .frame(width: 60)
+                    .onChange(of: inputText.wrappedValue) { _, newVal in
+                        if let parsed = Int(newVal), parsed >= 0 {
+                            viewModel.updatePresetTarget(presetID: preset.id, target: parsed)
+                        }
+                    }
+                    .onSubmit {
+                        if let parsed = Int(inputText.wrappedValue), parsed >= 0 {
+                            viewModel.updatePresetTarget(presetID: preset.id, target: parsed)
+                        }
+                    }
+                Text("counts")
+                    .font(.caption)
+                    .foregroundStyle(colors.textSecondary)
+            }
+            Slider(
+                value: Binding(
+                    get: { Double(currentTarget) },
+                    set: { newVal in
+                        let rounded = Int(newVal)
+                        targetInputs[preset.id] = "\(rounded)"
+                        viewModel.updatePresetTarget(presetID: preset.id, target: rounded)
+                    }
+                ),
+                in: 0...500,
+                step: 1
+            )
+            .tint(ZikrPalette.gold)
+        }
+        .padding(.vertical, 4)
     }
 
     private func customPresetRow(_ preset: DhikrPreset) -> some View {
