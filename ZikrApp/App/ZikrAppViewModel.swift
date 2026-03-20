@@ -104,6 +104,14 @@ final class ZikrAppViewModel: ObservableObject {
         }
     }
 
+    func updatePresetTarget(presetID: String, target: Int) {
+        state = store.updatePresetTarget(presetID: presetID, target: target)
+        Task {
+            await refreshNotifications()
+            await refreshLiveActivity()
+        }
+    }
+
     func setSimpleDailyEnabled(_ isEnabled: Bool) {
         var preference = state.reminderPreference
         preference.simpleDailyEnabled = isEnabled

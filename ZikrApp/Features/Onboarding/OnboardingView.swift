@@ -6,6 +6,7 @@ struct OnboardingView: View {
     @Environment(\.zikrColors) var colors
     @State private var name = ""
     @State private var target = 100
+    @State private var targetInput = "100"
     @State private var selectedPresetID = DhikrPreset.starterPresets.first?.id ?? "salawat"
 
     var body: some View {
@@ -68,10 +69,18 @@ struct OnboardingView: View {
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(colors.textPrimary)
 
-            HStack(alignment: .bottom, spacing: 4) {
-                Text("\(target)")
+            HStack(alignment: .bottom, spacing: 8) {
+                TextField("100", text: $targetInput)
                     .font(.system(size: 40, weight: .bold, design: .serif))
                     .foregroundStyle(ZikrPalette.royalBlue)
+                    .keyboardType(.numberPad)
+                    .frame(minWidth: 60, maxWidth: 120)
+                    .fixedSize()
+                    .onChange(of: targetInput) { _, newVal in
+                        if let parsed = Int(newVal), parsed >= 1 {
+                            target = min(parsed, 9999)
+                        }
+                    }
                 Text("counts")
                     .font(.subheadline)
                     .foregroundStyle(colors.textSecondary)
@@ -81,7 +90,10 @@ struct OnboardingView: View {
             Slider(
                 value: Binding(
                     get: { Double(target) },
-                    set: { target = Int($0) }
+                    set: { newVal in
+                        target = Int(newVal)
+                        targetInput = "\(target)"
+                    }
                 ),
                 in: 33...2000,
                 step: 33

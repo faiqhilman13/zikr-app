@@ -78,6 +78,22 @@ public final class SharedZikrStore: @unchecked Sendable {
     }
 
     @discardableResult
+    public func updatePresetTarget(presetID: String, target: Int) -> ZikrAppState {
+        mutate { state in
+            state.dailyGoal.perPresetTargets[presetID] = max(0, target)
+            let sum = state.dailyGoal.perPresetTargets.values.reduce(0, +)
+            state.dailyGoal.targetCount = sum > 0 ? sum : state.dailyGoal.targetCount
+            if sum > 0, state.today.totalCount >= sum {
+                state.today.goalCompleted = true
+                state.today.completedAt = state.today.completedAt ?? now()
+            } else if sum > 0 {
+                state.today.goalCompleted = false
+                state.today.completedAt = nil
+            }
+        }
+    }
+
+    @discardableResult
     public func updateReminderPreference(_ preference: ReminderPreference) -> ZikrAppState {
         mutate { state in
             state.reminderPreference = preference

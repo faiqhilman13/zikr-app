@@ -130,11 +130,18 @@ public struct DayProgress: Identifiable, Codable, Hashable, Sendable {
 
 public struct DailyGoal: Codable, Hashable, Sendable {
     public var targetCount: Int
+    public var perPresetTargets: [String: Int]
     public var rewardName: String
 
-    public init(targetCount: Int = 100, rewardName: String = "Noor Chest") {
+    public init(targetCount: Int = 100, perPresetTargets: [String: Int] = [:], rewardName: String = "Noor Chest") {
         self.targetCount = targetCount
+        self.perPresetTargets = perPresetTargets
         self.rewardName = rewardName
+    }
+
+    public var effectiveTargetCount: Int {
+        let sum = perPresetTargets.values.reduce(0, +)
+        return sum > 0 ? sum : targetCount
     }
 }
 
