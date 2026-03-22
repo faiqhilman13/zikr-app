@@ -7,7 +7,7 @@ final class ZikrAppViewModel: ObservableObject {
     enum Tab: Hashable {
         case counter
         case rewards
-        case circles
+        case garden
         case history
         case settings
     }

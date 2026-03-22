@@ -8,6 +8,7 @@ struct RootView: View {
         TabView(selection: $viewModel.selectedTab) {
             counterTab
             rewardsTab
+            gardenTab
             historyTab
             settingsTab
         }
@@ -41,6 +42,15 @@ struct RootView: View {
                 Label("Rewards", systemImage: "flame.fill")
             }
             .tag(ZikrAppViewModel.Tab.rewards)
+    }
+
+    @ViewBuilder
+    private var gardenTab: some View {
+        GardenView(viewModel: viewModel)
+            .tabItem {
+                Label("Garden", systemImage: "leaf.fill")
+            }
+            .tag(ZikrAppViewModel.Tab.garden)
     }
 
     @ViewBuilder
