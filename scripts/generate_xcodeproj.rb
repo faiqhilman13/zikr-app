@@ -113,7 +113,9 @@ app_files = %w[
   Services/LiveActivityManager.swift
   Features/Onboarding/OnboardingView.swift
   Features/Counter/CounterView.swift
+  Features/Timer/ZikrTimerView.swift
   Features/Rewards/RewardsView.swift
+  Features/Garden/GardenView.swift
   Features/Circles/CirclesView.swift
   Features/History/HistoryView.swift
   Features/Settings/SettingsView.swift

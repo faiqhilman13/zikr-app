@@ -145,6 +145,40 @@ public struct DailyGoal: Codable, Hashable, Sendable {
     }
 }
 
+public struct ActiveDhikrTimer: Codable, Hashable, Sendable {
+    public var presetID: String
+    public var startedAt: Date
+
+    public init(presetID: String, startedAt: Date) {
+        self.presetID = presetID
+        self.startedAt = startedAt
+    }
+}
+
+public struct DailyTimerProgress: Codable, Hashable, Sendable {
+    public var isoDate: String
+    public var elapsedSecondsByPreset: [String: Int]
+    public var activeTimer: ActiveDhikrTimer?
+
+    public init(
+        isoDate: String,
+        elapsedSecondsByPreset: [String: Int] = [:],
+        activeTimer: ActiveDhikrTimer? = nil
+    ) {
+        self.isoDate = isoDate
+        self.elapsedSecondsByPreset = elapsedSecondsByPreset
+        self.activeTimer = activeTimer
+    }
+}
+
+public struct TimerGoalState: Codable, Hashable, Sendable {
+    public var perPresetMinutes: [String: Int]
+
+    public init(perPresetMinutes: [String: Int] = [:]) {
+        self.perPresetMinutes = perPresetMinutes
+    }
+}
+
 public struct StreakState: Codable, Hashable, Sendable {
     public var current: Int
     public var longest: Int
@@ -349,6 +383,8 @@ public struct ZikrAppState: Codable, Hashable, Sendable {
     public var reminderPreference: ReminderPreference
     public var circles: [CircleSummary]
     public var liveActivityEnabled: Bool
+    public var dailyTimerProgress: DailyTimerProgress
+    public var timerGoals: TimerGoalState
 
     public init(
         hasCompletedOnboarding: Bool,
@@ -363,7 +399,9 @@ public struct ZikrAppState: Codable, Hashable, Sendable {
         rewards: RewardState,
         reminderPreference: ReminderPreference,
         circles: [CircleSummary],
-        liveActivityEnabled: Bool
+        liveActivityEnabled: Bool,
+        dailyTimerProgress: DailyTimerProgress? = nil,
+        timerGoals: TimerGoalState = TimerGoalState()
     ) {
         self.hasCompletedOnboarding = hasCompletedOnboarding
         self.userName = userName
@@ -378,6 +416,64 @@ public struct ZikrAppState: Codable, Hashable, Sendable {
         self.reminderPreference = reminderPreference
         self.circles = circles
         self.liveActivityEnabled = liveActivityEnabled
+        self.dailyTimerProgress = dailyTimerProgress ?? DailyTimerProgress(isoDate: today.isoDate)
+        self.timerGoals = timerGoals
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case hasCompletedOnboarding
+        case userName
+        case selectedPresetID
+        case presets
+        case today
+        case history
+        case recentEvents
+        case dailyGoal
+        case streak
+        case rewards
+        case reminderPreference
+        case circles
+        case liveActivityEnabled
+        case dailyTimerProgress
+        case timerGoals
+    }
+
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        hasCompletedOnboarding = try container.decode(Bool.self, forKey: .hasCompletedOnboarding)
+        userName = try container.decode(String.self, forKey: .userName)
+        selectedPresetID = try container.decode(String.self, forKey: .selectedPresetID)
+        presets = try container.decode([DhikrPreset].self, forKey: .presets)
+        today = try container.decode(DayProgress.self, forKey: .today)
+        history = try container.decode([DayProgress].self, forKey: .history)
+        recentEvents = try container.decode([CountEvent].self, forKey: .recentEvents)
+        dailyGoal = try container.decode(DailyGoal.self, forKey: .dailyGoal)
+        streak = try container.decode(StreakState.self, forKey: .streak)
+        rewards = try container.decode(RewardState.self, forKey: .rewards)
+        reminderPreference = try container.decode(ReminderPreference.self, forKey: .reminderPreference)
+        circles = try container.decode([CircleSummary].self, forKey: .circles)
+        liveActivityEnabled = try container.decodeIfPresent(Bool.self, forKey: .liveActivityEnabled) ?? true
+        dailyTimerProgress = try container.decodeIfPresent(DailyTimerProgress.self, forKey: .dailyTimerProgress) ?? DailyTimerProgress(isoDate: today.isoDate)
+        timerGoals = try container.decodeIfPresent(TimerGoalState.self, forKey: .timerGoals) ?? TimerGoalState()
+    }
+
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(hasCompletedOnboarding, forKey: .hasCompletedOnboarding)
+        try container.encode(userName, forKey: .userName)
+        try container.encode(selectedPresetID, forKey: .selectedPresetID)
+        try container.encode(presets, forKey: .presets)
+        try container.encode(today, forKey: .today)
+        try container.encode(history, forKey: .history)
+        try container.encode(recentEvents, forKey: .recentEvents)
+        try container.encode(dailyGoal, forKey: .dailyGoal)
+        try container.encode(streak, forKey: .streak)
+        try container.encode(rewards, forKey: .rewards)
+        try container.encode(reminderPreference, forKey: .reminderPreference)
+        try container.encode(circles, forKey: .circles)
+        try container.encode(liveActivityEnabled, forKey: .liveActivityEnabled)
+        try container.encode(dailyTimerProgress, forKey: .dailyTimerProgress)
+        try container.encode(timerGoals, forKey: .timerGoals)
     }
 
     public static func initial(now: Date = Date(), calendar: Calendar = .current) -> ZikrAppState {
@@ -395,7 +491,9 @@ public struct ZikrAppState: Codable, Hashable, Sendable {
             rewards: RewardState(),
             reminderPreference: ReminderPreference(),
             circles: [],
-            liveActivityEnabled: true
+            liveActivityEnabled: true,
+            dailyTimerProgress: DailyTimerProgress(isoDate: dayKey),
+            timerGoals: TimerGoalState()
         )
     }
 }
@@ -403,6 +501,10 @@ public struct ZikrAppState: Codable, Hashable, Sendable {
 public extension ZikrAppState {
     var selectedPreset: DhikrPreset? {
         presets.first { $0.id == selectedPresetID }
+    }
+
+    var activeTimerPresetID: String? {
+        dailyTimerProgress.activeTimer?.presetID
     }
 
     var remainingToGoal: Int {
@@ -416,5 +518,28 @@ public extension ZikrAppState {
 
     var allProgress: [DayProgress] {
         [today] + history
+    }
+
+    func timerTargetMinutes(for presetID: String) -> Int {
+        timerGoals.perPresetMinutes[presetID] ?? 0
+    }
+
+    func isTimerRunning(for presetID: String) -> Bool {
+        dailyTimerProgress.activeTimer?.presetID == presetID
+    }
+
+    func timerElapsedSeconds(for presetID: String, now: Date = Date()) -> Int {
+        let storedSeconds = dailyTimerProgress.elapsedSecondsByPreset[presetID] ?? 0
+        guard let activeTimer = dailyTimerProgress.activeTimer, activeTimer.presetID == presetID else {
+            return storedSeconds
+        }
+
+        return storedSeconds + max(Int(now.timeIntervalSince(activeTimer.startedAt)), 0)
+    }
+
+    func timerCompletionRatio(for presetID: String, now: Date = Date()) -> Double {
+        let targetMinutes = timerTargetMinutes(for: presetID)
+        guard targetMinutes > 0 else { return 0 }
+        return min(Double(timerElapsedSeconds(for: presetID, now: now)) / Double(targetMinutes * 60), 1)
     }
 }

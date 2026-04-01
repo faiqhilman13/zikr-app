@@ -115,6 +115,42 @@ public final class SharedZikrStore: @unchecked Sendable {
     }
 
     @discardableResult
+    public func setTimerTargetMinutes(presetID: String, minutes: Int) -> ZikrAppState {
+        mutate { state in
+            guard state.presets.contains(where: { $0.id == presetID }) else { return }
+            let sanitizedMinutes = max(0, minutes)
+            if sanitizedMinutes == 0 {
+                state.timerGoals.perPresetMinutes.removeValue(forKey: presetID)
+            } else {
+                state.timerGoals.perPresetMinutes[presetID] = sanitizedMinutes
+            }
+        }
+    }
+
+    @discardableResult
+    public func startTimer(for presetID: String) -> ZikrAppState {
+        mutate { state in
+            guard state.presets.contains(where: { $0.id == presetID }) else { return }
+
+            let timestamp = now()
+            if state.dailyTimerProgress.activeTimer?.presetID == presetID {
+                return
+            }
+
+            pauseActiveTimerLocked(state: &state, at: timestamp)
+            state.selectedPresetID = presetID
+            state.dailyTimerProgress.activeTimer = ActiveDhikrTimer(presetID: presetID, startedAt: timestamp)
+        }
+    }
+
+    @discardableResult
+    public func pauseActiveTimer() -> ZikrAppState {
+        mutate { state in
+            pauseActiveTimerLocked(state: &state, at: now())
+        }
+    }
+
+    @discardableResult
     public func addCustomPreset(title: String, arabic: String, transliteration: String) -> ZikrAppState {
         mutate { state in
             let cleanedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -166,6 +202,11 @@ public final class SharedZikrStore: @unchecked Sendable {
                 state.selectedPresetID = state.presets.first?.id ?? "salawat"
             }
             state.today.counts.removeValue(forKey: id)
+            state.timerGoals.perPresetMinutes.removeValue(forKey: id)
+            state.dailyTimerProgress.elapsedSecondsByPreset.removeValue(forKey: id)
+            if state.dailyTimerProgress.activeTimer?.presetID == id {
+                state.dailyTimerProgress.activeTimer = nil
+            }
         }
     }
 
@@ -202,11 +243,33 @@ public final class SharedZikrStore: @unchecked Sendable {
         state.history.insert(state.today, at: 0)
         state.history = Array(state.history.prefix(30))
         state.today = DayProgress(isoDate: todayKey)
+        state.dailyTimerProgress = DailyTimerProgress(isoDate: todayKey)
     }
 
     private func normalize(state: inout ZikrAppState) {
+        let validPresetIDs = Set(state.presets.map(\.id))
+        state.dailyTimerProgress.isoDate = state.today.isoDate
+        state.dailyTimerProgress.elapsedSecondsByPreset = state.dailyTimerProgress.elapsedSecondsByPreset.filter { entry in
+            validPresetIDs.contains(entry.key) && entry.value > 0
+        }
+        state.timerGoals.perPresetMinutes = state.timerGoals.perPresetMinutes.filter { entry in
+            validPresetIDs.contains(entry.key) && entry.value > 0
+        }
+        if let activeTimer = state.dailyTimerProgress.activeTimer, !validPresetIDs.contains(activeTimer.presetID) {
+            state.dailyTimerProgress.activeTimer = nil
+        }
         state.history.sort { $0.isoDate > $1.isoDate }
         state.streak = StreakEngine.recalculate(history: state.allProgress, referenceDayKey: state.today.isoDate, calendar: calendar)
         state.rewards = RewardEngine.recalculate(history: state.allProgress, goal: state.dailyGoal, currentStreak: state.streak)
+    }
+
+    private func pauseActiveTimerLocked(state: inout ZikrAppState, at timestamp: Date) {
+        guard let activeTimer = state.dailyTimerProgress.activeTimer else { return }
+
+        let elapsedSeconds = max(Int(timestamp.timeIntervalSince(activeTimer.startedAt)), 0)
+        if elapsedSeconds > 0 {
+            state.dailyTimerProgress.elapsedSecondsByPreset[activeTimer.presetID, default: 0] += elapsedSeconds
+        }
+        state.dailyTimerProgress.activeTimer = nil
     }
 }

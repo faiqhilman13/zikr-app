@@ -1,6 +1,14 @@
 import XCTest
 @testable import ZikrCore
 
+private final class MutableNow: @unchecked Sendable {
+    var value: Date
+
+    init(_ value: Date) {
+        self.value = value
+    }
+}
+
 final class ZikrCoreTests: XCTestCase {
     func testStreakEngineBuildsConsecutiveRun() {
         let history = [
@@ -61,5 +69,56 @@ final class ZikrCoreTests: XCTestCase {
         XCTAssertEqual(state.today.totalCount, 100)
         XCTAssertTrue(state.today.goalCompleted)
         XCTAssertEqual(state.remainingToGoal, 0)
+    }
+
+    func testTimedDhikrProgressPersistsPauseAndResumeOnSameDay() {
+        let suiteName = "test.zikr.timer.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defaults.removePersistentDomain(forName: suiteName)
+
+        let clock = MutableNow(Calendar.current.date(from: DateComponents(year: 2026, month: 3, day: 19, hour: 10, minute: 0)) ?? Date())
+        let store = SharedZikrStore(suiteName: suiteName, defaults: defaults, now: { clock.value })
+
+        _ = store.setTimerTargetMinutes(presetID: "salawat", minutes: 30)
+        _ = store.startTimer(for: "salawat")
+
+        clock.value = clock.value.addingTimeInterval(19 * 60)
+        let runningState = store.snapshot()
+        XCTAssertTrue(runningState.isTimerRunning(for: "salawat"))
+        XCTAssertEqual(runningState.timerElapsedSeconds(for: "salawat", now: clock.value), 19 * 60)
+        XCTAssertEqual(runningState.timerTargetMinutes(for: "salawat"), 30)
+
+        _ = store.pauseActiveTimer()
+        let pausedState = store.snapshot()
+        XCTAssertFalse(pausedState.isTimerRunning(for: "salawat"))
+        XCTAssertEqual(pausedState.timerElapsedSeconds(for: "salawat", now: clock.value), 19 * 60)
+
+        clock.value = clock.value.addingTimeInterval(5 * 60)
+        _ = store.startTimer(for: "salawat")
+        clock.value = clock.value.addingTimeInterval(11 * 60)
+        let resumedState = store.pauseActiveTimer()
+
+        XCTAssertEqual(resumedState.timerElapsedSeconds(for: "salawat", now: clock.value), 30 * 60)
+        XCTAssertEqual(resumedState.timerTargetMinutes(for: "salawat"), 30)
+    }
+
+    func testTimedDhikrProgressResetsAcrossDayBoundary() {
+        let suiteName = "test.zikr.timer.rollover.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defaults.removePersistentDomain(forName: suiteName)
+
+        let clock = MutableNow(Calendar.current.date(from: DateComponents(year: 2026, month: 3, day: 19, hour: 23, minute: 50)) ?? Date())
+        let store = SharedZikrStore(suiteName: suiteName, defaults: defaults, now: { clock.value })
+
+        _ = store.setTimerTargetMinutes(presetID: "salawat", minutes: 30)
+        _ = store.startTimer(for: "salawat")
+
+        clock.value = Calendar.current.date(from: DateComponents(year: 2026, month: 3, day: 20, hour: 8, minute: 0)) ?? clock.value.addingTimeInterval(8 * 3600)
+        let rolledState = store.snapshot()
+
+        XCTAssertNil(rolledState.activeTimerPresetID)
+        XCTAssertEqual(rolledState.dailyTimerProgress.isoDate, "2026-03-20")
+        XCTAssertEqual(rolledState.timerElapsedSeconds(for: "salawat", now: clock.value), 0)
+        XCTAssertEqual(rolledState.timerTargetMinutes(for: "salawat"), 30)
     }
 }

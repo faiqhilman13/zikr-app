@@ -48,6 +48,10 @@ final class ZikrAppViewModel: ObservableObject {
         [state.today] + state.history
     }
 
+    var activeTimedPresetID: String? {
+        state.activeTimerPresetID
+    }
+
     func bootstrap() async {
         guard !hasBootstrapped else { return }
         hasBootstrapped = true
@@ -109,6 +113,38 @@ final class ZikrAppViewModel: ObservableObject {
         Task {
             await refreshNotifications()
             await refreshLiveActivity()
+        }
+    }
+
+    func timerTargetMinutes(for presetID: String) -> Int {
+        state.timerTargetMinutes(for: presetID)
+    }
+
+    func timerElapsedSeconds(for presetID: String, at referenceDate: Date = Date()) -> Int {
+        state.timerElapsedSeconds(for: presetID, now: referenceDate)
+    }
+
+    func isTimerRunning(for presetID: String) -> Bool {
+        state.isTimerRunning(for: presetID)
+    }
+
+    func setTimerTargetMinutes(_ minutes: Int, for presetID: String) {
+        state = store.setTimerTargetMinutes(presetID: presetID, minutes: minutes)
+    }
+
+    func startTimer(for presetID: String) {
+        state = store.startTimer(for: presetID)
+    }
+
+    func pauseActiveTimer() {
+        state = store.pauseActiveTimer()
+    }
+
+    func toggleTimer(for presetID: String) {
+        if isTimerRunning(for: presetID) {
+            pauseActiveTimer()
+        } else {
+            startTimer(for: presetID)
         }
     }
 

@@ -42,6 +42,15 @@ struct CounterView: View {
                         .scaledToFit()
                         .frame(height: 54)
                 }
+                ToolbarItem(placement: .topBarTrailing) {
+                    NavigationLink {
+                        ZikrTimerView(viewModel: viewModel)
+                    } label: {
+                        Image(systemName: "timer")
+                            .font(.headline)
+                            .foregroundStyle(ZikrPalette.gold)
+                    }
+                }
             }
             .toolbarBackground(colors.navBackground, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)

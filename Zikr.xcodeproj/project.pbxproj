@@ -18,6 +18,7 @@
 		199EDAD1BEEF3BE9308596CC /* CirclesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C914A8E1644629E17CADB8A /* CirclesView.swift */; };
 		1D6F68467AB1CB7D9DE74FAC /* FirebaseBootstrap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91E20F600EFF9F031AA3BAF9 /* FirebaseBootstrap.swift */; };
 		22B8213EB9DB86A014390E97 /* RewardsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13248B5DD9F611F23C131187 /* RewardsView.swift */; };
+		22B8213EB9DB86A014390E98 /* GardenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22B8213EB9DB86A014390E99 /* GardenView.swift */; };
 		235F40152C3A217D40CE5EC2 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47B57C7917486818BCDA02ED /* OnboardingView.swift */; };
 		39EDD1F81AA0FC48B854D603 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0B0924C4675113449572BECA /* Foundation.framework */; };
 		3B1B30CCE3940D072A4B2B88 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0B0924C4675113449572BECA /* Foundation.framework */; };
@@ -27,6 +28,7 @@
 		4CC7FA3A003E3A962EF7239A /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E642AEBA366A57075A8A3D24 /* HistoryView.swift */; };
 		52BF9B718FFD599783C6947E /* ZikrModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD6C19D1B5F09A1F8133BCA /* ZikrModels.swift */; };
 		5BC6D6FFFBC29CBB9ED04909 /* CounterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE4FB710EAB8AC7AEA86AF28 /* CounterView.swift */; };
+		F5D6C2B14A7E4D2B8C0A1001 /* ZikrTimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5D6C2B14A7E4D2B8C0A1002 /* ZikrTimerView.swift */; };
 		5C2FCAF2D7C45E3C43CE8812 /* ZikrCore.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = B3CDD36B045284AF4EFED49B /* ZikrCore.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		620A6EFF5D5D78BEC806CC05 /* ZikrCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B3CDD36B045284AF4EFED49B /* ZikrCore.framework */; };
 		76313003FFD5B12D85286DBC /* IncrementDhikrIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FAD4054B27E302E77C132BF /* IncrementDhikrIntent.swift */; };
@@ -107,6 +109,7 @@
 		0AEFF1677429AD145EFA6E72 /* ZikrApp-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "ZikrApp-Info.plist"; sourceTree = "<group>"; };
 		0B0924C4675113449572BECA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		13248B5DD9F611F23C131187 /* RewardsView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RewardsView.swift; sourceTree = "<group>"; };
+		22B8213EB9DB86A014390E99 /* GardenView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = GardenView.swift; sourceTree = "<group>"; };
 		1C6EE7F116B2EA3DB460DF9B /* NotificationScheduler.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NotificationScheduler.swift; sourceTree = "<group>"; };
 		1FD6C19D1B5F09A1F8133BCA /* ZikrModels.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ZikrModels.swift; sourceTree = "<group>"; };
 		3F00125C071330151FC1FB2E /* SharedZikrStore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SharedZikrStore.swift; sourceTree = "<group>"; };
@@ -129,6 +132,7 @@
 		BBAF4E2D9C0A48161B0923D2 /* ZikrWidgetBundle.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ZikrWidgetBundle.swift; sourceTree = "<group>"; };
 		BCD542A95BC16AF5993F7769 /* RootView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		BE4FB710EAB8AC7AEA86AF28 /* CounterView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CounterView.swift; sourceTree = "<group>"; };
+		F5D6C2B14A7E4D2B8C0A1002 /* ZikrTimerView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ZikrTimerView.swift; sourceTree = "<group>"; };
 		C245EE177DEA3F79265F856E /* ZikrWidget.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = ZikrWidget.entitlements; sourceTree = "<group>"; };
 		D8FF3215BB96545FA023B6C1 /* ZikrApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ZikrApp.swift; sourceTree = "<group>"; };
 		DEDCF01C6CA30D471CE2812B /* ZikrActivityAttributes.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ZikrActivityAttributes.swift; sourceTree = "<group>"; };
@@ -251,6 +255,14 @@
 			path = Counter;
 			sourceTree = "<group>";
 		};
+		F5D6C2B14A7E4D2B8C0A1003 /* Timer */ = {
+			isa = PBXGroup;
+			children = (
+				F5D6C2B14A7E4D2B8C0A1002 /* ZikrTimerView.swift */,
+			);
+			path = Timer;
+			sourceTree = "<group>";
+		};
 		9A1E4455AF21D3F9251B8223 /* iOS */ = {
 			isa = PBXGroup;
 			children = (
@@ -281,6 +293,14 @@
 				13248B5DD9F611F23C131187 /* RewardsView.swift */,
 			);
 			path = Rewards;
+			sourceTree = "<group>";
+		};
+		22B8213EB9DB86A014390E9A /* Garden */ = {
+			isa = PBXGroup;
+			children = (
+				22B8213EB9DB86A014390E99 /* GardenView.swift */,
+			);
+			path = Garden;
 			sourceTree = "<group>";
 		};
 		B90C8D442ADACE345B94116C /* Config */ = {
@@ -351,7 +371,9 @@
 			children = (
 				C8926E4F8802C3A88D26E3F1 /* Onboarding */,
 				923B8D6952B1E6CCBC59CF79 /* Counter */,
+				F5D6C2B14A7E4D2B8C0A1003 /* Timer */,
 				ACD8CF229062B2C159B1A02A /* Rewards */,
+				22B8213EB9DB86A014390E9A /* Garden */,
 				A6F559E7D8D7BFA10B0CC50F /* Circles */,
 				5DD913DBA5C8AD3FB91F2124 /* History */,
 				89D90C23C308E8AB930DFB50 /* Settings */,
@@ -506,7 +528,9 @@
 				F34D01025C50253E316E9CDA /* LiveActivityManager.swift in Sources */,
 				235F40152C3A217D40CE5EC2 /* OnboardingView.swift in Sources */,
 				5BC6D6FFFBC29CBB9ED04909 /* CounterView.swift in Sources */,
+				F5D6C2B14A7E4D2B8C0A1001 /* ZikrTimerView.swift in Sources */,
 				22B8213EB9DB86A014390E97 /* RewardsView.swift in Sources */,
+				22B8213EB9DB86A014390E98 /* GardenView.swift in Sources */,
 				199EDAD1BEEF3BE9308596CC /* CirclesView.swift in Sources */,
 				4CC7FA3A003E3A962EF7239A /* HistoryView.swift in Sources */,
 				0ECAE58FE19BD13A415CFBA1 /* SettingsView.swift in Sources */,
