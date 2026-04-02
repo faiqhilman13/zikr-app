@@ -42,7 +42,7 @@ struct SettingsView: View {
                             HStack(alignment: .bottom, spacing: 4) {
                                 Text("\(viewModel.state.dailyGoal.targetCount)")
                                     .font(.system(size: 24, weight: .bold, design: .serif))
-                                    .foregroundStyle(ZikrPalette.royalBlue)
+                                    .foregroundStyle(colors.accentText)
                                 Text("counts")
                                     .font(.caption)
                                     .foregroundStyle(colors.textSecondary)
@@ -207,7 +207,7 @@ struct SettingsView: View {
                 Spacer()
                 TextField("0", text: inputText)
                     .font(.system(size: 16, weight: .semibold, design: .serif))
-                    .foregroundStyle(ZikrPalette.royalBlue)
+                    .foregroundStyle(colors.accentText)
                     .multilineTextAlignment(.trailing)
                     .keyboardType(.numberPad)
                     .frame(width: 60)
@@ -250,7 +250,7 @@ struct SettingsView: View {
                     .foregroundStyle(colors.textPrimary)
                 Text(preset.arabic)
                     .font(.caption)
-                    .foregroundStyle(ZikrPalette.royalBlue)
+                    .foregroundStyle(colors.accentText)
             }
             Spacer()
             Button {
@@ -305,4 +305,3 @@ struct SettingsView: View {
         .presentationDetents([.medium])
     }
 }
-

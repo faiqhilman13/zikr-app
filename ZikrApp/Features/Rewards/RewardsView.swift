@@ -97,7 +97,7 @@ struct RewardsView: View {
                             .foregroundStyle(colors.textSecondary)
                         Text("\(viewModel.state.streak.longest)d")
                             .font(.headline)
-                            .foregroundStyle(ZikrPalette.royalBlue)
+                            .foregroundStyle(colors.accentText)
                     }
                     if viewModel.state.streak.multiplier > 1 {
                         HStack(spacing: 4) {

@@ -92,7 +92,7 @@ struct CounterView: View {
                 dismissUndo()
             }
             .font(.subheadline.weight(.semibold))
-            .foregroundStyle(ZikrPalette.royalBlue)
+            .foregroundStyle(colors.accentText)
             Button {
                 dismissUndo()
             } label: {
@@ -366,7 +366,7 @@ struct CounterView: View {
                     .foregroundStyle(colors.textPrimary)
                 Text(preset.arabic)
                     .font(.system(size: 15, weight: .medium, design: .serif))
-                    .foregroundStyle(colorScheme == .dark ? Color.gray.opacity(0.7) : ZikrPalette.royalBlue)
+                    .foregroundStyle(colors.accentText)
                     .lineLimit(1)
                 Text(preset.transliteration)
                     .font(.caption2)

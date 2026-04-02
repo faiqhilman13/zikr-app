@@ -212,7 +212,7 @@ struct ZikrTimerView: View {
                 Spacer()
                 Text("\(displayedTargetMinutes) min")
                     .font(.system(size: 22, weight: .bold, design: .rounded))
-                    .foregroundStyle(ZikrPalette.royalBlue)
+                    .foregroundStyle(colors.accentText)
             }
 
             Stepper(value: Binding(
@@ -248,7 +248,7 @@ struct ZikrTimerView: View {
                 Spacer()
                 Text("\(displayedSecondsPerRep)s each")
                     .font(.system(size: 22, weight: .bold, design: .rounded))
-                    .foregroundStyle(ZikrPalette.royalBlue)
+                    .foregroundStyle(colors.accentText)
             }
 
             Stepper(value: Binding(
@@ -314,7 +314,7 @@ struct ZikrTimerView: View {
                 }
                 Text("\(repetitions) reps")
                     .font(.system(size: 24, weight: .bold, design: .rounded))
-                    .foregroundStyle(ZikrPalette.royalBlue)
+                    .foregroundStyle(colors.accentText)
                 Text("\(formattedMinutes(elapsed)) • \(secondsPerRep)s each")
                     .font(.caption)
                     .foregroundStyle(colors.textSecondary)

@@ -393,12 +393,11 @@ struct HistoryView: View {
                             ForEach(presetEntries) { entry in
                                 Text(logEntryLabel(for: entry))
                                     .font(.caption2)
-                                    .foregroundStyle(colorScheme == .dark ? Color.gray.opacity(0.7) : ZikrPalette.royalBlue)
+                                    .foregroundStyle(colors.accentText)
                                     .padding(.horizontal, 8)
                                     .padding(.vertical, 3)
                                     .background(
-                                        (colorScheme == .dark ? Color.gray.opacity(0.7) : ZikrPalette.royalBlue)
-                                            .opacity(0.12),
+                                        colors.accentText.opacity(0.12),
                                         in: Capsule()
                                     )
                             }
@@ -418,7 +417,7 @@ struct HistoryView: View {
                         .foregroundStyle(ZikrPalette.gold)
                 } else if hasActivity {
                     Image(systemName: "timer")
-                        .foregroundStyle(ZikrPalette.royalBlue)
+                        .foregroundStyle(colors.accentText)
                     Text("Active")
                         .font(.caption2)
                         .foregroundStyle(colors.textSecondary)

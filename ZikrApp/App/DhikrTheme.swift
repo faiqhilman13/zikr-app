@@ -28,6 +28,7 @@ struct ZikrColors {
     var border: Color { colorScheme == .dark ? ZikrPalette.darkBorder : ZikrPalette.ivoryDark }
     var textPrimary: Color { colorScheme == .dark ? ZikrPalette.lightText : ZikrPalette.midnight }
     var textSecondary: Color { colorScheme == .dark ? ZikrPalette.mutedBlue : .secondary }
+    var accentText: Color { colorScheme == .dark ? ZikrPalette.goldLight : ZikrPalette.royalBlue }
     var progressTrack: Color { colorScheme == .dark ? ZikrPalette.darkBorder : ZikrPalette.ivoryDark }
     var goldPaleAdaptive: Color { colorScheme == .dark ? ZikrPalette.gold.opacity(0.2) : ZikrPalette.goldPale }
     var navBackground: Color { colorScheme == .dark ? ZikrPalette.darkSurface : ZikrPalette.ivory }

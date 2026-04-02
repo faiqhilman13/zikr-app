@@ -181,7 +181,7 @@ struct GardenView: View {
 
                     Text("سُبْحَانَ اللهِ، وَالْحَمْدُ لِلَّهِ، وَلَا إِلَهَ إِلَّا اللهُ، وَاللهُ أَكْبَرُ")
                         .font(.system(size: 18, weight: .medium, design: .serif))
-                        .foregroundStyle(ZikrPalette.royalBlue)
+                        .foregroundStyle(colors.accentText)
                         .multilineTextAlignment(.trailing)
                         .frame(maxWidth: .infinity, alignment: .trailing)
 
@@ -228,7 +228,7 @@ struct GardenView: View {
                 Spacer()
                 Text("\(Int(ratio * 100))%")
                     .font(.system(size: 32, weight: .bold, design: .serif))
-                    .foregroundStyle(ZikrPalette.royalBlue)
+                    .foregroundStyle(colors.accentText)
             }
             .padding(.horizontal, 4)
 
