@@ -81,13 +81,28 @@ struct GardenView: View {
     @State private var showTreePicker = false
     @State private var animatePulse = false
     @State private var showHadith = false
+    @State private var currentTime = Date()
+
+    private let ticker = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
     private var selectedTree: TreeKind {
         TreeKind(rawValue: selectedTreeRaw) ?? .olive
     }
 
     private var ratio: Double {
-        viewModel.state.completionRatio
+        viewModel.state.unifiedCompletionRatio(now: currentTime)
+    }
+
+    private var trackedSecondsToday: Int {
+        viewModel.state.totalElapsedSeconds(on: viewModel.state.today, now: currentTime)
+    }
+
+    private var manualRepetitionsToday: Int {
+        viewModel.state.today.totalCount
+    }
+
+    private var activityPointsToday: Int {
+        viewModel.state.activityPoints(on: viewModel.state.today, now: currentTime)
     }
 
     /// 0…4 growth stage
@@ -131,6 +146,9 @@ struct GardenView: View {
             .toolbarBackground(.visible, for: .navigationBar)
         }
         .onAppear { withAnimation(.easeInOut(duration: 1.6).repeatForever(autoreverses: true)) { animatePulse = true } }
+        .onReceive(ticker) { newDate in
+            currentTime = newDate
+        }
     }
 
     // MARK: Hadith Banner
@@ -279,18 +297,18 @@ struct GardenView: View {
         HStack(spacing: 12) {
             statPill(
                 icon: "hand.tap.fill",
-                value: "\(viewModel.state.today.totalCount)",
-                label: "Today"
+                value: "\(manualRepetitionsToday)",
+                label: "Manual"
             )
             statPill(
-                icon: "flag.checkered",
-                value: "\(viewModel.state.dailyGoal.targetCount)",
-                label: "Target"
+                icon: "timer",
+                value: formattedDuration(trackedSecondsToday),
+                label: "Timer"
             )
             statPill(
-                icon: "flame.fill",
-                value: "\(viewModel.state.streak.current)",
-                label: "Streak"
+                icon: "leaf.fill",
+                value: "\(activityPointsToday)",
+                label: "Reps"
             )
         }
     }
@@ -314,6 +332,21 @@ struct GardenView: View {
                 .fill(colors.surface)
                 .shadow(color: ZikrPalette.royalBlue.opacity(0.05), radius: 6, x: 0, y: 2)
         )
+    }
+
+    private func formattedDuration(_ totalSeconds: Int) -> String {
+        guard totalSeconds > 0 else { return "0s" }
+
+        let hours = totalSeconds / 3600
+        let minutes = (totalSeconds % 3600) / 60
+
+        if hours > 0 {
+            return "\(hours)h \(minutes)m"
+        }
+        if minutes > 0 {
+            return "\(minutes)m"
+        }
+        return "\(totalSeconds)s"
     }
 
     // MARK: Tree Picker

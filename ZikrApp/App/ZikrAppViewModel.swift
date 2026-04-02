@@ -41,7 +41,7 @@ final class ZikrAppViewModel: ObservableObject {
     }
 
     var selectedPresetCount: Int {
-        state.today.counts[selectedPreset.id] ?? 0
+        selectedPresetCount(at: Date())
     }
 
     var timeline: [DayProgress] {
@@ -116,12 +116,40 @@ final class ZikrAppViewModel: ObservableObject {
         }
     }
 
+    func selectedPresetCount(at referenceDate: Date = Date()) -> Int {
+        state.repetitionCount(for: selectedPreset.id, on: state.today, now: referenceDate)
+    }
+
+    func totalTodayCount(at referenceDate: Date = Date()) -> Int {
+        state.totalRepetitionCount(on: state.today, now: referenceDate)
+    }
+
+    func targetCount(for presetID: String) -> Int {
+        state.targetCount(for: presetID)
+    }
+
+    func remainingToGoal(at referenceDate: Date = Date()) -> Int {
+        state.remainingToGoal(on: state.today, now: referenceDate)
+    }
+
+    func isGoalCompleted(at referenceDate: Date = Date()) -> Bool {
+        state.isGoalCompleted(on: state.today, now: referenceDate)
+    }
+
     func timerTargetMinutes(for presetID: String) -> Int {
         state.timerTargetMinutes(for: presetID)
     }
 
+    func secondsPerRepetition(for presetID: String) -> Int {
+        state.secondsPerRepetition(for: presetID)
+    }
+
     func timerElapsedSeconds(for presetID: String, at referenceDate: Date = Date()) -> Int {
         state.timerElapsedSeconds(for: presetID, now: referenceDate)
+    }
+
+    func timerEstimatedRepetitions(for presetID: String, at referenceDate: Date = Date()) -> Int {
+        state.estimatedTimerRepetitions(for: presetID, on: state.today, now: referenceDate)
     }
 
     func isTimerRunning(for presetID: String) -> Bool {
@@ -130,6 +158,10 @@ final class ZikrAppViewModel: ObservableObject {
 
     func setTimerTargetMinutes(_ minutes: Int, for presetID: String) {
         state = store.setTimerTargetMinutes(presetID: presetID, minutes: minutes)
+    }
+
+    func setSecondsPerRepetition(_ seconds: Int, for presetID: String) {
+        state = store.setSecondsPerRepetition(presetID: presetID, seconds: seconds)
     }
 
     func startTimer(for presetID: String) {
@@ -212,7 +244,7 @@ final class ZikrAppViewModel: ObservableObject {
         do {
             let circles = try await communityRepository.loadCircles(
                 for: state.userName,
-                currentTotal: state.today.totalCount,
+                currentTotal: state.totalRepetitionCount(on: state.today, now: Date()),
                 streak: state.streak.current
             )
             state = store.setCircles(circles)

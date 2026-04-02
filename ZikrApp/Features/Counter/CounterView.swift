@@ -11,6 +11,9 @@ struct CounterView: View {
     @State private var undoTimer: Timer?
     @State private var sessionElapsed: TimeInterval = 0
     @State private var sessionTimer: Timer?
+    @State private var currentTime = Date()
+
+    private let ticker = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
     var body: some View {
         NavigationStack {
@@ -70,6 +73,9 @@ struct CounterView: View {
             if viewModel.sessionStartTime != nil {
                 startSessionTimer()
             }
+        }
+        .onReceive(ticker) { newDate in
+            currentTime = newDate
         }
     }
 
@@ -165,8 +171,8 @@ struct CounterView: View {
     }
 
     private var completionRatio: Double {
-        guard viewModel.state.dailyGoal.targetCount > 0 else { return 0 }
-        return min(Double(viewModel.selectedPresetCount) / Double(viewModel.state.dailyGoal.targetCount), 1.0)
+        let targetCount = max(viewModel.targetCount(for: viewModel.selectedPreset.id), 1)
+        return min(Double(viewModel.selectedPresetCount(at: currentTime)) / Double(targetCount), 1.0)
     }
 
     private var progressCard: some View {
@@ -176,10 +182,10 @@ struct CounterView: View {
                     Text(viewModel.selectedPreset.title)
                         .font(.subheadline)
                         .foregroundStyle(colors.textSecondary)
-                    Text("\(viewModel.selectedPresetCount)")
+                    Text("\(viewModel.selectedPresetCount(at: currentTime))")
                         .font(.system(size: 42, weight: .bold, design: .serif))
                         .foregroundStyle(colors.textPrimary)
-                    Text("of \(viewModel.state.dailyGoal.targetCount)")
+                    Text("of \(viewModel.targetCount(for: viewModel.selectedPreset.id))")
                         .font(.subheadline)
                         .foregroundStyle(colors.textSecondary)
                 }
@@ -233,17 +239,17 @@ struct CounterView: View {
             Spacer().frame(height: 6)
 
             HStack {
-                if viewModel.state.today.goalCompleted {
+                if viewModel.isGoalCompleted(at: currentTime) {
                     Label("Goal reached", systemImage: "checkmark.seal.fill")
                         .font(.caption)
                         .foregroundStyle(ZikrPalette.gold)
                 } else {
-                    Text("\(viewModel.state.remainingToGoal) remaining")
+                    Text("\(viewModel.remainingToGoal(at: currentTime)) remaining")
                         .font(.caption)
                         .foregroundStyle(colors.textSecondary)
                 }
                 Spacer()
-                Text("Total today: \(viewModel.state.today.totalCount)")
+                Text("Total today: \(viewModel.totalTodayCount(at: currentTime))")
                     .font(.caption)
                     .foregroundStyle(colors.textSecondary)
             }
@@ -393,7 +399,7 @@ struct CounterView: View {
 
     private var statsRow: some View {
         HStack(spacing: 12) {
-            statCard(title: "Today", value: "\(viewModel.state.today.totalCount)", icon: "hand.tap.fill")
+            statCard(title: "Today", value: "\(viewModel.totalTodayCount(at: currentTime))", icon: "hand.tap.fill")
             statCard(title: "Level", value: "\(viewModel.state.rewards.level)", icon: "star.fill")
             statCard(title: "Streak", value: "\(viewModel.state.streak.current)d", icon: "flame.fill")
         }

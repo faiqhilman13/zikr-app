@@ -68,7 +68,7 @@ public enum ReminderPlanner {
             }
         }
 
-        if state.reminderPreference.smartNudgesEnabled, !state.today.goalCompleted {
+        if state.reminderPreference.smartNudgesEnabled, !state.isGoalCompleted(on: state.today, now: now) {
             let currentDay = calendar.dateComponents([.year, .month, .day], from: now)
             for (index, time) in state.reminderPreference.smartNudgeTimes.enumerated() {
                 if isLaterToday(time, now: now, calendar: calendar) {

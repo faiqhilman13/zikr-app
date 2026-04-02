@@ -8,10 +8,13 @@ struct LiveActivityManager {
     func refresh(for state: ZikrAppState, selectedPreset: DhikrPreset) async {
         guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
 
+        let referenceDate = Date()
+        let presetRepetitions = state.repetitionCount(for: selectedPreset.id, on: state.today, now: referenceDate)
+
         let contentState = ZikrActivityAttributes.ContentState(
             presetTitle: selectedPreset.title,
-            totalCount: state.today.totalCount,
-            targetCount: state.dailyGoal.targetCount,
+            totalCount: presetRepetitions,
+            targetCount: state.targetCount(for: selectedPreset.id),
             streak: state.streak.current,
             multiplier: state.streak.multiplier
         )

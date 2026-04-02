@@ -88,6 +88,17 @@ public struct DhikrPreset: Identifiable, Codable, Hashable, Sendable {
             colorName: "teal"
         )
     ]
+
+    public var defaultSecondsPerRepetition: Int {
+        switch kind {
+        case .salawat:
+            return 3
+        case .custom:
+            return 2
+        default:
+            return 1
+        }
+    }
 }
 
 public struct CountEvent: Identifiable, Codable, Hashable, Sendable {
@@ -107,6 +118,7 @@ public struct CountEvent: Identifiable, Codable, Hashable, Sendable {
 public struct DayProgress: Identifiable, Codable, Hashable, Sendable {
     public var isoDate: String
     public var counts: [String: Int]
+    public var elapsedSecondsByPreset: [String: Int]
     public var totalCount: Int
     public var goalCompleted: Bool
     public var completedAt: Date?
@@ -114,18 +126,65 @@ public struct DayProgress: Identifiable, Codable, Hashable, Sendable {
     public init(
         isoDate: String,
         counts: [String: Int] = [:],
+        elapsedSecondsByPreset: [String: Int] = [:],
         totalCount: Int = 0,
         goalCompleted: Bool = false,
         completedAt: Date? = nil
     ) {
         self.isoDate = isoDate
         self.counts = counts
+        self.elapsedSecondsByPreset = elapsedSecondsByPreset
         self.totalCount = totalCount
         self.goalCompleted = goalCompleted
         self.completedAt = completedAt
     }
 
     public var id: String { isoDate }
+
+    public var totalElapsedSeconds: Int {
+        elapsedSecondsByPreset.values.reduce(0, +)
+    }
+
+    public var trackedMinutes: Int {
+        totalElapsedSeconds / 60
+    }
+
+    public var activityPoints: Int {
+        totalCount + trackedMinutes
+    }
+
+    public var hasActivity: Bool {
+        totalCount > 0 || totalElapsedSeconds > 0
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case isoDate
+        case counts
+        case elapsedSecondsByPreset
+        case totalCount
+        case goalCompleted
+        case completedAt
+    }
+
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        isoDate = try container.decode(String.self, forKey: .isoDate)
+        counts = try container.decodeIfPresent([String: Int].self, forKey: .counts) ?? [:]
+        elapsedSecondsByPreset = try container.decodeIfPresent([String: Int].self, forKey: .elapsedSecondsByPreset) ?? [:]
+        totalCount = try container.decodeIfPresent(Int.self, forKey: .totalCount) ?? counts.values.reduce(0, +)
+        goalCompleted = try container.decodeIfPresent(Bool.self, forKey: .goalCompleted) ?? false
+        completedAt = try container.decodeIfPresent(Date.self, forKey: .completedAt)
+    }
+
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(isoDate, forKey: .isoDate)
+        try container.encode(counts, forKey: .counts)
+        try container.encode(elapsedSecondsByPreset, forKey: .elapsedSecondsByPreset)
+        try container.encode(totalCount, forKey: .totalCount)
+        try container.encode(goalCompleted, forKey: .goalCompleted)
+        try container.encode(completedAt, forKey: .completedAt)
+    }
 }
 
 public struct DailyGoal: Codable, Hashable, Sendable {
@@ -173,9 +232,31 @@ public struct DailyTimerProgress: Codable, Hashable, Sendable {
 
 public struct TimerGoalState: Codable, Hashable, Sendable {
     public var perPresetMinutes: [String: Int]
+    public var perPresetSecondsPerRep: [String: Int]
 
-    public init(perPresetMinutes: [String: Int] = [:]) {
+    public init(
+        perPresetMinutes: [String: Int] = [:],
+        perPresetSecondsPerRep: [String: Int] = [:]
+    ) {
         self.perPresetMinutes = perPresetMinutes
+        self.perPresetSecondsPerRep = perPresetSecondsPerRep
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case perPresetMinutes
+        case perPresetSecondsPerRep
+    }
+
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        perPresetMinutes = try container.decodeIfPresent([String: Int].self, forKey: .perPresetMinutes) ?? [:]
+        perPresetSecondsPerRep = try container.decodeIfPresent([String: Int].self, forKey: .perPresetSecondsPerRep) ?? [:]
+    }
+
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(perPresetMinutes, forKey: .perPresetMinutes)
+        try container.encode(perPresetSecondsPerRep, forKey: .perPresetSecondsPerRep)
     }
 }
 
@@ -508,12 +589,11 @@ public extension ZikrAppState {
     }
 
     var remainingToGoal: Int {
-        max(dailyGoal.targetCount - today.totalCount, 0)
+        remainingToGoal(on: today, now: Date())
     }
 
     var completionRatio: Double {
-        guard dailyGoal.targetCount > 0 else { return 0 }
-        return min(Double(today.totalCount) / Double(dailyGoal.targetCount), 1)
+        completionRatio(on: today, now: Date())
     }
 
     var allProgress: [DayProgress] {
@@ -522,6 +602,14 @@ public extension ZikrAppState {
 
     func timerTargetMinutes(for presetID: String) -> Int {
         timerGoals.perPresetMinutes[presetID] ?? 0
+    }
+
+    func secondsPerRepetition(for presetID: String) -> Int {
+        if let configured = timerGoals.perPresetSecondsPerRep[presetID], configured > 0 {
+            return configured
+        }
+
+        return presets.first(where: { $0.id == presetID })?.defaultSecondsPerRepetition ?? 1
     }
 
     func isTimerRunning(for presetID: String) -> Bool {
@@ -541,5 +629,98 @@ public extension ZikrAppState {
         let targetMinutes = timerTargetMinutes(for: presetID)
         guard targetMinutes > 0 else { return 0 }
         return min(Double(timerElapsedSeconds(for: presetID, now: now)) / Double(targetMinutes * 60), 1)
+    }
+
+    func elapsedSeconds(for presetID: String, on day: DayProgress, now: Date = Date()) -> Int {
+        let storedSeconds = day.elapsedSecondsByPreset[presetID] ?? 0
+        guard day.isoDate == today.isoDate else { return storedSeconds }
+        return max(storedSeconds, timerElapsedSeconds(for: presetID, now: now))
+    }
+
+    func totalElapsedSeconds(on day: DayProgress, now: Date = Date()) -> Int {
+        var total = day.elapsedSecondsByPreset.values.reduce(0, +)
+        guard day.isoDate == today.isoDate, let activeTimer = dailyTimerProgress.activeTimer else {
+            return total
+        }
+
+        let liveElapsed = timerElapsedSeconds(for: activeTimer.presetID, now: now)
+        let storedElapsed = day.elapsedSecondsByPreset[activeTimer.presetID] ?? 0
+        total += max(liveElapsed - storedElapsed, 0)
+        return total
+    }
+
+    func estimatedTimerRepetitions(for presetID: String, on day: DayProgress, now: Date = Date()) -> Int {
+        let secondsPerRep = max(secondsPerRepetition(for: presetID), 1)
+        return elapsedSeconds(for: presetID, on: day, now: now) / secondsPerRep
+    }
+
+    func repetitionCount(for presetID: String, on day: DayProgress, now: Date = Date()) -> Int {
+        (day.counts[presetID] ?? 0) + estimatedTimerRepetitions(for: presetID, on: day, now: now)
+    }
+
+    func totalRepetitionCount(on day: DayProgress, now: Date = Date()) -> Int {
+        let liveTimerKeys = day.isoDate == today.isoDate ? Set(dailyTimerProgress.elapsedSecondsByPreset.keys) : Set<String>()
+        let activeTimerKeys = day.isoDate == today.isoDate ? Set([activeTimerPresetID].compactMap { $0 }) : Set<String>()
+        let presetIDs = Set(day.counts.keys)
+            .union(day.elapsedSecondsByPreset.keys)
+            .union(liveTimerKeys)
+            .union(activeTimerKeys)
+        let detailedManualCount = day.counts.values.reduce(0, +)
+        let fallbackManualCount = max(day.totalCount - detailedManualCount, 0)
+
+        return fallbackManualCount + presetIDs.reduce(0) { partialResult, presetID in
+            partialResult + repetitionCount(for: presetID, on: day, now: now)
+        }
+    }
+
+    func activityPoints(on day: DayProgress, now: Date = Date()) -> Int {
+        totalRepetitionCount(on: day, now: now)
+    }
+
+    func targetCount(for presetID: String) -> Int {
+        let presetTarget = dailyGoal.perPresetTargets[presetID] ?? 0
+        return presetTarget > 0 ? presetTarget : dailyGoal.effectiveTargetCount
+    }
+
+    func isGoalCompleted(on day: DayProgress, now: Date = Date()) -> Bool {
+        let presetTargets = dailyGoal.perPresetTargets.filter { $0.value > 0 }
+        if !presetTargets.isEmpty {
+            return presetTargets.allSatisfy { presetID, target in
+                repetitionCount(for: presetID, on: day, now: now) >= target
+            }
+        }
+
+        return totalRepetitionCount(on: day, now: now) >= dailyGoal.effectiveTargetCount
+    }
+
+    func remainingToGoal(on day: DayProgress, now: Date = Date()) -> Int {
+        let presetTargets = dailyGoal.perPresetTargets.filter { $0.value > 0 }
+        if !presetTargets.isEmpty {
+            return presetTargets.reduce(0) { partialResult, entry in
+                partialResult + max(entry.value - repetitionCount(for: entry.key, on: day, now: now), 0)
+            }
+        }
+
+        return max(dailyGoal.effectiveTargetCount - totalRepetitionCount(on: day, now: now), 0)
+    }
+
+    func completionRatio(on day: DayProgress, now: Date = Date()) -> Double {
+        let presetTargets = dailyGoal.perPresetTargets.filter { $0.value > 0 }
+        if !presetTargets.isEmpty {
+            let targetTotal = presetTargets.values.reduce(0, +)
+            guard targetTotal > 0 else { return 0 }
+
+            let completedTotal = presetTargets.reduce(0) { partialResult, entry in
+                partialResult + min(repetitionCount(for: entry.key, on: day, now: now), entry.value)
+            }
+            return min(Double(completedTotal) / Double(targetTotal), 1)
+        }
+
+        guard dailyGoal.effectiveTargetCount > 0 else { return 0 }
+        return min(Double(totalRepetitionCount(on: day, now: now)) / Double(dailyGoal.effectiveTargetCount), 1)
+    }
+
+    func unifiedCompletionRatio(now: Date = Date()) -> Double {
+        completionRatio(on: today, now: now)
     }
 }

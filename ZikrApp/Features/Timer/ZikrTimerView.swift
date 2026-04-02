@@ -8,6 +8,7 @@ struct ZikrTimerView: View {
 
     @State private var currentTime = Date()
     @State private var targetMinutesInput = 30
+    @State private var secondsPerRepInput = 1
 
     private let ticker = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
@@ -23,8 +24,20 @@ struct ZikrTimerView: View {
         max(targetMinutesInput, 5)
     }
 
+    private var displayedSecondsPerRep: Int {
+        max(secondsPerRepInput, 1)
+    }
+
     private var elapsedSeconds: Int {
         viewModel.timerElapsedSeconds(for: selectedPreset.id, at: currentTime)
+    }
+
+    private var estimatedRepetitions: Int {
+        viewModel.timerEstimatedRepetitions(for: selectedPreset.id, at: currentTime)
+    }
+
+    private var estimatedTargetRepetitions: Int {
+        (displayedTargetMinutes * 60) / displayedSecondsPerRep
     }
 
     private var progressRatio: Double {
@@ -64,6 +77,7 @@ struct ZikrTimerView: View {
                     activeElsewhereCard(activePreset: activePreset)
                 }
                 targetCard
+                cadenceCard
                 presetScroller
             }
             .padding(20)
@@ -72,13 +86,13 @@ struct ZikrTimerView: View {
         .navigationTitle("Timer")
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
-            syncTargetInput()
+            syncInputs()
         }
         .onReceive(ticker) { newDate in
             currentTime = newDate
         }
         .onChange(of: selectedPreset.id) { _, _ in
-            syncTargetInput()
+            syncInputs()
         }
     }
 
@@ -106,13 +120,22 @@ struct ZikrTimerView: View {
                         .font(.system(size: 40, weight: .bold, design: .rounded))
                         .monospacedDigit()
                         .foregroundStyle(colors.textPrimary)
-                    Text("\(formattedMinutes(elapsedSeconds)) of \(displayedTargetMinutes) min today")
+                    Text("\(estimatedRepetitions) reps of \(viewModel.targetCount(for: selectedPreset.id)) today")
                         .font(.subheadline)
                         .foregroundStyle(colors.textSecondary)
                 }
                 .padding(24)
             }
             .frame(width: 250, height: 250)
+
+            VStack(spacing: 6) {
+                Text("\(formattedMinutes(elapsedSeconds)) tracked • ~\(displayedSecondsPerRep)s per repetition")
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(colors.textPrimary)
+                Text("\(displayedTargetMinutes) min target is about \(estimatedTargetRepetitions) repetitions")
+                    .font(.caption)
+                    .foregroundStyle(colors.textSecondary)
+            }
 
             Text(timerStatusText)
                 .font(.subheadline.weight(.medium))
@@ -123,6 +146,9 @@ struct ZikrTimerView: View {
                     viewModel.setTimerTargetMinutes(displayedTargetMinutes, for: selectedPreset.id)
                 } else if storedTargetMinutes == 0 {
                     viewModel.setTimerTargetMinutes(displayedTargetMinutes, for: selectedPreset.id)
+                }
+                if viewModel.secondsPerRepetition(for: selectedPreset.id) != displayedSecondsPerRep {
+                    viewModel.setSecondsPerRepetition(displayedSecondsPerRep, for: selectedPreset.id)
                 }
                 viewModel.toggleTimer(for: selectedPreset.id)
                 currentTime = Date()
@@ -213,6 +239,42 @@ struct ZikrTimerView: View {
         )
     }
 
+    private var cadenceCard: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack {
+                Text("Zikr pace")
+                    .font(.headline)
+                    .foregroundStyle(colors.textPrimary)
+                Spacer()
+                Text("\(displayedSecondsPerRep)s each")
+                    .font(.system(size: 22, weight: .bold, design: .rounded))
+                    .foregroundStyle(ZikrPalette.royalBlue)
+            }
+
+            Stepper(value: Binding(
+                get: { displayedSecondsPerRep },
+                set: { newValue in
+                    secondsPerRepInput = min(max(newValue, 1), 10)
+                    viewModel.setSecondsPerRepetition(secondsPerRepInput, for: selectedPreset.id)
+                }
+            ), in: 1...10, step: 1) {
+                Text("How many seconds does it take you to complete this zikr once?")
+                    .font(.subheadline)
+                    .foregroundStyle(colors.textSecondary)
+            }
+
+            Text("We use this to convert timer seconds into estimated repetitions so the timer counts toward your daily goal.")
+                .font(.caption)
+                .foregroundStyle(colors.textSecondary)
+        }
+        .padding(20)
+        .background(
+            RoundedRectangle(cornerRadius: 20)
+                .fill(colors.surface)
+                .shadow(color: ZikrPalette.royalBlue.opacity(0.06), radius: 12, x: 0, y: 4)
+        )
+    }
+
     private var presetScroller: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Per-zikr progress")
@@ -232,6 +294,8 @@ struct ZikrTimerView: View {
     private func presetButton(for preset: DhikrPreset) -> some View {
         let elapsed = viewModel.timerElapsedSeconds(for: preset.id, at: currentTime)
         let targetMinutes = max(viewModel.timerTargetMinutes(for: preset.id), preset.id == selectedPreset.id ? displayedTargetMinutes : 30)
+        let secondsPerRep = viewModel.secondsPerRepetition(for: preset.id)
+        let repetitions = viewModel.state.repetitionCount(for: preset.id, on: viewModel.state.today, now: currentTime)
 
         return Button {
             viewModel.selectPreset(preset)
@@ -248,11 +312,14 @@ struct ZikrTimerView: View {
                             .foregroundStyle(ZikrPalette.gold)
                     }
                 }
-                Text(formattedMinutes(elapsed))
+                Text("\(repetitions) reps")
                     .font(.system(size: 24, weight: .bold, design: .rounded))
                     .foregroundStyle(ZikrPalette.royalBlue)
-                Text("of \(targetMinutes) min")
+                Text("\(formattedMinutes(elapsed)) • \(secondsPerRep)s each")
                     .font(.caption)
+                    .foregroundStyle(colors.textSecondary)
+                Text("of \(targetMinutes) min target")
+                    .font(.caption2)
                     .foregroundStyle(colors.textSecondary)
                 GeometryReader { geometry in
                     ZStack(alignment: .leading) {
@@ -279,9 +346,10 @@ struct ZikrTimerView: View {
         .buttonStyle(.plain)
     }
 
-    private func syncTargetInput() {
+    private func syncInputs() {
         let storedMinutes = viewModel.timerTargetMinutes(for: selectedPreset.id)
         targetMinutesInput = storedMinutes > 0 ? storedMinutes : 30
+        secondsPerRepInput = viewModel.secondsPerRepetition(for: selectedPreset.id)
         currentTime = Date()
     }
 

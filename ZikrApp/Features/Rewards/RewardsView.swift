@@ -5,6 +5,39 @@ struct RewardsView: View {
     @ObservedObject var viewModel: ZikrAppViewModel
     @Environment(\.zikrColors) var colors
 
+    @State private var currentTime = Date()
+
+    private let ticker = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+
+    private var liveRewardState: RewardState {
+        RewardEngine.recalculate(
+            history: [liveToday] + viewModel.state.history,
+            goal: viewModel.state.dailyGoal,
+            currentStreak: viewModel.state.streak,
+            activityCount: { progress in
+                viewModel.state.activityPoints(on: progress, now: currentTime)
+            }
+        )
+    }
+
+    private var liveToday: DayProgress {
+        var today = viewModel.state.today
+        today.elapsedSecondsByPreset = liveElapsedSecondsByPreset(for: today)
+        return today
+    }
+
+    private var todayManualCount: Int {
+        viewModel.state.today.totalCount
+    }
+
+    private var todayActivityPoints: Int {
+        viewModel.state.activityPoints(on: viewModel.state.today, now: currentTime)
+    }
+
+    private var todayTrackedTime: Int {
+        viewModel.state.totalElapsedSeconds(on: viewModel.state.today, now: currentTime)
+    }
+
     var body: some View {
         NavigationStack {
             ZStack {
@@ -14,6 +47,7 @@ struct RewardsView: View {
                     VStack(spacing: 20) {
                         streakCard
                         xpCard
+                        todayActivityCard
                         badgesSection
                     }
                     .padding(20)
@@ -31,6 +65,9 @@ struct RewardsView: View {
             }
             .toolbarBackground(colors.navBackground, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
+        }
+        .onReceive(ticker) { newDate in
+            currentTime = newDate
         }
     }
 
@@ -86,13 +123,15 @@ struct RewardsView: View {
     }
 
     private var xpCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        let rewards = liveRewardState
+
+        return VStack(alignment: .leading, spacing: 12) {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Level \(viewModel.state.rewards.level)")
+                    Text("Level \(rewards.level)")
                         .font(.system(size: 24, weight: .bold, design: .serif))
                         .foregroundStyle(colors.textPrimary)
-                    Text("\(viewModel.state.rewards.xp) XP earned")
+                    Text("\(rewards.xp) unified XP earned")
                         .font(.caption)
                         .foregroundStyle(colors.textSecondary)
                 }
@@ -116,12 +155,12 @@ struct RewardsView: View {
                                 endPoint: .trailing
                             )
                         )
-                        .frame(width: geometry.size.width * (Double(viewModel.state.rewards.xp % 250) / 250.0), height: 6)
+                        .frame(width: geometry.size.width * (Double(rewards.xp % 250) / 250.0), height: 6)
                 }
             }
             .frame(height: 6)
 
-            Text("Earn \(250 - (viewModel.state.rewards.xp % 250)) more XP to reach Level \(viewModel.state.rewards.level + 1)")
+            Text("Earn \(250 - (rewards.xp % 250)) more XP to reach Level \(rewards.level + 1)")
                 .font(.caption)
                 .foregroundStyle(colors.textSecondary)
         }
@@ -133,18 +172,51 @@ struct RewardsView: View {
         )
     }
 
+    private var todayActivityCard: some View {
+        HStack(spacing: 12) {
+            todayMetricCard(title: "Manual", value: "\(todayManualCount)", icon: "hand.tap.fill")
+            todayMetricCard(title: "Timer", value: formattedDuration(todayTrackedTime), icon: "timer")
+            todayMetricCard(title: "Reps", value: "\(todayActivityPoints)", icon: "leaf.fill")
+        }
+    }
+
+    private func todayMetricCard(title: String, value: String, icon: String) -> some View {
+        VStack(spacing: 8) {
+            Image(systemName: icon)
+                .font(.caption)
+                .foregroundStyle(ZikrPalette.gold)
+            Text(value)
+                .font(.headline)
+                .foregroundStyle(colors.textPrimary)
+                .minimumScaleFactor(0.75)
+                .lineLimit(1)
+            Text(title)
+                .font(.caption2)
+                .foregroundStyle(colors.textSecondary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 16)
+        .background(
+            RoundedRectangle(cornerRadius: 14)
+                .fill(colors.surface)
+                .shadow(color: ZikrPalette.royalBlue.opacity(0.05), radius: 6, x: 0, y: 2)
+        )
+    }
+
     private var badgesSection: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        let rewards = liveRewardState
+
+        return VStack(alignment: .leading, spacing: 14) {
             Text("Badges")
                 .font(.headline)
                 .foregroundStyle(colors.textPrimary)
 
-            if viewModel.state.rewards.badges.isEmpty {
+            if rewards.badges.isEmpty {
                 VStack(spacing: 12) {
                     Image(systemName: "medal.fill")
                         .font(.system(size: 40))
                         .foregroundStyle(ZikrPalette.gold.opacity(0.4))
-                    Text("Complete your daily goal to earn badges")
+                    Text("Keep counting or tracking timer sessions to earn badges")
                         .font(.subheadline)
                         .foregroundStyle(colors.textSecondary)
                         .multilineTextAlignment(.center)
@@ -157,7 +229,7 @@ struct RewardsView: View {
                         .shadow(color: ZikrPalette.royalBlue.opacity(0.05), radius: 8, x: 0, y: 2)
                 )
             } else {
-                ForEach(viewModel.state.rewards.badges) { badge in
+                ForEach(rewards.badges) { badge in
                     HStack(spacing: 14) {
                         ZStack {
                             RoundedRectangle(cornerRadius: 12)
@@ -186,5 +258,32 @@ struct RewardsView: View {
                 }
             }
         }
+    }
+
+    private func liveElapsedSecondsByPreset(for day: DayProgress) -> [String: Int] {
+        var presetIDs = Set(day.elapsedSecondsByPreset.keys)
+        if day.isoDate == viewModel.state.today.isoDate, let activePresetID = viewModel.activeTimedPresetID {
+            presetIDs.insert(activePresetID)
+        }
+
+        return Dictionary(uniqueKeysWithValues: presetIDs.compactMap { presetID in
+            let seconds = viewModel.state.elapsedSeconds(for: presetID, on: day, now: currentTime)
+            return seconds > 0 ? (presetID, seconds) : nil
+        })
+    }
+
+    private func formattedDuration(_ totalSeconds: Int) -> String {
+        guard totalSeconds > 0 else { return "0s" }
+
+        let hours = totalSeconds / 3600
+        let minutes = (totalSeconds % 3600) / 60
+
+        if hours > 0 {
+            return "\(hours)h \(minutes)m"
+        }
+        if minutes > 0 {
+            return "\(minutes)m"
+        }
+        return "\(totalSeconds)s"
     }
 }

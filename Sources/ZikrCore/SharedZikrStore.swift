@@ -33,10 +33,6 @@ public final class SharedZikrStore: @unchecked Sendable {
             state.today.totalCount += amount
             state.recentEvents.insert(.init(presetID: presetID, amount: amount, occurredAt: now()), at: 0)
             state.recentEvents = Array(state.recentEvents.prefix(50))
-            if state.today.totalCount >= state.dailyGoal.targetCount, !state.today.goalCompleted {
-                state.today.goalCompleted = true
-                state.today.completedAt = now()
-            }
         }
     }
 
@@ -56,10 +52,6 @@ public final class SharedZikrStore: @unchecked Sendable {
             state.userName = userName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Dhikr Hero" : userName.trimmingCharacters(in: .whitespacesAndNewlines)
             state.selectedPresetID = state.presets.contains(where: { $0.id == selectedPresetID }) ? selectedPresetID : state.selectedPresetID
             state.dailyGoal.targetCount = max(33, dailyTarget)
-            if state.today.totalCount >= state.dailyGoal.targetCount {
-                state.today.goalCompleted = true
-                state.today.completedAt = state.today.completedAt ?? now()
-            }
         }
     }
 
@@ -67,13 +59,6 @@ public final class SharedZikrStore: @unchecked Sendable {
     public func updateDailyGoal(_ target: Int) -> ZikrAppState {
         mutate { state in
             state.dailyGoal.targetCount = max(33, target)
-            if state.today.totalCount >= state.dailyGoal.targetCount {
-                state.today.goalCompleted = true
-                state.today.completedAt = state.today.completedAt ?? now()
-            } else {
-                state.today.goalCompleted = false
-                state.today.completedAt = nil
-            }
         }
     }
 
@@ -83,13 +68,6 @@ public final class SharedZikrStore: @unchecked Sendable {
             state.dailyGoal.perPresetTargets[presetID] = max(0, target)
             let sum = state.dailyGoal.perPresetTargets.values.reduce(0, +)
             state.dailyGoal.targetCount = sum > 0 ? sum : state.dailyGoal.targetCount
-            if sum > 0, state.today.totalCount >= sum {
-                state.today.goalCompleted = true
-                state.today.completedAt = state.today.completedAt ?? now()
-            } else if sum > 0 {
-                state.today.goalCompleted = false
-                state.today.completedAt = nil
-            }
         }
     }
 
@@ -124,6 +102,15 @@ public final class SharedZikrStore: @unchecked Sendable {
             } else {
                 state.timerGoals.perPresetMinutes[presetID] = sanitizedMinutes
             }
+        }
+    }
+
+    @discardableResult
+    public func setSecondsPerRepetition(presetID: String, seconds: Int) -> ZikrAppState {
+        mutate { state in
+            guard state.presets.contains(where: { $0.id == presetID }) else { return }
+            let sanitizedSeconds = max(1, seconds)
+            state.timerGoals.perPresetSecondsPerRep[presetID] = sanitizedSeconds
         }
     }
 
@@ -174,10 +161,6 @@ public final class SharedZikrStore: @unchecked Sendable {
             state.recentEvents.removeFirst()
             state.today.counts[lastEvent.presetID, default: 0] -= lastEvent.amount
             state.today.totalCount -= lastEvent.amount
-            if state.today.totalCount < state.dailyGoal.targetCount {
-                state.today.goalCompleted = false
-                state.today.completedAt = nil
-            }
         }
     }
 
@@ -203,6 +186,7 @@ public final class SharedZikrStore: @unchecked Sendable {
             }
             state.today.counts.removeValue(forKey: id)
             state.timerGoals.perPresetMinutes.removeValue(forKey: id)
+            state.timerGoals.perPresetSecondsPerRep.removeValue(forKey: id)
             state.dailyTimerProgress.elapsedSecondsByPreset.removeValue(forKey: id)
             if state.dailyTimerProgress.activeTimer?.presetID == id {
                 state.dailyTimerProgress.activeTimer = nil
@@ -238,8 +222,12 @@ public final class SharedZikrStore: @unchecked Sendable {
     }
 
     private func rolloverIfNeeded(state: inout ZikrAppState) {
-        let todayKey = DayKey.string(from: now(), calendar: calendar)
+        let currentDate = now()
+        let todayKey = DayKey.string(from: currentDate, calendar: calendar)
         guard todayKey != state.today.isoDate else { return }
+
+        pauseActiveTimerLocked(state: &state, at: calendar.startOfDay(for: currentDate))
+        syncTodayTimerProgressLocked(state: &state)
         state.history.insert(state.today, at: 0)
         state.history = Array(state.history.prefix(30))
         state.today = DayProgress(isoDate: todayKey)
@@ -247,20 +235,37 @@ public final class SharedZikrStore: @unchecked Sendable {
     }
 
     private func normalize(state: inout ZikrAppState) {
+        let evaluationNow = now()
         let validPresetIDs = Set(state.presets.map(\.id))
         state.dailyTimerProgress.isoDate = state.today.isoDate
+        state.today.elapsedSecondsByPreset = state.today.elapsedSecondsByPreset.filter { entry in
+            validPresetIDs.contains(entry.key) && entry.value > 0
+        }
         state.dailyTimerProgress.elapsedSecondsByPreset = state.dailyTimerProgress.elapsedSecondsByPreset.filter { entry in
             validPresetIDs.contains(entry.key) && entry.value > 0
         }
+        syncTodayTimerProgressLocked(state: &state)
         state.timerGoals.perPresetMinutes = state.timerGoals.perPresetMinutes.filter { entry in
+            validPresetIDs.contains(entry.key) && entry.value > 0
+        }
+        state.timerGoals.perPresetSecondsPerRep = state.timerGoals.perPresetSecondsPerRep.filter { entry in
             validPresetIDs.contains(entry.key) && entry.value > 0
         }
         if let activeTimer = state.dailyTimerProgress.activeTimer, !validPresetIDs.contains(activeTimer.presetID) {
             state.dailyTimerProgress.activeTimer = nil
         }
+        recalculateTodayGoalStateLocked(state: &state, now: evaluationNow)
         state.history.sort { $0.isoDate > $1.isoDate }
         state.streak = StreakEngine.recalculate(history: state.allProgress, referenceDayKey: state.today.isoDate, calendar: calendar)
-        state.rewards = RewardEngine.recalculate(history: state.allProgress, goal: state.dailyGoal, currentStreak: state.streak)
+        let evaluationState = state
+        state.rewards = RewardEngine.recalculate(
+            history: state.allProgress,
+            goal: state.dailyGoal,
+            currentStreak: state.streak,
+            activityCount: { progress in
+                evaluationState.activityPoints(on: progress, now: evaluationNow)
+            }
+        )
     }
 
     private func pauseActiveTimerLocked(state: inout ZikrAppState, at timestamp: Date) {
@@ -271,5 +276,25 @@ public final class SharedZikrStore: @unchecked Sendable {
             state.dailyTimerProgress.elapsedSecondsByPreset[activeTimer.presetID, default: 0] += elapsedSeconds
         }
         state.dailyTimerProgress.activeTimer = nil
+        syncTodayTimerProgressLocked(state: &state)
+    }
+
+    private func syncTodayTimerProgressLocked(state: inout ZikrAppState) {
+        state.today.elapsedSecondsByPreset = state.today.elapsedSecondsByPreset.merging(
+            state.dailyTimerProgress.elapsedSecondsByPreset
+        ) { currentValue, timerValue in
+            max(currentValue, timerValue)
+        }
+    }
+
+    private func recalculateTodayGoalStateLocked(state: inout ZikrAppState, now timestamp: Date) {
+        let goalCompleted = state.isGoalCompleted(on: state.today, now: timestamp)
+        if goalCompleted {
+            state.today.goalCompleted = true
+            state.today.completedAt = state.today.completedAt ?? timestamp
+        } else {
+            state.today.goalCompleted = false
+            state.today.completedAt = nil
+        }
     }
 }

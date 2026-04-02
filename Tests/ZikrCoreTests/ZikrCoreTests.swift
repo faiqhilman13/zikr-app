@@ -41,6 +41,32 @@ final class ZikrCoreTests: XCTestCase {
         XCTAssertGreaterThan(rewards.level, 1)
     }
 
+    func testRewardEngineCountsDerivedTimerRepetitionsAsActivity() {
+        let referenceDate = Calendar.current.date(from: DateComponents(year: 2026, month: 3, day: 19, hour: 12, minute: 0)) ?? Date()
+        var state = ZikrAppState.initial(now: referenceDate)
+        state.timerGoals.perPresetSecondsPerRep["salawat"] = 3
+
+        let history = [
+            DayProgress(
+                isoDate: "2026-03-19",
+                elapsedSecondsByPreset: ["salawat": 45 * 60],
+                goalCompleted: false
+            )
+        ]
+
+        let rewards = RewardEngine.recalculate(
+            history: history,
+            goal: DailyGoal(targetCount: 100),
+            currentStreak: StreakState(),
+            activityCount: { progress in
+                state.activityPoints(on: progress, now: referenceDate)
+            }
+        )
+
+        XCTAssertEqual(rewards.xp, 900)
+        XCTAssertEqual(rewards.level, 4)
+    }
+
     func testReminderPlannerDropsSmartNudgesAfterGoalCompletion() {
         var state = ZikrAppState.initial(now: Date(timeIntervalSince1970: 0))
         state.today = DayProgress(isoDate: "2026-03-19", totalCount: 100, goalCompleted: true)
@@ -100,6 +126,7 @@ final class ZikrCoreTests: XCTestCase {
 
         XCTAssertEqual(resumedState.timerElapsedSeconds(for: "salawat", now: clock.value), 30 * 60)
         XCTAssertEqual(resumedState.timerTargetMinutes(for: "salawat"), 30)
+        XCTAssertEqual(resumedState.today.elapsedSecondsByPreset["salawat"], 30 * 60)
     }
 
     func testTimedDhikrProgressResetsAcrossDayBoundary() {
@@ -120,5 +147,29 @@ final class ZikrCoreTests: XCTestCase {
         XCTAssertEqual(rolledState.dailyTimerProgress.isoDate, "2026-03-20")
         XCTAssertEqual(rolledState.timerElapsedSeconds(for: "salawat", now: clock.value), 0)
         XCTAssertEqual(rolledState.timerTargetMinutes(for: "salawat"), 30)
+        XCTAssertEqual(rolledState.history.first?.isoDate, "2026-03-19")
+        XCTAssertEqual(rolledState.history.first?.elapsedSecondsByPreset["salawat"], 10 * 60)
+    }
+
+    func testTimedDhikrProgressCompletesGoalUsingSecondsPerRepetition() {
+        let suiteName = "test.zikr.timer.goal.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defaults.removePersistentDomain(forName: suiteName)
+
+        let clock = MutableNow(Calendar.current.date(from: DateComponents(year: 2026, month: 3, day: 19, hour: 10, minute: 0)) ?? Date())
+        let store = SharedZikrStore(suiteName: suiteName, defaults: defaults, now: { clock.value })
+
+        _ = store.updateDailyGoal(600)
+        _ = store.setTimerTargetMinutes(presetID: "salawat", minutes: 30)
+        _ = store.setSecondsPerRepetition(presetID: "salawat", seconds: 3)
+        _ = store.startTimer(for: "salawat")
+
+        clock.value = clock.value.addingTimeInterval(30 * 60)
+        let state = store.snapshot()
+
+        XCTAssertEqual(state.timerElapsedSeconds(for: "salawat", now: clock.value), 30 * 60)
+        XCTAssertEqual(state.repetitionCount(for: "salawat", on: state.today, now: clock.value), 600)
+        XCTAssertEqual(state.remainingToGoal(on: state.today, now: clock.value), 0)
+        XCTAssertTrue(state.today.goalCompleted)
     }
 }
