@@ -15,3 +15,5 @@ Pods/
 *.xcodeproj/xcuserdata/
 Carthage/
 Archives/
+.gradle/
+local.properties
