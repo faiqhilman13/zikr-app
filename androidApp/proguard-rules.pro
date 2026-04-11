@@ -1,1 +1,4 @@
-
+-keepattributes *Annotation*
+-keep class kotlinx.serialization.** { *; }
+-keep class com.faiqhilman.zikr.shared.** { *; }
+-dontwarn kotlinx.serialization.**
