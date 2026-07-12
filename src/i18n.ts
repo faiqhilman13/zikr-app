@@ -62,7 +62,14 @@ export const resources = {
     pushNotConfigured: 'Web reminders are not configured for this deployment yet.', pushDenied: 'Notification permission was not granted.',
     pushRegisterFailed: 'Unable to register this device for reminders.',
     iosStep1: 'Open this page in Safari.', iosStep2: 'Tap the Share button.', iosStep3: 'Choose Add to Home Screen, then tap Add.',
-    androidStep1: 'Open your browser menu.', androidStep2: 'Choose Install app or Add to Home screen.', androidStep3: 'Confirm the installation.'
+    androidStep1: 'Open your browser menu.', androidStep2: 'Choose Install app or Add to Home screen.', androidStep3: 'Confirm the installation.',
+    heatmapEyebrow: 'The long view', heatmapTitle: 'Practice map',
+    heatmapNote: 'Each square is one day, shaded by how much of that day’s intention was met.',
+    heatmapAria: 'Daily practice map for the last {{weeks}} weeks',
+    less: 'Less', more: 'More', completedLegend: 'Intention complete',
+    breakdownTitle: 'Phrase by phrase', breakdownBody: 'How today’s practice is spread across your phrases.',
+    quietDay: 'A quiet day — nothing recorded.',
+    phraseComplete: '{{title}} complete for today', continueWith: 'Continue with {{title}}', allComplete: 'Every intention met today'
   } },
   ms: { translation: {
     brand: 'Zikr', tagline: 'Amalan harian yang lebih tenang', begin: 'Mulakan dengan tenang', install: 'Pasang Zikr',
@@ -124,7 +131,14 @@ export const resources = {
     pushNotConfigured: 'Peringatan web belum dikonfigurasi untuk perkhidmatan ini.', pushDenied: 'Kebenaran pemberitahuan tidak diberikan.',
     pushRegisterFailed: 'Tidak dapat mendaftarkan peranti ini untuk peringatan.',
     iosStep1: 'Buka halaman ini dalam Safari.', iosStep2: 'Tekan butang Kongsi.', iosStep3: 'Pilih Tambah ke Skrin Utama, kemudian tekan Tambah.',
-    androidStep1: 'Buka menu pelayar anda.', androidStep2: 'Pilih Pasang aplikasi atau Tambah ke skrin utama.', androidStep3: 'Sahkan pemasangan.'
+    androidStep1: 'Buka menu pelayar anda.', androidStep2: 'Pilih Pasang aplikasi atau Tambah ke skrin utama.', androidStep3: 'Sahkan pemasangan.',
+    heatmapEyebrow: 'Pandangan jauh', heatmapTitle: 'Peta amalan',
+    heatmapNote: 'Setiap petak ialah satu hari, diwarnakan mengikut sejauh mana niat hari itu dipenuhi.',
+    heatmapAria: 'Peta amalan harian untuk {{weeks}} minggu terakhir',
+    less: 'Kurang', more: 'Lebih', completedLegend: 'Niat selesai',
+    breakdownTitle: 'Zikir demi zikir', breakdownBody: 'Bagaimana amalan hari ini terbahagi antara zikir anda.',
+    quietDay: 'Hari yang tenang — tiada rekod.',
+    phraseComplete: '{{title}} selesai untuk hari ini', continueWith: 'Teruskan dengan {{title}}', allComplete: 'Semua niat hari ini tercapai'
   } },
   ar: { translation: {
     brand: 'ذِكر', tagline: 'ورد يومي أكثر سكينة', begin: 'ابدأ برفق', install: 'ثبّت ذِكر',
@@ -186,7 +200,14 @@ export const resources = {
     pushNotConfigured: 'لم تُهيَّأ تذكيرات الويب لهذا النشر بعد.', pushDenied: 'لم يُمنح إذن الإشعارات.',
     pushRegisterFailed: 'تعذّر تسجيل هذا الجهاز للتذكيرات.',
     iosStep1: 'افتح هذه الصفحة في Safari.', iosStep2: 'اضغط زر المشاركة.', iosStep3: 'اختر «إضافة إلى الشاشة الرئيسية» ثم اضغط «إضافة».',
-    androidStep1: 'افتح قائمة المتصفح.', androidStep2: 'اختر «تثبيت التطبيق» أو «الإضافة إلى الشاشة الرئيسية».', androidStep3: 'أكّد التثبيت.'
+    androidStep1: 'افتح قائمة المتصفح.', androidStep2: 'اختر «تثبيت التطبيق» أو «الإضافة إلى الشاشة الرئيسية».', androidStep3: 'أكّد التثبيت.',
+    heatmapEyebrow: 'نظرة أبعد', heatmapTitle: 'خريطة الورد',
+    heatmapNote: 'كل مربع يوم واحد، يتدرّج لونه بقدر ما تحقق من ورد ذلك اليوم.',
+    heatmapAria: 'خريطة الممارسة اليومية لآخر {{weeks}} أسبوعًا',
+    less: 'أقل', more: 'أكثر', completedLegend: 'اكتمل الورد',
+    breakdownTitle: 'ذكرًا بعد ذكر', breakdownBody: 'كيف توزّعت ممارسة اليوم بين أذكارك.',
+    quietDay: 'يوم هادئ — لا شيء مسجّل.',
+    phraseComplete: 'اكتمل {{title}} لهذا اليوم', continueWith: 'تابع مع {{title}}', allComplete: 'تحقّقت أوراد اليوم كلها'
   } }
 } as const;
 

@@ -17,4 +17,14 @@ describe('CounterView', () => {
     render(<CounterView state={initialState()} onIncrement={vi.fn()} onUndo={vi.fn()} onSelect={vi.fn()} onToggleTimer={vi.fn()} onTimerRollover={vi.fn()} />);
     expect(screen.getByText(/Time is recorded separately/i)).toBeInTheDocument();
   });
+
+  it('offers the next unfinished phrase once the target is reached', () => {
+    const base = initialState();
+    const state = { ...base, logs: [{ ...base.logs[0], counts: { tasbih: 33 } }] };
+    const onSelect = vi.fn();
+    render(<CounterView state={state} onIncrement={vi.fn()} onUndo={vi.fn()} onSelect={onSelect} onToggleTimer={vi.fn()} onTimerRollover={vi.fn()} />);
+    expect(screen.getByText('Tasbih complete for today')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Continue with Tahmid/i }));
+    expect(onSelect).toHaveBeenCalledWith('tahmid');
+  });
 });

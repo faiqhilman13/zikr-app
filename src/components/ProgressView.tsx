@@ -1,14 +1,18 @@
-import { CalendarDays, Flame, Leaf } from 'lucide-react';
+import { CalendarDays, ChevronRight, Flame, Leaf } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { calculateStreak, dayKey, totalForLog, totalTarget, totalToday } from '../domain/state';
+import { calculateStreak, dayKey, emptyLog, getToday, totalForLog, totalTarget, totalToday } from '../domain/state';
 import type { ZikrState } from '../domain/types';
+import { BreakdownRows, DayDetail } from './DayDetail';
+import { PracticeHeatmap } from './PracticeHeatmap';
 
 const HISTORY_PAGE = 14;
 
 export function ProgressView({ state }: { state: ZikrState }) {
   const { t, i18n } = useTranslation();
   const [visibleDays, setVisibleDays] = useState(HISTORY_PAGE);
+  const [detailDate, setDetailDate] = useState<string | null>(null);
+  const detailLog = detailDate ? state.logs.find((log) => log.date === detailDate) ?? emptyLog(detailDate) : null;
   const streak = calculateStreak(state);
   const allTime = state.logs.reduce((sum, log) => sum + totalForLog(log), 0);
   const target = Math.max(1, totalTarget(state));
@@ -30,10 +34,15 @@ export function ProgressView({ state }: { state: ZikrState }) {
     <section className="chart-card" aria-labelledby="week-chart-title"><div className="section-heading"><div><p className="eyebrow">{t('lastSeven')}</p><h2 id="week-chart-title">{t('rhythmTitle')}</h2><p className="chart-note">{t('chartNote', { target: target.toLocaleString(i18n.language) })}</p></div><span>{t('weekTotal', { total: last7.reduce((sum, item) => sum + item.total, 0) })}</span></div>
       <div className="bar-chart">{last7.map((item) => { const percent = Math.min(100, item.total / target * 100); return <div className="bar-column" key={item.key}><span className="bar-value">{item.total}</span><div className="bar-track" role="meter" aria-label={t('barAria', { total: item.total, target })} aria-valuemin={0} aria-valuemax={target} aria-valuenow={Math.min(item.total, target)}><i className={item.total >= target ? 'goal-met' : ''} style={{ height: `${percent}%` }} /></div><small>{new Intl.DateTimeFormat(i18n.language, { weekday: 'narrow' }).format(item.date)}</small></div>; })}</div>
     </section>
+    <PracticeHeatmap state={state} onSelectDay={setDetailDate} />
     <section className="garden-card" aria-labelledby="garden-title"><div className={`garden-visual stage-${stage}`}><GardenPlant stage={stage} label={t('gardenAria', { stage: stage + 1 })} /></div><div><p className="eyebrow">{t('garden')}</p><h2 id="garden-title">{t(`gardenStage${stage}`)}</h2><p>{t('gardenBody')}</p><div className="fine-progress"><i style={{ width: `${ratio * 100}%` }} /></div><small>{t('intentionSummary', { percent: Math.round(ratio * 100), count: totalToday(state).toLocaleString(i18n.language), target: target.toLocaleString(i18n.language) })}</small></div></section>
-    <section className="history-list" aria-labelledby="history-title"><div className="section-heading"><h2 id="history-title">{t('historyTitle')}</h2><span>{t('daysStored', { count: state.logs.length })}</span></div>{state.logs.slice(0, visibleDays).map((log) => { const timedMinutes = Math.floor(Object.values(log.timedSeconds).reduce((a, b) => a + b, 0) / 60); return <article key={log.date}><time dateTime={log.date}>{new Intl.DateTimeFormat(i18n.language, { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(`${log.date}T12:00:00`))}</time><span>{timedMinutes > 0 ? t('minTimed', { minutes: timedMinutes }) : t('countedPractice')}</span><strong>{totalForLog(log)}</strong></article>; })}
+    <section className="breakdown-card" aria-labelledby="breakdown-title"><div className="section-heading"><div><p className="eyebrow">{t('today')}</p><h2 id="breakdown-title">{t('breakdownTitle')}</h2><p className="chart-note">{t('breakdownBody')}</p></div></div>
+      <BreakdownRows log={getToday(state)} presets={state.presets} showTargets />
+    </section>
+    <section className="history-list" aria-labelledby="history-title"><div className="section-heading"><h2 id="history-title">{t('historyTitle')}</h2><span>{t('daysStored', { count: state.logs.length })}</span></div>{state.logs.slice(0, visibleDays).map((log) => { const timedMinutes = Math.floor(Object.values(log.timedSeconds).reduce((a, b) => a + b, 0) / 60); return <button type="button" className="history-item" key={log.date} onClick={() => setDetailDate(log.date)}><time dateTime={log.date}>{new Intl.DateTimeFormat(i18n.language, { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(`${log.date}T12:00:00`))}</time><span>{timedMinutes > 0 ? t('minTimed', { minutes: timedMinutes }) : t('countedPractice')}</span><strong>{totalForLog(log)}</strong><ChevronRight className="row-chevron" aria-hidden="true" /></button>; })}
       {state.logs.length > visibleDays && <button className="quiet-button show-more" onClick={() => setVisibleDays((days) => days + 30)}>{t('showMore')}</button>}
     </section>
+    {detailLog && <DayDetail log={detailLog} presets={state.presets} onClose={() => setDetailDate(null)} />}
   </div>;
 }
 

@@ -1,4 +1,4 @@
-import { Clock3, Pause, Play, RotateCcw } from 'lucide-react';
+import { ArrowRight, Check, Clock3, Pause, Play, RotateCcw } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { dayKey, getToday, selectedCount, selectedPreset, totalToday } from '../domain/state';
@@ -36,10 +36,19 @@ export function CounterView({ state, onIncrement, onUndo, onSelect, onToggleTime
 
   const timeLabel = useMemo(() => `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`, [seconds]);
   const countLabel = hasTarget ? t('countOf', { count, target }) : String(count);
+  const phraseDone = hasTarget && count >= target;
+  // The next phrase still short of its target, walking the preset order from the
+  // current one, so finishing tasbih naturally offers tahmid, then takbir, and so on.
+  const nextPhrase = useMemo(() => {
+    if (!phraseDone) return null;
+    const index = state.presets.findIndex((item) => item.id === preset.id);
+    const ordered = [...state.presets.slice(index + 1), ...state.presets.slice(0, index)];
+    return ordered.find((item) => item.target > 0 && (today.counts[item.id] ?? 0) < item.target) ?? null;
+  }, [phraseDone, state.presets, preset.id, today]);
   const handleTap = () => {
     onIncrement();
     setAnnounce(`${preset.title}: ${hasTarget ? t('countOf', { count: count + 1, target }) : count + 1}`);
-    if (state.settings.haptics && 'vibrate' in navigator) navigator.vibrate(8);
+    if (state.settings.haptics && 'vibrate' in navigator) navigator.vibrate(hasTarget && count + 1 === target ? [10, 70, 16] : 8);
   };
 
   return <div className="view counter-view">
@@ -53,13 +62,19 @@ export function CounterView({ state, onIncrement, onUndo, onSelect, onToggleTime
     </section>
 
     <section className="count-stage">
-      <button className="count-orb" onClick={handleTap} aria-label={`${t('tap')}: ${preset.title}. ${countLabel}`} style={{ '--progress': `${ratio * 360}deg` } as React.CSSProperties}>
+      <button className={`count-orb${phraseDone ? ' complete' : ''}`} onClick={handleTap} aria-label={`${t('tap')}: ${preset.title}. ${countLabel}`} style={{ '--progress': `${ratio * 360}deg` } as React.CSSProperties}>
         <span className="orb-inner"><span className="arabic" lang="ar" dir="rtl">{preset.arabic}</span><span>{preset.transliteration}</span><strong>{count}</strong><small>{t('tap')}</small></span>
       </button>
       <div className="counter-tools">
         <button className="quiet-button" disabled={count === 0} onClick={onUndo}><RotateCcw />{t('undo')}</button>
         <button className={`quiet-button ${state.activeTimer ? 'active' : ''}`} onClick={onToggleTimer}>{state.activeTimer ? <Pause /> : <Play />}{state.activeTimer ? t('pauseTimer') : t('startTimer')}</button>
       </div>
+      {phraseDone && <div className="completion-note" role="status">
+        <span className="completion-msg"><Check aria-hidden="true" />{t('phraseComplete', { title: preset.title })}</span>
+        {nextPhrase
+          ? <button className="quiet-button continue-chip" onClick={() => onSelect(nextPhrase.id)}>{t('continueWith', { title: nextPhrase.title })}<ArrowRight aria-hidden="true" /></button>
+          : <span className="all-complete">{t('allComplete')}</span>}
+      </div>}
       <div className="timer-readout" aria-live="off"><Clock3 /> <span>{timeLabel}</span><small>{t('timerNote')}</small></div>
     </section>
 
