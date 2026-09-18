@@ -3,6 +3,19 @@ import { initReactI18next } from 'react-i18next';
 
 export const resources = {
   en: { translation: {
+    feedbackTitle: "Help shape Zikr",
+    feedbackBody: "What feels good? What could be better? We read every message.",
+    feedbackRating: "Your experience (1 = poor, 5 = great)",
+    feedbackOptional: "Optional",
+    feedbackMessage: "Your feedback",
+    feedbackEmail: "Email (optional, only if you want a reply)",
+    feedbackPrivacy: "Only your feedback, rating, language, and optional email are sent to our private Netlify inbox. Your practice history stays on your device. Please avoid sensitive information.",
+    feedbackSending: "Sending…",
+    feedbackSend: "Send feedback",
+    feedbackSent: "Thank you. Your feedback has been sent.",
+    feedbackOffline: "You’re offline. Reconnect and send again; your message is still here.",
+    feedbackError: "We couldn’t confirm delivery. Your message is still here. Please try again; if the connection dropped, a previous copy may have arrived.",
+
     backupReady: 'Your encrypted backup is ready. Tap Save backup to choose where to keep it.', saveBackup: 'Save backup',
     storageBlockedTitle: "Your history is protected.",
     storageBlockedBody: "Zikr could not read or save your data. Counting is paused so existing history is not replaced. Close other Zikr windows, free some device storage if needed, then retry. The last action may not have been saved. Do not clear site data.",
@@ -83,6 +96,19 @@ export const resources = {
     phraseComplete: '{{title}} complete for today', continueWith: 'Continue with {{title}}', allComplete: 'Every intention met today'
   } },
   ms: { translation: {
+    feedbackTitle: "Bantu membentuk Zikr",
+    feedbackBody: "Apa yang anda suka? Apa yang boleh diperbaiki? Kami membaca setiap mesej.",
+    feedbackRating: "Pengalaman anda (1 = kurang baik, 5 = sangat baik)",
+    feedbackOptional: "Pilihan",
+    feedbackMessage: "Maklum balas anda",
+    feedbackEmail: "E-mel (pilihan, jika anda mahu balasan)",
+    feedbackPrivacy: "Hanya maklum balas, penilaian, bahasa dan e-mel pilihan dihantar ke peti masuk Netlify peribadi kami. Sejarah amalan kekal pada peranti anda. Elakkan maklumat sensitif.",
+    feedbackSending: "Sedang menghantar…",
+    feedbackSend: "Hantar maklum balas",
+    feedbackSent: "Terima kasih. Maklum balas anda telah dihantar.",
+    feedbackOffline: "Anda di luar talian. Sambung semula dan hantar; mesej anda masih di sini.",
+    feedbackError: "Penghantaran tidak dapat disahkan. Mesej anda masih di sini. Cuba lagi; salinan terdahulu mungkin telah diterima jika sambungan terputus.",
+
     backupReady: 'Sandaran disulitkan anda sedia. Ketik Simpan sandaran untuk memilih tempat menyimpannya.', saveBackup: 'Simpan sandaran',
     storageBlockedTitle: "Sejarah anda dilindungi.",
     storageBlockedBody: "Zikr tidak dapat membaca atau menyimpan data. Pengiraan dijeda supaya sejarah sedia ada tidak diganti. Tutup tetingkap Zikr lain, kosongkan ruang peranti jika perlu, kemudian cuba lagi. Tindakan terakhir mungkin belum disimpan. Jangan padam data laman.",
@@ -163,6 +189,19 @@ export const resources = {
     phraseComplete: '{{title}} selesai untuk hari ini', continueWith: 'Teruskan dengan {{title}}', allComplete: 'Semua niat hari ini tercapai'
   } },
   ar: { translation: {
+    feedbackTitle: "ساعد في تحسين ذكر",
+    feedbackBody: "ما الذي أعجبك؟ وما الذي يمكن تحسينه؟ نقرأ كل رسالة.",
+    feedbackRating: "تجربتك (١ = ضعيفة، ٥ = ممتازة)",
+    feedbackOptional: "اختياري",
+    feedbackMessage: "ملاحظاتك",
+    feedbackEmail: "البريد الإلكتروني (اختياري، إذا رغبت في رد)",
+    feedbackPrivacy: "تُرسل ملاحظاتك وتقييمك ولغتك وبريدك الاختياري فقط إلى صندوق Netlify الخاص بنا. يبقى سجل عبادتك على جهازك. يرجى تجنب المعلومات الحساسة.",
+    feedbackSending: "جارٍ الإرسال…",
+    feedbackSend: "إرسال الملاحظات",
+    feedbackSent: "شكرًا لك. تم إرسال ملاحظاتك.",
+    feedbackOffline: "أنت غير متصل. اتصل بالإنترنت وحاول مجددًا؛ رسالتك لا تزال هنا.",
+    feedbackError: "تعذر تأكيد التسليم. رسالتك لا تزال هنا. حاول مجددًا؛ ربما وصلت نسخة سابقة إذا انقطع الاتصال.",
+
     backupReady: 'نسختك المشفّرة جاهزة. اضغط حفظ النسخة لاختيار مكان حفظها.', saveBackup: 'حفظ النسخة',
     storageBlockedTitle: "سجلّك محفوظ.",
     storageBlockedBody: "تعذّرت قراءة بياناتك أو حفظها. أوقفنا العدّ مؤقتًا لحماية السجلّ الحالي. أغلق نوافذ ذِكر الأخرى ووفّر مساحة على الجهاز عند الحاجة ثم أعد المحاولة. قد لا يكون الإجراء الأخير محفوظًا. لا تمسح بيانات الموقع.",

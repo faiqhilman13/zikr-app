@@ -55,7 +55,7 @@ html { min-height: 100%; background: var(--bg); scroll-behavior: smooth; }
 body { margin: 0; min-width: 320px; min-height: 100vh; background: var(--bg); color: var(--ink); }
 button, input, select { font: inherit; }
 button, a { -webkit-tap-highlight-color: transparent; }
-button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid #bc7d19; outline-offset: 3px; }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 3px solid #bc7d19; outline-offset: 3px; }
 a { color: inherit; }
 p { line-height: 1.6; }
 h1, h2, h3, p { margin-top: 0; }
@@ -394,3 +394,6 @@ input, select { max-width: 100%; min-width: 0; font: inherit; }
 @media (max-width: 760px) {
   .metric-grid article { grid-template-columns: auto minmax(0, 1fr) auto; }
 }
+
+.feedback-fields { border: 0; padding: 0; margin: 0; min-width: 0; }
+.feedback-fields textarea { width: 100%; box-sizing: border-box; min-height: 120px; resize: vertical; background: var(--surface); color: inherit; border: 1px solid var(--line); border-radius: 12px; padding: 12px; font: inherit; font-size: 1rem; }

@@ -21,6 +21,9 @@
     <title>Zikr — a quieter daily practice</title>
   </head>
   <body>
+    <form name="zikr-feedback" action="/feedback-received.html" method="POST" data-netlify="true" netlify-honeypot="bot-field" hidden>
+      <input name="form-name" value="zikr-feedback" /><input name="rating" /><textarea name="message"></textarea><input name="email" type="email" /><input name="language" /><input name="bot-field" />
+    </form>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

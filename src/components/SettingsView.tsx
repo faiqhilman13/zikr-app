@@ -6,6 +6,7 @@ import { disablePushNotifications, enablePushNotifications, pushConfigured } fro
 import type { DhikrPreset, Language, ThemePreference, UserSettings, ZikrState } from '../domain/types';
 import { isAppleMobile, isStandalone } from '../services/platform';
 import { clampTarget } from '../domain/state';
+import { FeedbackCard } from './FeedbackCard';
 import { InstallCard } from './InstallCard';
 
 export function SettingsView({ state, setState, patchSettings, setLanguage, setTheme, updatePreset, addPreset, removePreset, onReset }: {
@@ -71,6 +72,7 @@ export function SettingsView({ state, setState, patchSettings, setLanguage, setT
   return <div className="view settings-view">
     <header className="view-title"><p className="eyebrow">{t('settings')}</p><h1>{t('settingsTitle')}</h1><p>{t('settingsBody')}</p></header>
     <InstallCard compact />
+    <FeedbackCard />
 
     <section className="settings-card" aria-labelledby="goals-title"><div className="settings-heading"><LeafIcon /><div><h2 id="goals-title">{t('dailyIntentions')}</h2><p>{t('dailyIntentionsBody')}</p></div></div>
       <div className="target-list">{state.presets.map((preset) => <div className="target-row" key={preset.id}><label htmlFor={`target-${preset.id}`}><b>{preset.title}</b><small lang="ar" dir="rtl">{preset.arabic}</small></label><input id={`target-${preset.id}`} type="number" min="0" max="9999" value={preset.target} onChange={(e) => updatePreset(preset.id, { target: clampTarget(Number(e.target.value)) })} />{preset.custom && <button className="icon-button danger" aria-label={t('deletePreset', { title: preset.title })} onClick={() => removePreset(preset.id)}><Trash2 /></button>}</div>)}</div>
