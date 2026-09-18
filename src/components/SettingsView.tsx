@@ -7,6 +7,7 @@ import type { DhikrPreset, Language, ThemePreference, UserSettings, ZikrState } 
 import { isAppleMobile, isStandalone } from '../services/platform';
 import { clampTarget } from '../domain/state';
 import { FeedbackCard } from './FeedbackCard';
+import { version } from '../../package.json';
 import { InstallCard } from './InstallCard';
 
 export function SettingsView({ state, setState, patchSettings, setLanguage, setTheme, updatePreset, addPreset, removePreset, onReset }: {
@@ -70,7 +71,7 @@ export function SettingsView({ state, setState, patchSettings, setLanguage, setT
   };
 
   return <div className="view settings-view">
-    <header className="view-title"><p className="eyebrow">{t('settings')}</p><h1>{t('settingsTitle')}</h1><p>{t('settingsBody')}</p></header>
+    <header className="view-title"><p className="eyebrow">{t('settings')}</p><h1>{t('settingsTitle')}</h1><p>{t('settingsBody')}</p><small className="fine-print">Zikr v{version}</small></header>
     <InstallCard compact />
     <FeedbackCard />
 
