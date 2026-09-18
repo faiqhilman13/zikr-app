@@ -1,6 +1,6 @@
 # Launch fixes and verification — 18 September 2026
 
-All actionable findings from the original launch audit have been addressed. The remaining release sign-off is physical-device testing, described below. A passing audit cannot prove the absence of every possible defect.
+All actionable findings from the original launch audit have been addressed and deployed to https://myzikr.netlify.app/. The remaining release sign-off is physical-device testing, described below. A passing audit cannot prove the absence of every possible defect.
 
 ## Changes
 
@@ -51,3 +51,12 @@ No cloud account, push-service credentials or analytics setup are required for t
 - Backups larger than 20 MB are rejected with an error rather than risking uncontrolled import work.
 - Browser test data was synthetic and used localhost; actual production history was not reset/imported.
 - Dependency maintenance used a temporary newer npm because npm 10's dependency resolver crashed. Normal npm 10 `npm ci` then succeeded with the generated lockfile. Per-command release-age exceptions were limited to the specific patched packages; no global npm configuration was changed.
+
+## Deployment record
+
+- Application source commit: `20256d2` (pushed to `origin/main`).
+- Production Netlify deployment: `6aad325e26c2143657f7be1c`.
+- Immutable deployment: https://6aad325e26c2143657f7be1c--myzikr.netlify.app/ .
+- All 21 served files on https://myzikr.netlify.app/ returned successfully and byte-matched the tested local production build. Netlify's `_redirects` control file is processed by hosting and is intentionally not a served asset.
+- Fresh-origin deployed smoke test: onboarding, three taps, reload retained three; offline-ready notice appeared; no captured console warnings/errors.
+- All temporary browser fault injections, text-size overrides and viewport changes were removed. Synthetic backup download was cleaned up after verification.
