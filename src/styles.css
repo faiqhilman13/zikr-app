@@ -352,3 +352,45 @@ input, select { min-height: 44px; border: 1px solid var(--line); border-radius: 
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
 .reduce-motion *, .reduce-motion *::before, .reduce-motion *::after { scroll-behavior: auto !important; animation: none !important; transition: none !important; }
+
+/* Reflow must preserve controls at narrow widths and enlarged text sizes. */
+.settings-view, .settings-card, .settings-heading > div, .form-grid > label,
+.target-row label, .setting-row > *, .phrase-rows li > *, .section-heading > * { min-width: 0; }
+input, select { max-width: 100%; min-width: 0; font: inherit; }
+.settings-view, .phrase-rows, .preset-scroll, .orb-inner { overflow-wrap: anywhere; }
+.toggle-row i, .button svg, .quiet-button svg { flex-shrink: 0; }
+.setting-row { flex-wrap: wrap; padding-block: 8px; }
+.setting-row select { max-width: 100%; }
+.target-row { grid-template-columns: minmax(0, 1fr) 78px auto; }
+.button, .quiet-button { white-space: normal; text-align: center; }
+.recovery-screen { min-height: 100dvh; max-width: 640px; margin: auto; padding: 60px 24px; display: flex; flex-direction: column; align-items: start; gap: 20px; }
+.recovery-screen h1 { font-size: clamp(2rem, 8vw, 3.5rem); }
+.recovery-screen p { color: var(--muted); }
+.orb-inner .arabic { max-width: 100%; max-height: 45%; overflow-y: auto; }
+.orb-inner > span:not(.arabic) { max-width: 100%; max-height: 20%; overflow-y: auto; }
+@media (max-width: 440px) {
+  .settings-heading { grid-template-columns: 32px minmax(0, 1fr); gap: 10px; }
+  .settings-heading > svg, .leaf-icon { width: 32px; height: 32px; padding: 7px; }
+  .section-heading { flex-wrap: wrap; }
+  .counter-tools { flex-wrap: wrap; justify-content: center; }
+  .timer-readout { max-width: 100%; }
+  .update-toast { flex-wrap: wrap; }
+}
+/* Let long phrases and enlarged text expand the counter instead of creating
+   nested scroll regions inside its button. */
+.count-orb { height: auto; min-height: min(76vw, 330px); }
+.orb-inner { height: auto; min-height: min(calc(76vw - 18px), 312px); padding: clamp(18px, 4vw, 30px); }
+.orb-inner .arabic, .orb-inner > span:not(.arabic) { max-height: none; overflow: visible; }
+.orb-inner strong { font-size: clamp(3rem, 17vw, 5.5rem); }
+@media (max-width: 440px) {
+  .count-orb { min-height: min(84vw, 330px); }
+  .orb-inner { min-height: min(calc(84vw - 18px), 312px); }
+}
+.progress-view { overflow-wrap: anywhere; }
+.heatmap-wrap { grid-template-columns: auto minmax(0, 1fr); }
+.heatmap-months, .heatmap-grid { grid-template-columns: repeat(16, minmax(0, 1fr)); min-width: 0; }
+.heatmap-months span, .heatmap-week, .heat-cell { min-width: 0; }
+.metric-grid article { min-width: 0; }
+@media (max-width: 760px) {
+  .metric-grid article { grid-template-columns: auto minmax(0, 1fr) auto; }
+}

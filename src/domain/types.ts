@@ -42,6 +42,7 @@ export interface ZikrState {
   onboardingComplete: boolean;
   selectedPresetId: string;
   presets: DhikrPreset[];
+  archivedPresets?: DhikrPreset[];
   logs: DailyLog[];
   settings: UserSettings;
   activeTimer: ActiveTimer | null;

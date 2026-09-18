@@ -27,8 +27,8 @@ export function CounterView({ state, onIncrement, onUndo, onSelect, onToggleTime
     const startedDay = dayKey(new Date(state.activeTimer.startedAt));
     const timer = window.setInterval(() => {
       setNow(Date.now());
-      // A live session crossing midnight: bank yesterday's portion and restart the
-      // timer for today, so the practice continues instead of silently stopping.
+      // Refresh at midnight. Suspended sessions are capped at midnight rather
+      // than turning an overnight browser tab into hours of practice.
       if (dayKey() !== startedDay) rollover.current();
     }, 1000);
     return () => window.clearInterval(timer);

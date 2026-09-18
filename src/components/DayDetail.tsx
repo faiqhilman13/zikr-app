@@ -11,7 +11,10 @@ import type { DailyLog, DhikrPreset } from '../domain/types';
  */
 export function BreakdownRows({ log, presets, showTargets = false }: { log: DailyLog; presets: DhikrPreset[]; showTargets?: boolean }) {
   const { t, i18n } = useTranslation();
-  const rows = presets
+  const knownIds = new Set(presets.map((p) => p.id));
+  const missing = [...new Set([...Object.keys(log.counts), ...Object.keys(log.timedSeconds)])].filter((id) => !knownIds.has(id));
+  const allPresets = [...presets, ...missing.map((id) => ({ id, title: t('archivedPhrase'), arabic: '', transliteration: '', target: 0 }))];
+  const rows = allPresets
     .map((preset) => ({ preset, count: log.counts[preset.id] ?? 0, minutes: Math.floor((log.timedSeconds[preset.id] ?? 0) / 60) }))
     .filter(({ preset, count, minutes }) => count > 0 || minutes > 0 || (showTargets && preset.target > 0));
   if (rows.length === 0) return <p className="quiet-day">{t('quietDay')}</p>;

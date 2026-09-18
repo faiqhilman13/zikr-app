@@ -3,6 +3,17 @@ import { initReactI18next } from 'react-i18next';
 
 export const resources = {
   en: { translation: {
+    backupReady: 'Your encrypted backup is ready. Tap Save backup to choose where to keep it.', saveBackup: 'Save backup',
+    storageBlockedTitle: "Your history is protected.",
+    storageBlockedBody: "Zikr could not read or save your data. Counting is paused so existing history is not replaced. Close other Zikr windows, free some device storage if needed, then retry. The last action may not have been saved. Do not clear site data.",
+    retryLoad: "Retry loading",
+    dataConflict: "Data changed in another window. Your action was not applied. Review the latest data and try again.",
+    appErrorTitle: "Something interrupted Zikr.",
+    appErrorBody: "Your saved history has not been reset. Reload to try again. If this continues, visit Support without clearing site data.",
+    remindersUnavailable: "Reminders are not available in this version. Your offline counter and backups work without them.",
+    archivedPhrase: "Archived phrase",
+    pushDisableFailed: "Could not stop reminders. Please try again before resetting your data.",
+
     brand: 'Zikr', tagline: 'A quieter daily practice', begin: 'Begin gently', install: 'Install Zikr',
     landingTitle: 'Make a little room for remembrance.', landingBody: 'A private dhikr counter designed to disappear into the practice. No account, no feed, no pressure.',
     private: 'Private by design', offline: 'Works offline', noAccount: 'No account needed',
@@ -23,7 +34,7 @@ export const resources = {
     skipToContent: 'Skip to content', loadingLabel: 'Loading Zikr', primaryNav: 'Primary navigation', brandHome: 'Zikr home',
     storageWarning: 'Zikr cannot save to this browser right now. Export a backup to protect your history.',
     noTarget: 'No daily target', countOf: '{{count}} of {{target}}',
-    timerNote: 'Time is recorded separately and never converted into repetitions.',
+    timerNote: 'Time is recorded separately, never converted into repetitions, and stops at midnight.',
     previewLabel: 'Preview of the Zikr counter', previewTagline: 'One tap. One breath. One moment returned.',
     privacyTitle: 'Your practice belongs to you.',
     privacyBody: 'Counts and preferences remain in this browser. Encrypted export gives you a portable recovery copy; analytics and reminders remain off until you choose otherwise.',
@@ -37,7 +48,7 @@ export const resources = {
     historyTitle: 'History', daysStored: '{{count}} days stored', showMore: 'Show more',
     minTimed: '{{minutes}} min timed', countedPractice: 'Counted practice',
     settingsTitle: 'Keep the practice yours.',
-    settingsBody: 'Everything sensitive is off by default. Your choices and history remain on this device unless you export or sync them.',
+    settingsBody: 'Everything sensitive is off by default. Your choices and history remain on this device unless you export them.',
     dailyIntentions: 'Daily intentions', dailyIntentionsBody: 'Set each phrase independently. A zero target removes it from today’s combined intention.',
     deletePreset: 'Delete {{title}}', customBody: 'Add a phrase that matters to your own practice.',
     appearanceBody: 'Choose a comfortable reading experience.', hapticsLabel: 'Gentle haptics where supported',
@@ -72,6 +83,17 @@ export const resources = {
     phraseComplete: '{{title}} complete for today', continueWith: 'Continue with {{title}}', allComplete: 'Every intention met today'
   } },
   ms: { translation: {
+    backupReady: 'Sandaran disulitkan anda sedia. Ketik Simpan sandaran untuk memilih tempat menyimpannya.', saveBackup: 'Simpan sandaran',
+    storageBlockedTitle: "Sejarah anda dilindungi.",
+    storageBlockedBody: "Zikr tidak dapat membaca atau menyimpan data. Pengiraan dijeda supaya sejarah sedia ada tidak diganti. Tutup tetingkap Zikr lain, kosongkan ruang peranti jika perlu, kemudian cuba lagi. Tindakan terakhir mungkin belum disimpan. Jangan padam data laman.",
+    retryLoad: "Cuba muat semula",
+    dataConflict: "Data berubah dalam tetingkap lain. Tindakan anda tidak digunakan. Semak data terkini dan cuba lagi.",
+    appErrorTitle: "Zikr telah terganggu.",
+    appErrorBody: "Sejarah tersimpan anda tidak ditetapkan semula. Muat semula untuk mencuba lagi. Jika berterusan, buka Sokongan tanpa memadam data laman.",
+    remindersUnavailable: "Peringatan tidak tersedia dalam versi ini. Pengira luar talian dan sandaran tetap berfungsi.",
+    archivedPhrase: "Zikir diarkibkan",
+    pushDisableFailed: "Peringatan tidak dapat dihentikan. Cuba lagi sebelum menetapkan semula data.",
+
     brand: 'Zikr', tagline: 'Amalan harian yang lebih tenang', begin: 'Mulakan dengan tenang', install: 'Pasang Zikr',
     landingTitle: 'Luangkan sedikit ruang untuk mengingati Allah.', landingBody: 'Kaunter zikir peribadi yang tidak mengganggu amalan. Tiada akaun, suapan atau tekanan.',
     private: 'Privasi diutamakan', offline: 'Berfungsi luar talian', noAccount: 'Tiada akaun diperlukan',
@@ -92,7 +114,7 @@ export const resources = {
     skipToContent: 'Langkau ke kandungan', loadingLabel: 'Memuatkan Zikr', primaryNav: 'Navigasi utama', brandHome: 'Laman utama Zikr',
     storageWarning: 'Zikr tidak dapat menyimpan dalam pelayar ini buat masa ini. Eksport sandaran untuk melindungi sejarah anda.',
     noTarget: 'Tiada sasaran harian', countOf: '{{count}} daripada {{target}}',
-    timerNote: 'Masa direkodkan secara berasingan dan tidak sekali-kali ditukar menjadi ulangan.',
+    timerNote: 'Masa direkodkan berasingan, tidak ditukar menjadi ulangan, dan berhenti pada tengah malam.',
     previewLabel: 'Pratonton kaunter Zikr', previewTagline: 'Satu sentuhan. Satu nafas. Satu detik yang kembali.',
     privacyTitle: 'Amalan anda milik anda.',
     privacyBody: 'Kiraan dan tetapan kekal dalam pelayar ini. Eksport disulitkan memberi anda salinan pemulihan mudah alih; analitik dan peringatan kekal dimatikan sehingga anda memilih sebaliknya.',
@@ -106,7 +128,7 @@ export const resources = {
     historyTitle: 'Sejarah', daysStored: '{{count}} hari disimpan', showMore: 'Papar lagi',
     minTimed: '{{minutes}} minit bermasa', countedPractice: 'Amalan dikira',
     settingsTitle: 'Biar amalan kekal milik anda.',
-    settingsBody: 'Semua yang sensitif dimatikan secara lalai. Pilihan dan sejarah anda kekal pada peranti ini melainkan anda mengeksport atau menyegerakkannya.',
+    settingsBody: 'Semua yang sensitif dimatikan secara lalai. Pilihan dan sejarah anda kekal pada peranti ini melainkan anda mengeksportnya.',
     dailyIntentions: 'Niat harian', dailyIntentionsBody: 'Tetapkan setiap zikir secara berasingan. Sasaran sifar mengeluarkannya daripada niat gabungan hari ini.',
     deletePreset: 'Padam {{title}}', customBody: 'Tambah zikir yang bermakna untuk amalan anda sendiri.',
     appearanceBody: 'Pilih pengalaman membaca yang selesa.', hapticsLabel: 'Getaran lembut jika disokong',
@@ -141,6 +163,17 @@ export const resources = {
     phraseComplete: '{{title}} selesai untuk hari ini', continueWith: 'Teruskan dengan {{title}}', allComplete: 'Semua niat hari ini tercapai'
   } },
   ar: { translation: {
+    backupReady: 'نسختك المشفّرة جاهزة. اضغط حفظ النسخة لاختيار مكان حفظها.', saveBackup: 'حفظ النسخة',
+    storageBlockedTitle: "سجلّك محفوظ.",
+    storageBlockedBody: "تعذّرت قراءة بياناتك أو حفظها. أوقفنا العدّ مؤقتًا لحماية السجلّ الحالي. أغلق نوافذ ذِكر الأخرى ووفّر مساحة على الجهاز عند الحاجة ثم أعد المحاولة. قد لا يكون الإجراء الأخير محفوظًا. لا تمسح بيانات الموقع.",
+    retryLoad: "أعد التحميل",
+    dataConflict: "تغيّرت البيانات في نافذة أخرى. لم يُطبّق الإجراء. راجع البيانات الجديدة وحاول مجددًا.",
+    appErrorTitle: "حدث خطأ في ذِكر.",
+    appErrorBody: "لم يُمسح سجلّك المحفوظ. أعد التحميل للمحاولة مجددًا. إذا استمر الخطأ فانتقل إلى الدعم دون مسح بيانات الموقع.",
+    remindersUnavailable: "التذكيرات غير متاحة في هذا الإصدار. يعمل العدّ دون اتصال والنسخ الاحتياطي دونها.",
+    archivedPhrase: "ذكر مؤرشف",
+    pushDisableFailed: "تعذّر إيقاف التذكيرات. حاول مجددًا قبل مسح البيانات.",
+
     brand: 'ذِكر', tagline: 'ورد يومي أكثر سكينة', begin: 'ابدأ برفق', install: 'ثبّت ذِكر',
     landingTitle: 'افسح في يومك مكانًا صغيرًا للذكر.', landingBody: 'عداد ذكر خاص ينساب بهدوء في عبادتك. بلا حساب أو موجز أو ضغط.',
     private: 'الخصوصية أساس', offline: 'يعمل دون اتصال', noAccount: 'لا يحتاج إلى حساب',
@@ -161,7 +194,7 @@ export const resources = {
     skipToContent: 'تخطَّ إلى المحتوى', loadingLabel: 'جارٍ تحميل ذِكر', primaryNav: 'التنقل الرئيسي', brandHome: 'صفحة ذِكر الرئيسية',
     storageWarning: 'يتعذّر على ذِكر الحفظ في هذا المتصفح حاليًا. صدّر نسخة احتياطية لحماية سجلّك.',
     noTarget: 'بلا هدف يومي', countOf: '{{count}} من {{target}}',
-    timerNote: 'يُسجَّل الوقت على حدة ولا يُحوَّل إلى تكرارات أبدًا.',
+    timerNote: 'يُسجَّل الوقت على حدة ولا يُحوَّل إلى تكرارات، ويتوقف عند منتصف الليل.',
     previewLabel: 'معاينة عداد ذِكر', previewTagline: 'لمسة واحدة. نفَس واحد. لحظة تعود إليك.',
     privacyTitle: 'عبادتك ملكٌ لك.',
     privacyBody: 'تبقى الأعداد والتفضيلات في هذا المتصفح. يمنحك التصدير المشفَّر نسخة استرداد محمولة، وتبقى التحليلات والتذكيرات متوقفة حتى تختار غير ذلك.',
@@ -175,7 +208,7 @@ export const resources = {
     historyTitle: 'السجل', daysStored: '{{count}} يومًا محفوظًا', showMore: 'أظهر المزيد',
     minTimed: '{{minutes}} دقيقة موقّتة', countedPractice: 'ذكر معدود',
     settingsTitle: 'لتبقَ العبادة لك.',
-    settingsBody: 'كل ما هو حسّاس متوقف افتراضيًا. تبقى خياراتك وسجلّك على هذا الجهاز ما لم تُصدّرها أو تُزامنها.',
+    settingsBody: 'كل ما هو حسّاس متوقف افتراضيًا. تبقى خياراتك وسجلّك على هذا الجهاز ما لم تُصدّرها.',
     dailyIntentions: 'أوراد اليوم', dailyIntentionsBody: 'حدّد كل ذكر على حدة. الهدف صفر يخرجه من ورد اليوم المشترك.',
     deletePreset: 'احذف {{title}}', customBody: 'أضف ذكرًا له معنى في عبادتك.',
     appearanceBody: 'اختر تجربة قراءة مريحة.', hapticsLabel: 'اهتزاز لطيف حيثما يتوفر',
@@ -227,7 +260,7 @@ const detectLanguage = (): AppLanguage => {
 };
 
 const initialLanguage = detectLanguage();
-void i18n.use(initReactI18next).init({ resources, lng: initialLanguage, fallbackLng: 'en', interpolation: { escapeValue: false } });
+void i18n.use(initReactI18next).init({ resources, showSupportNotice: false, lng: initialLanguage, fallbackLng: 'en', interpolation: { escapeValue: false } });
 document.documentElement.lang = initialLanguage;
 document.documentElement.dir = initialLanguage === 'ar' ? 'rtl' : 'ltr';
 

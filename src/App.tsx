@@ -8,7 +8,7 @@ import { Onboarding } from './components/Onboarding';
 import { ProgressView } from './components/ProgressView';
 import { SettingsView } from './components/SettingsView';
 import { dayKey } from './domain/state';
-import { resetDatabase } from './data/db';
+import { disablePushNotifications } from './services/push';
 import { track } from './data/analytics';
 import { usePwaUpdate } from './hooks/usePwaUpdate';
 import { useZikrState } from './hooks/useZikrState';
@@ -68,9 +68,17 @@ export function App() {
     };
   }, [refresh]);
 
+  const notices = <>
+    {controller.conflict && <aside className="update-toast storage-warning" role="alert"><span>{t('dataConflict')}</span><button className="text-link" onClick={controller.clearConflict}>{t('done')}</button></aside>}
+    {(pwa.needRefresh || pwa.offlineReady) && <aside className="update-toast" role="status"><span>{pwa.needRefresh ? t('updateReady') : t('offlineReady')}</span>{pwa.needRefresh && <button className="button small" disabled={controller.pending} onClick={() => void pwa.update()}>{t('updateNow')}</button>}<button className="text-link" onClick={pwa.close}>{t('done')}</button></aside>}
+  </>;
+
   if (!controller.ready) return <div className="splash" aria-label={t('loadingLabel')}><span>ذِكر</span></div>;
 
+  if (controller.storageFailed) return <main className="recovery-screen" role="alert"><h1>{t('storageBlockedTitle')}</h1><p>{t('storageBlockedBody')}</p><button className="button" onClick={() => window.location.reload()}>{t('retryLoad')}</button><a href="/support.html">{t('support')}</a>{notices}</main>;
+
   if (!controller.state.onboardingComplete) return <>
+    {notices}
     <Landing onBegin={() => setShowOnboarding(true)} />
     {showOnboarding && <Onboarding presets={controller.state.presets} onClose={() => setShowOnboarding(false)} onComplete={(id, target) => { controller.completeOnboarding(id, target); void requestDurableStorage(); void track(controller.state, 'onboarding_complete'); }} />}
   </>;
@@ -78,11 +86,10 @@ export function App() {
   return <>
     <a className="skip-link" href="#main-content">{t('skipToContent')}</a>
     <AppShell tab={tab} setTab={(next) => { setTab(next); void track(controller.state, 'tab_view', { tab: next }); }}>
-      {tab === 'count' && <CounterView state={controller.state} onIncrement={() => { controller.increment(); void track(controller.state, 'count_increment'); }} onUndo={controller.decrement} onSelect={(id) => { if (controller.state.activeTimer) controller.setTimerRunning(false); controller.selectPreset(id); }} onToggleTimer={() => controller.setTimerRunning(!controller.state.activeTimer)} onTimerRollover={() => controller.setTimerRunning(true)} />}
+      {tab === 'count' && <CounterView state={controller.state} onIncrement={() => { controller.increment(); void track(controller.state, 'count_increment'); }} onUndo={controller.decrement} onSelect={controller.selectPreset} onToggleTimer={() => controller.setTimerRunning(!controller.state.activeTimer)} onTimerRollover={controller.refresh} />}
       {tab === 'progress' && <ProgressView state={controller.state} />}
-      {tab === 'settings' && <SettingsView state={controller.state} setState={controller.setState} patchSettings={controller.patchSettings} setLanguage={controller.setLanguage} setTheme={controller.setTheme} updatePreset={controller.updatePreset} addPreset={controller.addPreset} removePreset={controller.removePreset} onReset={async () => { controller.setState(await resetDatabase()); setTab('count'); }} />}
+      {tab === 'settings' && <SettingsView state={controller.state} setState={controller.setState} patchSettings={controller.patchSettings} setLanguage={controller.setLanguage} setTheme={controller.setTheme} updatePreset={controller.updatePreset} addPreset={controller.addPreset} removePreset={controller.removePreset} onReset={async () => { await disablePushNotifications(); if (await controller.reset()) setTab('count'); }} />}
     </AppShell>
-    {controller.storageFailed && <aside className="update-toast storage-warning" role="alert"><span>{t('storageWarning')}</span></aside>}
-    {(pwa.needRefresh || pwa.offlineReady) && <aside className="update-toast" role="status"><span>{pwa.needRefresh ? t('updateReady') : t('offlineReady')}</span>{pwa.needRefresh && <button className="button small" onClick={() => void pwa.update()}>{t('updateNow')}</button>}<button className="text-link" onClick={pwa.close}>{t('done')}</button></aside>}
+    {notices}
   </>;
 }

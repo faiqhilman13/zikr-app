@@ -40,3 +40,13 @@ describe('encrypted backups', () => {
     expect(restored.logs.some((log) => log.timedSeconds.tasbih === 900)).toBe(true);
   }, 30_000);
 });
+
+it('rejects unbounded key derivation before doing expensive crypto', async () => {
+  const backup = JSON.parse(await createEncryptedBackup(initialState(), 'a secure phrase'));
+  backup.iterations = 4_000_000_000;
+  await expect(readEncryptedBackup(JSON.stringify(backup), 'a secure phrase')).rejects.toThrow();
+});
+it('rejects malformed dates even inside an authenticated encrypted backup', async () => {
+  const s=initialState(); s.logs[0].date='2026-99-99';
+  await expect(readEncryptedBackup(await createEncryptedBackup(s,'a secure phrase'),'a secure phrase')).rejects.toThrow();
+});

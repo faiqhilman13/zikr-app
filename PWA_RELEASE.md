@@ -4,7 +4,7 @@
 
 - Confirmed taps and timed practice are stored separately.
 - Complete history is retained in IndexedDB; it is not truncated after 30 days.
-- Reminder, analytics, sync, and push features are opt-in.
+- Analytics and push are optional and opt-in. Unconfigured reminders are visibly unavailable; cloud sync is not shipped.
 - Prayer-time reminders are excluded until a trustworthy manual or location-aware schedule exists.
 - No account is required. Encrypted export/import is the default recovery path.
 
@@ -13,7 +13,7 @@
 Copy `.env.example` to `.env` and configure only the services being deployed. The application works without any of them.
 
 - `VITE_ANALYTICS_ENDPOINT`: accepts anonymous JSON product events after explicit opt-in.
-- `VITE_SYNC_ENDPOINT`: accepts encrypted backup text via `PUT` and returns it via `GET`.
+- Cloud sync is not shipped. Use encrypted backup export/import; never wire a public deployment to a shared backup blob.
 - `VITE_PUSH_ENDPOINT`: accepts a Web Push subscription.
 - `VITE_VAPID_PUBLIC_KEY`: the public VAPID key paired with the push service.
 

@@ -1,6 +1,7 @@
 import type { ZikrState } from '../domain/types';
 import { sanitizeState } from '../domain/state';
 import i18n from '../i18n';
+import { isAppleMobile, isStandalone } from '../services/platform';
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
@@ -46,35 +47,38 @@ export async function createEncryptedBackup(state: ZikrState, passphrase: string
 }
 
 export async function readEncryptedBackup(content: string, passphrase: string): Promise<ZikrState> {
+  if (content.length > 20_000_000) throw new Error(i18n.t('backupInvalid'));
   const parsed = JSON.parse(content) as { format: string; version: number; iterations?: number; salt: string; iv: string; data: string };
-  if (parsed.format !== 'zikr-backup' || (parsed.version !== 1 && parsed.version !== 2)) throw new Error(i18n.t('backupUnsupportedFormat'));
+  if (!parsed || parsed.format !== 'zikr-backup' || (parsed.version !== 1 && parsed.version !== 2)) throw new Error(i18n.t('backupUnsupportedFormat'));
   const iterations = parsed.version === 1 ? LEGACY_ITERATIONS : parsed.iterations ?? CURRENT_ITERATIONS;
+  if (!Number.isInteger(iterations) || iterations < LEGACY_ITERATIONS || iterations > CURRENT_ITERATIONS || typeof parsed.salt !== 'string' || typeof parsed.iv !== 'string' || typeof parsed.data !== 'string') throw new Error(i18n.t('backupInvalid'));
   const salt = base64ToBytes(parsed.salt);
   const iv = base64ToBytes(parsed.iv);
+  if (salt.length !== 16 || iv.length !== 12) throw new Error(i18n.t('backupInvalid'));
   const key = await deriveKey(passphrase, salt, iterations, ['decrypt']);
   const clear = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, base64ToBytes(parsed.data));
   return sanitizeState(JSON.parse(decoder.decode(clear)));
 }
 
-const isStandaloneIos = () =>
-  /iphone|ipad|ipod/i.test(navigator.userAgent) &&
-  (window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true);
-
 export async function saveTextFile(filename: string, content: string) {
   const file = new File([content], filename, { type: 'application/json' });
   // Installed iOS web apps have no download manager; the share sheet is the reliable path.
-  if (isStandaloneIos() && navigator.canShare?.({ files: [file] })) {
+  if (isAppleMobile() && isStandalone() && navigator.canShare?.({ files: [file] })) {
     try {
       await navigator.share({ files: [file] });
-      return;
+      return true;
     } catch (error) {
-      if (error instanceof Error && error.name === 'AbortError') return;
+      if (typeof error === 'object' && error !== null && 'name' in error && error.name === 'AbortError') return false;
+      throw error;
     }
   }
   const url = URL.createObjectURL(file);
   const anchor = document.createElement('a');
   anchor.href = url;
   anchor.download = filename;
+  document.body.append(anchor);
   anchor.click();
-  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  anchor.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 30_000);
+  return true;
 }
