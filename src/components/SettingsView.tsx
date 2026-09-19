@@ -85,7 +85,7 @@ export function SettingsView({ state, setState, patchSettings, setLanguage, setT
     </section>
 
     <section className="settings-card" aria-labelledby="appearance-title"><div className="settings-heading"><Moon /><div><h2 id="appearance-title">{t('appearance')}</h2><p>{t('appearanceBody')}</p></div></div>
-      <div className="setting-row"><label htmlFor="language"><Languages />{t('language')}</label><select id="language" value={state.settings.language} onChange={(e) => setLanguage(e.target.value as Language)}><option value="en">English</option><option value="ms">Bahasa Melayu</option><option value="id">Bahasa Indonesia</option><option value="ar">العربية</option></select></div>
+      <div className="setting-row"><label htmlFor="language"><Languages />{t('language')}</label><select id="language" value={state.settings.language} onChange={(e) => setLanguage(e.target.value as Language)}><option value="en">English</option><option value="ms">Bahasa Melayu</option><option value="id">Bahasa Indonesia</option><option value="tr">Türkçe</option><option value="ar">العربية</option></select></div>
       <div className="setting-row"><label htmlFor="theme">{t('theme')}</label><select id="theme" value={state.settings.theme} onChange={(e) => setTheme(e.target.value as ThemePreference)}><option value="system">{t('system')}</option><option value="light">{t('light')}</option><option value="dark">{t('dark')}</option></select></div>
       <Toggle label={t('reducedMotion')} checked={state.settings.reducedMotion} onChange={(checked) => patchSettings({ reducedMotion: checked })} />
       <Toggle label={t('hapticsLabel')} checked={state.settings.haptics} onChange={(checked) => patchSettings({ haptics: checked })} />

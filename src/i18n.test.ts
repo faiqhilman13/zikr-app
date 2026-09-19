@@ -6,6 +6,7 @@ describe('translations', () => {
     const english = Object.keys(resources.en.translation).sort();
     expect(Object.keys(resources.ms.translation).sort()).toEqual(english);
     expect(Object.keys(resources.id.translation).sort()).toEqual(english);
+    expect(Object.keys(resources.tr.translation).sort()).toEqual(english);
     expect(Object.keys(resources.ar.translation).sort()).toEqual(english);
   });
 });

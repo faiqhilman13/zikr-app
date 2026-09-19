@@ -1,4 +1,4 @@
-export type Language = 'en' | 'ms' | 'id' | 'ar';
+export type Language = 'en' | 'ms' | 'id' | 'tr' | 'ar';
 export type ThemePreference = 'system' | 'light' | 'dark';
 
 export interface DhikrPreset {
