@@ -4,12 +4,28 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#faf8f5" />
-    <meta name="description" content="A private, peaceful daily dhikr counter that works offline." />
-    <meta property="og:title" content="Zikr — a quieter daily practice" />
-    <meta property="og:description" content="A private, peaceful daily dhikr counter that works offline. No account, no feed, no pressure." />
+    <meta name="description" content="Free tasbih counter for daily dhikr. Track tasbih, tahmid, takbir and salawat with targets and streaks. Works offline, no account, stays on your device." />
+    <link rel="canonical" href="https://myzikr.netlify.app/" />
+    <!-- Bing weights hreflang lightly and reads this instead; html[lang] is set at runtime. -->
+    <meta http-equiv="content-language" content="en" />
+    <meta property="og:title" content="Zikr · Free tasbih and dhikr counter" />
+    <meta property="og:description" content="Track tasbih, tahmid, takbir and salawat with daily targets and streaks. Works offline, no account, no feed, nothing leaves your device." />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Zikr" />
-    <meta name="twitter:card" content="summary" />
+    <meta property="og:url" content="https://myzikr.netlify.app/" />
+    <meta property="og:image" content="https://myzikr.netlify.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Zikr, a private tasbih and dhikr counter that works offline" />
+    <meta property="og:locale" content="en" />
+    <meta property="og:locale:alternate" content="ms" />
+    <meta property="og:locale:alternate" content="id" />
+    <meta property="og:locale:alternate" content="tr" />
+    <meta property="og:locale:alternate" content="ar" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Zikr · Free tasbih and dhikr counter" />
+    <meta name="twitter:description" content="Track tasbih, tahmid, takbir and salawat with daily targets and streaks. Works offline, no account, nothing leaves your device." />
+    <meta name="twitter:image" content="https://myzikr.netlify.app/og-image.png" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
@@ -18,7 +34,31 @@
     <link rel="icon" href="/icons/icon-192.png" type="image/png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png" />
     <script src="/theme-init.js"></script>
-    <title>Zikr — a quieter daily practice</title>
+    <title>Free Tasbih Counter &amp; Dhikr Tracker, Works Offline | Zikr</title>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Zikr",
+        "url": "https://myzikr.netlify.app/",
+        "description": "A free tasbih counter for daily dhikr. Track tasbih, tahmid, takbir and salawat with daily targets and streaks. Works offline, needs no account, and keeps all data on the device.",
+        "applicationCategory": "LifestyleApplication",
+        "operatingSystem": "Any",
+        "browserRequirements": "Requires JavaScript.",
+        "inLanguage": ["en", "ms", "id", "tr", "ar"],
+        "isAccessibleForFree": true,
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+        "featureList": [
+          "Tasbih, tahmid, takbir, tahlil and salawat counters",
+          "Custom dhikr phrases",
+          "Daily targets and streaks",
+          "Timed counting at your own recitation pace",
+          "Practice history and heatmap",
+          "Works offline as an installable app",
+          "Encrypted local backup"
+        ]
+      }
+    </script>
   </head>
   <body>
     <form name="zikr-feedback" action="/feedback-received.html" method="POST" data-netlify="true" netlify-honeypot="bot-field" hidden>

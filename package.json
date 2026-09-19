@@ -10,7 +10,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint .",
-    "icons": "node scripts/generate-pwa-icons.mjs"
+    "icons": "node scripts/generate-pwa-icons.mjs",
+    "og": "node scripts/generate-og-image.mjs"
   },
   "dependencies": {
     "@fontsource-variable/noto-sans-arabic": "^5.2.8",

@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+
+# Form thank-you page, no standalone value in search.
+Disallow: /feedback-received.html
+
+Sitemap: https://myzikr.netlify.app/sitemap.xml
