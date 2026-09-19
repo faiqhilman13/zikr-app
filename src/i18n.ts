@@ -93,7 +93,17 @@ export const resources = {
     less: 'Less', more: 'More', completedLegend: 'Intention complete',
     breakdownTitle: 'Phrase by phrase', breakdownBody: 'How today’s practice is spread across your phrases.',
     quietDay: 'A quiet day — nothing recorded.',
-    phraseComplete: '{{title}} complete for today', continueWith: 'Continue with {{title}}', allComplete: 'Every intention met today'
+    phraseComplete: '{{title}} complete for today', continueWith: 'Continue with {{title}}', allComplete: 'Every intention met today',
+
+    timerSetupTitle: 'Let the timer count for you',
+    timerSetupBody: 'How many seconds does it take you to say {{title}} once? Time it a few times and use your calm, unhurried pace.',
+    secondsPerRep: 'Seconds per repetition',
+    paceEstimate: 'About {{count}} repetitions a minute, one every {{pace}}s.',
+    paceInvalid: 'Enter how many seconds one repetition takes.',
+    startCountingTimer: 'Count repetitions',
+    trackTimeOnly: 'Just track time',
+    countingAtPace: 'Counting · one every {{pace}}s',
+    timerCountNote: 'Repetitions are added to today at your chosen pace and saved as you go. Counting stops at midnight, or after {{minutes}} minutes.'
   } },
   ms: { translation: {
     feedbackTitle: "Bantu membentuk Zikr",
@@ -186,7 +196,17 @@ export const resources = {
     less: 'Kurang', more: 'Lebih', completedLegend: 'Niat selesai',
     breakdownTitle: 'Zikir demi zikir', breakdownBody: 'Bagaimana amalan hari ini terbahagi antara zikir anda.',
     quietDay: 'Hari yang tenang — tiada rekod.',
-    phraseComplete: '{{title}} selesai untuk hari ini', continueWith: 'Teruskan dengan {{title}}', allComplete: 'Semua niat hari ini tercapai'
+    phraseComplete: '{{title}} selesai untuk hari ini', continueWith: 'Teruskan dengan {{title}}', allComplete: 'Semua niat hari ini tercapai',
+
+    timerSetupTitle: 'Biar pemasa mengira untuk anda',
+    timerSetupBody: 'Berapa saat anda mengambil masa untuk menyebut {{title}} sekali? Cuba beberapa kali dan gunakan kadar yang tenang, tidak tergesa-gesa.',
+    secondsPerRep: 'Saat bagi setiap ulangan',
+    paceEstimate: 'Kira-kira {{count}} ulangan seminit, satu setiap {{pace}}s.',
+    paceInvalid: 'Masukkan berapa saat diambil untuk satu ulangan.',
+    startCountingTimer: 'Kira ulangan',
+    trackTimeOnly: 'Rekod masa sahaja',
+    countingAtPace: 'Mengira · satu setiap {{pace}}s',
+    timerCountNote: 'Ulangan ditambah pada hari ini mengikut kadar pilihan anda dan disimpan sepanjang sesi. Pengiraan berhenti pada tengah malam, atau selepas {{minutes}} minit.'
   } },
   ar: { translation: {
     feedbackTitle: "ساعد في تحسين ذكر",
@@ -279,7 +299,17 @@ export const resources = {
     less: 'أقل', more: 'أكثر', completedLegend: 'اكتمل الورد',
     breakdownTitle: 'ذكرًا بعد ذكر', breakdownBody: 'كيف توزّعت ممارسة اليوم بين أذكارك.',
     quietDay: 'يوم هادئ — لا شيء مسجّل.',
-    phraseComplete: 'اكتمل {{title}} لهذا اليوم', continueWith: 'تابع مع {{title}}', allComplete: 'تحقّقت أوراد اليوم كلها'
+    phraseComplete: 'اكتمل {{title}} لهذا اليوم', continueWith: 'تابع مع {{title}}', allComplete: 'تحقّقت أوراد اليوم كلها',
+
+    timerSetupTitle: 'دع المؤقت يعدّ عنك',
+    timerSetupBody: 'كم ثانية تستغرق لقول {{title}} مرة واحدة؟ جرّب بضع مرات واعتمد إيقاعك الهادئ دون عجلة.',
+    secondsPerRep: 'ثوانٍ لكل تكرار',
+    paceEstimate: 'نحو {{count}} تكرارًا في الدقيقة، واحد كل {{pace}} ثانية.',
+    paceInvalid: 'أدخل عدد الثواني التي يستغرقها تكرار واحد.',
+    startCountingTimer: 'عدّ التكرارات',
+    trackTimeOnly: 'سجّل الوقت فقط',
+    countingAtPace: 'يعدّ · واحد كل {{pace}} ثانية',
+    timerCountNote: 'تُضاف التكرارات إلى اليوم وفق الإيقاع الذي اخترته وتُحفظ أولًا بأول. يتوقف العدّ عند منتصف الليل أو بعد {{minutes}} دقيقة.'
   } }
 } as const;
 

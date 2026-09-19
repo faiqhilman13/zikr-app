@@ -3,11 +3,12 @@ import { useTranslation } from 'react-i18next';
 import i18n from './i18n';
 import { AppShell, type Tab } from './components/AppShell';
 import { CounterView } from './components/CounterView';
+import { TimerSetup } from './components/TimerSetup';
 import { Landing } from './components/Landing';
 import { Onboarding } from './components/Onboarding';
 import { ProgressView } from './components/ProgressView';
 import { SettingsView } from './components/SettingsView';
-import { dayKey } from './domain/state';
+import { dayKey, selectedPreset } from './domain/state';
 import { disablePushNotifications } from './services/push';
 import { track } from './data/analytics';
 import { usePwaUpdate } from './hooks/usePwaUpdate';
@@ -18,6 +19,7 @@ export function App() {
   const controller = useZikrState();
   const { t } = useTranslation();
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [timerSetup, setTimerSetup] = useState(false);
   const [tab, setTab] = useState<Tab>('count');
   const pwa = usePwaUpdate();
 
@@ -86,10 +88,19 @@ export function App() {
   return <>
     <a className="skip-link" href="#main-content">{t('skipToContent')}</a>
     <AppShell tab={tab} setTab={(next) => { setTab(next); void track(controller.state, 'tab_view', { tab: next }); }}>
-      {tab === 'count' && <CounterView state={controller.state} onIncrement={() => { controller.increment(); void track(controller.state, 'count_increment'); }} onUndo={controller.decrement} onSelect={controller.selectPreset} onToggleTimer={() => controller.setTimerRunning(!controller.state.activeTimer)} onTimerRollover={controller.refresh} />}
+      {tab === 'count' && <CounterView state={controller.state} onIncrement={() => { controller.increment(); void track(controller.state, 'count_increment'); }} onUndo={controller.decrement} onSelect={controller.selectPreset} onStartTimer={() => setTimerSetup(true)} onStopTimer={() => { void controller.stopTimer(); void track(controller.state, 'timer_stop'); }} onTimerRollover={controller.refresh} />}
       {tab === 'progress' && <ProgressView state={controller.state} />}
       {tab === 'settings' && <SettingsView state={controller.state} setState={controller.setState} patchSettings={controller.patchSettings} setLanguage={controller.setLanguage} setTheme={controller.setTheme} updatePreset={controller.updatePreset} addPreset={controller.addPreset} removePreset={controller.removePreset} onReset={async () => { await disablePushNotifications(); if (await controller.reset()) setTab('count'); }} />}
     </AppShell>
+    {timerSetup && <TimerSetup
+      preset={selectedPreset(controller.state)}
+      onClose={() => setTimerSetup(false)}
+      onStart={(secondsPerRep) => {
+        setTimerSetup(false);
+        void controller.startTimer(secondsPerRep);
+        void track(controller.state, 'timer_start', { counting: secondsPerRep !== null, ...(secondsPerRep === null ? {} : { secondsPerRep }) });
+      }}
+    />}
     {notices}
   </>;
 }

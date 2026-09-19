@@ -1,4 +1,4 @@
-import type { DailyLog, DhikrPreset, ZikrState } from './types';
+import type { ActiveTimer, DailyLog, DhikrPreset, ZikrState } from './types';
 import type { Language, ThemePreference } from './types';
 
 export const starterPresets: DhikrPreset[] = [
@@ -39,6 +39,20 @@ export const initialState = (): ZikrState => ({
 
 const DATE_KEY = /^\d{4}-\d{2}-\d{2}$/;
 export const clampTarget = (value: number) => Number.isFinite(value) ? Math.min(9999, Math.max(0, Math.floor(value))) : 0;
+
+export const MIN_SECONDS_PER_REP = 0.5;
+export const MAX_SECONDS_PER_REP = 600;
+export const DEFAULT_SECONDS_PER_REP = 3;
+/** A counting session stops after an hour. Left running by accident it would otherwise
+ * keep adding repetitions nobody recited, and those counts feed streaks and history. */
+export const MAX_SESSION_SECONDS = 3600;
+
+/** A recitation pace in seconds, or null when the value cannot be one. One decimal is
+ * as fine as a spoken phrase can be measured, and keeps the repetition maths stable. */
+export const clampPace = (value: unknown): number | null => typeof value === 'number' && Number.isFinite(value) && value > 0
+  ? Math.min(MAX_SECONDS_PER_REP, Math.max(MIN_SECONDS_PER_REP, Math.round(value * 10) / 10))
+  : null;
+
 export const validDateKey = (value: string) => {
   if (!DATE_KEY.test(value)) return false;
   const date = new Date(`${value}T12:00:00`);
@@ -69,13 +83,15 @@ export const sanitizeState = (value: unknown): ZikrState => {
     ? value.presets.flatMap((raw): DhikrPreset[] => {
         if (!isRecord(raw) || typeof raw.id !== 'string' || !safeId(raw.id) || typeof raw.title !== 'string') return [];
         const target = finiteCount(raw.target);
+        const pace = clampPace(raw.secondsPerRep);
         return [{
           id: raw.id,
           title: raw.title,
           arabic: typeof raw.arabic === 'string' ? raw.arabic : '',
           transliteration: typeof raw.transliteration === 'string' ? raw.transliteration : '',
           target: target === null ? 0 : Math.min(9999, target),
-          ...(raw.custom === true ? { custom: true } : {})
+          ...(raw.custom === true ? { custom: true } : {}),
+          ...(pace === null ? {} : { secondsPerRep: pace })
         }];
       })
     : [];
@@ -108,8 +124,12 @@ export const sanitizeState = (value: unknown): ZikrState => {
 
   const rawTimer = value.activeTimer;
   const startedAt = isRecord(rawTimer) ? finiteCount(rawTimer.startedAt) : null;
-  const activeTimer = isRecord(rawTimer) && typeof rawTimer.presetId === 'string' && startedAt !== null && Number.isFinite(new Date(startedAt).getTime()) && presets.some((p) => p.id === rawTimer.presetId) && startedAt <= Date.now()
-    ? { presetId: rawTimer.presetId, startedAt }
+  // A pace without a credited tally would re-award every repetition the session has
+  // already banked, so the two are only ever restored together.
+  const timerPace = isRecord(rawTimer) ? clampPace(rawTimer.secondsPerRep) : null;
+  const creditedReps = isRecord(rawTimer) ? finiteCount(rawTimer.creditedReps) : null;
+  const activeTimer: ActiveTimer | null = isRecord(rawTimer) && typeof rawTimer.presetId === 'string' && startedAt !== null && Number.isFinite(new Date(startedAt).getTime()) && presets.some((p) => p.id === rawTimer.presetId) && startedAt <= Date.now()
+    ? { presetId: rawTimer.presetId, startedAt, ...(timerPace === null ? {} : { secondsPerRep: timerPace, creditedReps: creditedReps ?? 0 }) }
     : null;
 
   return normalizeState({
@@ -138,17 +158,51 @@ export const sanitizeState = (value: unknown): ZikrState => {
   });
 };
 
+const withLog = (logs: DailyLog[], date: string) => logs.some((log) => log.date === date) ? logs : [...logs, emptyLog(date)];
+
+/** The moment a session must stop: midnight of the day it began, and for a counting
+ * session no later than MAX_SESSION_SECONDS after it started. */
+const timerLimit = (timer: ActiveTimer) => {
+  const started = new Date(timer.startedAt);
+  const midnight = new Date(started.getFullYear(), started.getMonth(), started.getDate() + 1).getTime();
+  return timer.secondsPerRep ? Math.min(midnight, timer.startedAt + MAX_SESSION_SECONDS * 1000) : midnight;
+};
+
+/** Seconds the session has run, never past its limit. */
+export const timerSeconds = (timer: ActiveTimer, at = Date.now()) =>
+  Math.max(0, Math.floor((Math.min(at, timerLimit(timer)) - timer.startedAt) / 1000));
+
+/** Repetitions a counting session has earned. Only whole repetitions count: a phrase
+ * half said is not a repetition, and a time-only session earns none at all. */
+export const timerReps = (timer: ActiveTimer, at = Date.now()) =>
+  timer.secondsPerRep ? Math.floor(timerSeconds(timer, at) / timer.secondsPerRep) : 0;
+
+/** Repetitions earned but not yet written to the log — what the counter shows on top
+ * of the stored count between one credit and the next. */
+export const uncreditedReps = (timer: ActiveTimer, at = Date.now()) =>
+  Math.max(0, timerReps(timer, at) - (timer.creditedReps ?? 0));
+
+/** Move a session's elapsed seconds, and any repetitions it still owes, into the log
+ * for the day it began. Time is banked in both modes; repetitions only in counting mode. */
+const withBankedTimer = (logs: DailyLog[], timer: ActiveTimer, at: number): DailyLog[] => {
+  const startedKey = dayKey(new Date(timer.startedAt));
+  const seconds = timerSeconds(timer, at);
+  const reps = uncreditedReps(timer, at);
+  return withLog(logs, startedKey).map((log) => log.date === startedKey ? {
+    ...log,
+    counts: reps > 0 ? { ...log.counts, [timer.presetId]: (log.counts[timer.presetId] ?? 0) + reps } : log.counts,
+    timedSeconds: { ...log.timedSeconds, [timer.presetId]: (log.timedSeconds[timer.presetId] ?? 0) + seconds }
+  } : log);
+};
+
 export const normalizeState = (state: ZikrState): ZikrState => {
   const today = dayKey();
-  let logs = state.logs.some((log) => log.date === today) ? state.logs : [...state.logs, emptyLog(today)];
+  let logs = withLog(state.logs, today);
   let activeTimer = state.activeTimer;
-  if (activeTimer && dayKey(new Date(activeTimer.startedAt)) !== today) {
-    const started = new Date(activeTimer.startedAt);
-    const midnight = new Date(started.getFullYear(), started.getMonth(), started.getDate() + 1).getTime();
-    const elapsed = Math.max(0, Math.floor((midnight - activeTimer.startedAt) / 1000));
-    const startedKey = dayKey(started);
-    const timerPresetId = activeTimer.presetId;
-    logs = logs.map((log) => log.date === startedKey ? { ...log, timedSeconds: { ...log.timedSeconds, [timerPresetId]: (log.timedSeconds[timerPresetId] ?? 0) + elapsed } } : log);
+  // A session past midnight, or past the counting session cap, is banked at that limit.
+  // Reopening the app hours later must never invent time or repetitions.
+  if (activeTimer && Date.now() >= timerLimit(activeTimer)) {
+    logs = withBankedTimer(logs, activeTimer, timerLimit(activeTimer));
     activeTimer = null;
   }
   const presets = state.presets.map((preset) => ({ ...preset, target: clampTarget(preset.target) }));
@@ -220,9 +274,37 @@ export const withDecrement = (state: ZikrState, presetId: string): ZikrState => 
 export const stopTimer = (state: ZikrState): ZikrState => {
   const normalized = normalizeState(state);
   if (!normalized.activeTimer) return normalized;
-  const { presetId, startedAt } = normalized.activeTimer;
-  const elapsed = Math.max(0, Math.floor((Date.now() - startedAt) / 1000));
-  return { ...normalized, activeTimer: null, logs: normalized.logs.map((log) => log.date === dayKey() ? { ...log, timedSeconds: { ...log.timedSeconds, [presetId]: (log.timedSeconds[presetId] ?? 0) + elapsed } } : log) };
+  return normalizeState({ ...normalized, activeTimer: null, logs: withBankedTimer(normalized.logs, normalized.activeTimer, Date.now()) });
+};
+
+/** Write the repetitions a counting session has earned so far into its day's log, and
+ * record how many were banked. Ticking twice on the same second adds nothing, so a
+ * repetition is never counted twice. */
+export const creditTimerReps = (state: ZikrState, at = Date.now()): ZikrState => {
+  const timer = state.activeTimer;
+  if (!timer?.secondsPerRep) return state;
+  const owed = uncreditedReps(timer, at);
+  if (owed <= 0) return state;
+  const startedKey = dayKey(new Date(timer.startedAt));
+  const logs = withLog(state.logs, startedKey).map((log) => log.date === startedKey
+    ? { ...log, counts: { ...log.counts, [timer.presetId]: (log.counts[timer.presetId] ?? 0) + owed } }
+    : log);
+  return normalizeState({ ...state, logs, activeTimer: { ...timer, creditedReps: timerReps(timer, at) } });
+};
+
+/** Begin a session on the selected phrase. A pace starts a counting session and is
+ * remembered on the phrase; without one the session only records time. */
+export const startTimer = (state: ZikrState, secondsPerRep?: number | null): ZikrState => {
+  if (state.activeTimer) return state;
+  const pace = clampPace(secondsPerRep);
+  const presetId = state.selectedPresetId;
+  if (!state.presets.some((preset) => preset.id === presetId)) return state;
+  return {
+    ...state,
+    presets: pace === null ? state.presets : state.presets.map((preset) => preset.id === presetId ? { ...preset, secondsPerRep: pace } : preset),
+    activeTimer: { presetId, startedAt: Date.now(), ...(pace === null ? {} : { secondsPerRep: pace, creditedReps: 0 }) },
+    lastUpdatedAt: Date.now()
+  };
 };
 export const archivePreset = (state: ZikrState, id: string): ZikrState => {
   const preset = state.presets.find((p) => p.id === id);

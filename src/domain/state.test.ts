@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { archivePreset, clampTarget, stopTimer, calculateStreak, dayKey, initialState, normalizeState, sanitizeState, totalToday, withDecrement, withIncrement } from './state';
+import { archivePreset, clampPace, clampTarget, creditTimerReps, startTimer, stopTimer, calculateStreak, dayKey, initialState, normalizeState, sanitizeState, totalToday, withDecrement, withIncrement } from './state';
 
 describe('Zikr state', () => {
   it('keeps confirmed repetitions separate from timed practice', () => {
@@ -125,4 +125,109 @@ it('rejects prototype identifiers in imported phrases and counts', () => {
   const s=initialState();
   expect(()=>sanitizeState({...s,presets:[{...s.presets[0],id:'constructor'}]})).toThrow();
   expect(()=>sanitizeState({...s,logs:[{...s.logs[0],counts:{constructor:1}}]})).toThrow();
+});
+
+
+describe('counting the timer into repetitions', () => {
+  afterEach(() => vi.useRealTimers());
+  const at = (h: number, m: number, sec = 0, day = 19) => vi.setSystemTime(new Date(2026, 8, day, h, m, sec));
+  const log = (state: ReturnType<typeof initialState>, date: string) => state.logs.find((entry) => entry.date === date);
+  const counting = (pace: number | null) => { vi.useFakeTimers(); at(10, 0); return startTimer(initialState(), pace); };
+
+  it('credits whole repetitions at the chosen pace and never the same one twice', () => {
+    let state = counting(3);
+    expect(state.activeTimer).toMatchObject({ presetId: 'tasbih', secondsPerRep: 3, creditedReps: 0 });
+    at(10, 0, 31);
+    state = creditTimerReps(state);
+    expect(log(state, '2026-09-19')?.counts.tasbih).toBe(10);
+    expect(state.activeTimer?.creditedReps).toBe(10);
+    // A second tick on the same second owes nothing, so nothing is written.
+    expect(creditTimerReps(state)).toBe(state);
+    at(10, 0, 34);
+    state = creditTimerReps(state);
+    expect(log(state, '2026-09-19')?.counts.tasbih).toBe(11);
+  });
+
+  it('remembers the pace on the phrase so the next session can offer it', () => {
+    const state = counting(2.5);
+    expect(state.presets.find((preset) => preset.id === 'tasbih')?.secondsPerRep).toBe(2.5);
+    expect(state.presets.find((preset) => preset.id === 'tahmid')?.secondsPerRep).toBeUndefined();
+  });
+
+  it('banks the repetitions still owed, and the time, when the session stops', () => {
+    let state = counting(3);
+    at(10, 0, 31);
+    state = creditTimerReps(state);
+    at(10, 0, 35);
+    state = stopTimer(state);
+    expect(state.activeTimer).toBeNull();
+    expect(log(state, '2026-09-19')?.counts.tasbih).toBe(11);
+    expect(log(state, '2026-09-19')?.timedSeconds.tasbih).toBe(35);
+    expect(stopTimer(state)).toEqual(state);
+  });
+
+  it('counts timed repetitions toward the daily intention', () => {
+    let state = counting(1);
+    state = { ...state, presets: state.presets.map((preset) => ({ ...preset, target: preset.id === 'tasbih' ? 33 : 0 })) };
+    at(10, 0, 40);
+    state = creditTimerReps(state);
+    expect(log(state, '2026-09-19')?.counts.tasbih).toBe(40);
+    expect(log(state, '2026-09-19')?.completed).toBe(true);
+    expect(totalToday(state)).toBe(40);
+  });
+
+  it('completes the day from repetitions banked only at the stop', () => {
+    let state = counting(1);
+    state = { ...state, presets: state.presets.map((preset) => ({ ...preset, target: preset.id === 'tasbih' ? 33 : 0 })) };
+    at(10, 0, 40);
+    state = stopTimer(state);
+    expect(log(state, '2026-09-19')?.counts.tasbih).toBe(40);
+    expect(log(state, '2026-09-19')?.completed).toBe(true);
+  });
+
+  it('stops a forgotten session at the hour cap instead of inventing repetitions', () => {
+    let state = counting(2);
+    at(14, 0);
+    state = normalizeState(state);
+    expect(state.activeTimer).toBeNull();
+    expect(log(state, '2026-09-19')?.counts.tasbih).toBe(1800);
+    expect(log(state, '2026-09-19')?.timedSeconds.tasbih).toBe(3600);
+  });
+
+  it('ends a counting session at midnight and banks it to the day it began', () => {
+    vi.useFakeTimers(); at(23, 59, 0, 18);
+    let state = startTimer(initialState(), 3);
+    at(8, 0, 0, 19);
+    state = normalizeState(state);
+    expect(state.activeTimer).toBeNull();
+    expect(log(state, '2026-09-18')?.counts.tasbih).toBe(20);
+    expect(log(state, '2026-09-18')?.timedSeconds.tasbih).toBe(60);
+    expect(log(state, '2026-09-19')?.counts.tasbih).toBeUndefined();
+  });
+
+  it('still records a time-only session without converting it into repetitions', () => {
+    let state = counting(null);
+    expect(state.activeTimer?.secondsPerRep).toBeUndefined();
+    at(10, 16, 40);
+    state = stopTimer(state);
+    expect(log(state, '2026-09-19')?.counts.tasbih).toBeUndefined();
+    expect(log(state, '2026-09-19')?.timedSeconds.tasbih).toBe(1000);
+  });
+
+  it('refuses to start a second session over a running one', () => {
+    const state = counting(3);
+    expect(startTimer(state, 1)).toBe(state);
+  });
+
+  it('restores a running session, and drops a credited tally that has no pace', () => {
+    const state = counting(2.5);
+    const restored = sanitizeState(JSON.parse(JSON.stringify(state)));
+    expect(restored.activeTimer).toMatchObject({ secondsPerRep: 2.5, creditedReps: 0 });
+    expect(restored.presets.find((preset) => preset.id === 'tasbih')?.secondsPerRep).toBe(2.5);
+    const forged = sanitizeState({ ...initialState(), activeTimer: { presetId: 'tasbih', startedAt: Date.now(), creditedReps: 9999 } });
+    expect(forged.activeTimer?.creditedReps).toBeUndefined();
+  });
+
+  it.each([[3, 3], [2.55, 2.6], [0.1, 0.5], [9999, 600], [0, null], [-1, null], [NaN, null], ['3', null], [undefined, null]])(
+    'reads a pace of %s as %s', (input, output) => expect(clampPace(input)).toBe(output));
 });

@@ -13,6 +13,7 @@
 - **Counter** — Tap the orb to increment. Shows current dhikr's individual count + daily progress ring
 - **Undo** — Undo banner appears for 5 seconds after each tap. Can undo the last increment (data-backed via `recentEvents`)
 - **Session timer** — Tracks elapsed time since first tap of the day. Displays "Session: Xm Ys" below stats row. Resets automatically on day rollover.
+- **Timed counting (opt-in)** — Starting the timer asks how many seconds one recitation takes. With a pace, elapsed time is credited as repetitions into the day's counts every few seconds, so they reach history, streaks and targets like tapped ones; the pace is remembered per phrase. Without a pace the session records time only. Either way a session stops at midnight or after an hour, and each repetition is banked exactly once.
 - **Preset switching** — Switching presets shows that preset's own count (per-dhikr counting)
 - **Custom dhikr CRUD** — Settings shows list of custom presets with edit (sheet) and swipe-to-delete (confirmation alert). Starter presets protected.
 - **Streaks** — App tracks consecutive days of any activity. Streak multiplier: x3 (3+ days), x4 (7+ days), x5 (30+ days)

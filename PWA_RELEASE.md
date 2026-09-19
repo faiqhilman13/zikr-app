@@ -2,7 +2,10 @@
 
 ## Product guarantees
 
-- Confirmed taps and timed practice are stored separately.
+- Confirmed taps and timed practice are stored separately. A timed session only becomes
+  repetitions when the person opts in by entering their own seconds-per-repetition pace;
+  time-only remains available and converts nothing. Counting sessions stop at midnight or
+  after an hour, so a forgotten timer cannot invent practice.
 - Complete history is retained in IndexedDB; it is not truncated after 30 days.
 - Analytics and push are optional and opt-in. Unconfigured reminders are visibly unavailable; cloud sync is not shipped.
 - Prayer-time reminders are excluded until a trustworthy manual or location-aware schedule exists.

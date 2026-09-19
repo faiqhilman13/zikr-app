@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { liveQuery } from 'dexie';
 import { loadState, mutateState, replaceState, StateConflictError, type Snapshot } from '../data/db';
-import { archivePreset, clampTarget, initialState, stopTimer, withDecrement, withIncrement } from '../domain/state';
+import { archivePreset, clampTarget, creditTimerReps, initialState, startTimer, stopTimer, withDecrement, withIncrement } from '../domain/state';
 import type { DhikrPreset, Language, ThemePreference, ZikrState } from '../domain/types';
+
+const CREDIT_INTERVAL_MS = 5_000;
 
 export function useZikrState() {
   const [state, setState] = useState<ZikrState>(initialState);
@@ -58,6 +60,26 @@ export function useZikrState() {
     return enqueue(() => mutateState(generation ?? '', update));
   }, [enqueue]);
 
+  // Repetitions are banked on a short cycle rather than only when the session ends, so
+  // a closed tab or a dead battery costs at most a few seconds of practice. Crediting
+  // lives here, not in the counter screen, so it keeps running from any tab.
+  const countingSince = state.activeTimer?.secondsPerRep ? state.activeTimer.startedAt : null;
+  useEffect(() => {
+    if (countingSince === null) return;
+    const credit = () => { void commit((s) => creditTimerReps(s)); };
+    const interval = window.setInterval(credit, CREDIT_INTERVAL_MS);
+    // Bank on the way out as well: a backgrounded tab may never run another interval.
+    const onHide = () => { if (document.visibilityState === 'hidden') credit(); };
+    document.addEventListener('visibilitychange', onHide);
+    window.addEventListener('pagehide', credit);
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener('visibilitychange', onHide);
+      window.removeEventListener('pagehide', credit);
+      credit();
+    };
+  }, [countingSince, commit]);
+
   // The rendered snapshot is deliberately captured before async import/confirmation.
   // A concurrent mutation must cause a conflict rather than be erased.
   const renderedSnapshot = latest.current;
@@ -84,8 +106,9 @@ export function useZikrState() {
     setLanguage: (language: Language) => commit((s) => ({ ...s, settings: { ...s.settings, language } })),
     setTheme: (theme: ThemePreference) => commit((s) => ({ ...s, settings: { ...s.settings, theme } })),
     patchSettings: (changes: Partial<ZikrState['settings']>) => commit((s) => ({ ...s, settings: { ...s.settings, ...changes } })),
-    setTimerRunning: (run: boolean) => commit((s) => run
-      ? s.activeTimer ? s : { ...s, activeTimer: { presetId: s.selectedPresetId, startedAt: Date.now() } }
-      : stopTimer(s))
+    // A pace starts a counting session; omitting it records time only.
+    startTimer: (secondsPerRep?: number | null) => commit((s) => startTimer(s, secondsPerRep)),
+    stopTimer: () => commit((s) => stopTimer(s)),
+    creditTimer: () => commit((s) => creditTimerReps(s))
   };
 }

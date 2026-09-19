@@ -168,6 +168,14 @@ h2 { font-size: clamp(2rem, 5vw, 3.2rem); line-height: 1; font-weight: 520; }
 .timer-readout svg { width: 16px; }
 .timer-readout span { color: var(--ink); font-variant-numeric: tabular-nums; }
 .timer-readout small { grid-column: 1/-1; font-size: .68rem; }
+.timer-readout .pace-badge { font-style: normal; font-size: .68rem; color: var(--gold-text); }
+
+.timer-setup p:not(.eyebrow):not(.pace-estimate):not(.pace-note) { color: var(--muted); margin-bottom: 22px; }
+.pace-field { display: grid; grid-template-columns: 1fr 110px; gap: 10px; align-items: center; font-weight: 700; }
+.pace-field input { width: 110px; }
+.pace-estimate { margin: 14px 0 4px; font-weight: 700; }
+.pace-note { margin-bottom: 22px; color: var(--muted); font-size: .78rem; }
+.timer-setup .button-stack .button { flex: 1 1 180px; }
 .count-orb.complete { box-shadow: 0 22px 58px rgba(212,160,23,.35), 0 0 0 9px color-mix(in srgb, var(--gold) 22%, transparent); animation: orb-bloom .9s ease-out; }
 @keyframes orb-bloom {
   from { box-shadow: 0 22px 58px rgba(212,160,23,.35), 0 0 0 2px rgba(212,160,23,.55); }
@@ -348,6 +356,8 @@ input, select { min-height: 44px; border: 1px solid var(--line); border-radius: 
   .count-stage { min-height: 510px; }
   .count-orb { width: min(84vw, 330px); }
   .target-row { grid-template-columns: 1fr 78px auto; }
+  .pace-field { grid-template-columns: 1fr 90px; }
+  .pace-field input { width: 90px; }
   .target-row input { width: 78px; }
   .history-list .history-item { grid-template-columns: 1fr auto auto; }
   .history-list span { grid-column: 1/-1; grid-row: 2; }

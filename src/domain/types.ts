@@ -8,6 +8,9 @@ export interface DhikrPreset {
   transliteration: string;
   target: number;
   custom?: boolean;
+  /** Seconds this person takes to recite the phrase once. Remembered so the timer
+   * prompt can offer their own pace next time; absent until they set one. */
+  secondsPerRep?: number;
 }
 
 export interface DailyLog {
@@ -35,6 +38,12 @@ export interface UserSettings {
 export interface ActiveTimer {
   presetId: string;
   startedAt: number;
+  /** Set only when the session counts repetitions. Absent means time-only practice,
+   * which is never converted into repetitions. */
+  secondsPerRep?: number;
+  /** Repetitions already written into the log, so repeated ticks and a final stop
+   * bank each repetition exactly once. */
+  creditedReps?: number;
 }
 
 export interface ZikrState {
