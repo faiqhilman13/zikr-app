@@ -13,9 +13,9 @@ describe('CounterView', () => {
     expect(screen.getByText('Tasbih: 1 of 33')).toBeInTheDocument();
   });
 
-  it('states that a time-only session is not converted into repetitions', () => {
+  it('notes when a session is only recording time', () => {
     render(<CounterView state={initialState()} onIncrement={vi.fn()} onUndo={vi.fn()} onSelect={vi.fn()} onStartTimer={vi.fn()} onStopTimer={vi.fn()} onTimerRollover={vi.fn()} />);
-    expect(screen.getByText(/Time is recorded separately/i)).toBeInTheDocument();
+    expect(screen.getByText(/Time is recorded on its own and stops at midnight/i)).toBeInTheDocument();
   });
 
   it('offers the next unfinished phrase once the target is reached', () => {
@@ -46,7 +46,7 @@ describe('CounterView', () => {
     expect(screen.getByText('23 remaining')).toBeInTheDocument();
     expect(screen.getByText('10 / 33')).toBeInTheDocument();
     expect(screen.getByText(/Counting · one every 3s/i)).toBeInTheDocument();
-    expect(screen.queryByText(/Time is recorded separately/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Time is recorded on its own/i)).not.toBeInTheDocument();
     vi.useRealTimers();
   });
 
