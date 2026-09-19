@@ -8,7 +8,7 @@ export default defineConfig({
     react(),
     // Listed before VitePWA so the generated locale pages exist when the service
     // worker manifest is built, and ship precached like every other page.
-    localePages({ site: 'https://myzikr.netlify.app' }),
+    localePages(),
     VitePWA({
       registerType: 'prompt',
       injectRegister: 'auto',

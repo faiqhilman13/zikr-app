@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { Plugin } from 'vite';
 import { languageNames, resources, rtl, supported, type AppLanguage } from '../src/locales';
+import { SITE_URL } from '../src/site';
 
 /**
  * Writes one static landing page per non-default locale after the build.
@@ -169,11 +170,27 @@ ${staticUrls}
 `;
 }
 
-export function localePages(options: { site: string }): Plugin {
-  const site = options.site.replace(/\/$/, '');
+/** Generated so the sitemap URL cannot drift from the site constant. */
+export function robots(site: string): string {
+  return `User-agent: *
+Allow: /
+
+# Form thank-you page, no standalone value in search.
+Disallow: /feedback-received.html
+
+Sitemap: ${site}/sitemap.xml
+`;
+}
+
+export function localePages(options: { site?: string } = {}): Plugin {
+  const site = (options.site ?? SITE_URL).replace(/\/$/, '');
   return {
     name: 'zikr-locale-pages',
-    apply: 'build',
+    // index.html carries a placeholder rather than a hardcoded origin, substituted in
+    // dev and build alike so what you see locally matches what ships.
+    transformIndexHtml(html) {
+      return html.replaceAll('__SITE_URL__', site);
+    },
     // Runs before the PWA plugin's closeBundle so the generated pages are in dist in
     // time to be precached alongside everything else.
     async closeBundle() {
@@ -200,6 +217,7 @@ export function localePages(options: { site: string }): Plugin {
 
       const lastmod = new Date().toISOString().slice(0, 10);
       await fs.writeFile(path.join(dist, 'sitemap.xml'), sitemap(site, lastmod));
+      await fs.writeFile(path.join(dist, 'robots.txt'), robots(site));
     }
   };
 }

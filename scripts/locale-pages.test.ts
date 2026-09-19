@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { supported } from '../src/locales';
+import { SITE_URL } from '../src/site';
 import { landingBody, localePath, page, sitemap } from './locale-pages';
 
-const SITE = 'https://myzikr.netlify.app';
+const SITE = SITE_URL;
 const pages = supported.filter((locale) => locale !== 'en').map((locale) => ({ locale, html: page(locale, SITE, '/assets/index-test.css') }));
 
 const alternates = (html: string) => [...html.matchAll(/hreflang="([^"]+)" href="([^"]+)"/g)].map((m) => ({ hreflang: m[1], href: m[2] }));
