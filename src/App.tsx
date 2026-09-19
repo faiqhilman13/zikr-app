@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import i18n from './i18n';
+import i18n, { detectedLanguage } from './i18n';
 import { AppShell, type Tab } from './components/AppShell';
 import { CounterView } from './components/CounterView';
 import { TimerSetup } from './components/TimerSetup';
@@ -41,7 +41,10 @@ export function App() {
 
   // Single source of truth for language: whatever lands in state (settings screen,
   // backup restore, reset) is mirrored to i18next, the document, and the pre-boot hint.
-  const language = controller.state.settings.language;
+  // Before onboarding there is no chosen language yet, only the default that every new
+  // state carries, so detection wins until the person actually picks one. Without this
+  // the default overwrites detection on first load and everyone starts in English.
+  const language = controller.state.onboardingComplete ? controller.state.settings.language : detectedLanguage;
   useEffect(() => {
     if (!controller.ready) return;
     void i18n.changeLanguage(language);
@@ -82,7 +85,7 @@ export function App() {
   if (!controller.state.onboardingComplete) return <>
     {notices}
     <Landing onBegin={() => setShowOnboarding(true)} />
-    {showOnboarding && <Onboarding presets={controller.state.presets} onClose={() => setShowOnboarding(false)} onComplete={(id, target) => { controller.completeOnboarding(id, target); void requestDurableStorage(); void track(controller.state, 'onboarding_complete'); }} />}
+    {showOnboarding && <Onboarding presets={controller.state.presets} onClose={() => setShowOnboarding(false)} onComplete={(id, target) => { controller.completeOnboarding(id, target, language); void requestDurableStorage(); void track(controller.state, 'onboarding_complete'); }} />}
   </>;
 
   return <>
