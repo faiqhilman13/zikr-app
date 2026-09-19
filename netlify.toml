@@ -5,6 +5,14 @@
 [build.environment]
   NODE_VERSION = "22"
 
+# Digital Asset Links must be served as application/json for Android to verify the
+# TWA. A stale copy would keep an old signing key trusted, so cache it briefly.
+[[headers]]
+  for = "/.well-known/assetlinks.json"
+  [headers.values]
+    Content-Type = "application/json"
+    Cache-Control = "public, max-age=300"
+
 [[headers]]
   for = "/manifest.json"
   [headers.values]

@@ -26,3 +26,11 @@ coverage/
 
 # Local Netlify folder
 .netlify
+
+# TWA signing keys and build output. Losing the keystore means losing the ability to
+# update the Play listing; committing it means anyone can publish as you.
+*.keystore
+*.jks
+*.aab
+app-release-signed.apk
+app-release-unsigned-aligned.apk

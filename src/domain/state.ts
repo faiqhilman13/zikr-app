@@ -119,7 +119,7 @@ export const sanitizeState = (value: unknown): ZikrState => {
 
   const rawSettings = isRecord(value.settings) ? value.settings : {};
   const rawReminders = isRecord(rawSettings.reminders) ? rawSettings.reminders : {};
-  const languages: Language[] = ['en', 'ms', 'ar'];
+  const languages: Language[] = ['en', 'ms', 'id', 'ar'];
   const themes: ThemePreference[] = ['system', 'light', 'dark'];
 
   const rawTimer = value.activeTimer;
