@@ -28,7 +28,7 @@ export function BreakdownRows({ log, presets, showTargets = false }: { log: Dail
         <div className="phrase-info">
           <b>{preset.title}</b>
           {minutes > 0 && <small>{t('minTimed', { minutes })}</small>}
-          {hasTarget && <div className="fine-progress"><i style={{ width: `${ratio * 100}%` }} /></div>}
+          {hasTarget && <div className="fine-progress"><i style={{ '--fill': ratio } as React.CSSProperties} /></div>}
         </div>
         <span className="phrase-count"><strong>{count.toLocaleString(i18n.language)}</strong>{hasTarget && <small>/ {preset.target.toLocaleString(i18n.language)}</small>}</span>
       </li>;

@@ -65,7 +65,7 @@ export function CounterView({ state, onIncrement, onUndo, onSelect, onStartTimer
       <div><p className="eyebrow" id="daily-title">{t('today')}</p><strong>{totalForLog(today)}</strong><span>{t('repetitions')}</span></div>
       <div className="streak-whisper">
         {hasTarget
-          ? <><span>{count >= target ? t('complete') : `${Math.max(0, target - count)} ${t('remaining')}`}</span><div className="fine-progress"><i style={{ width: `${ratio * 100}%` }} /></div></>
+          ? <><span>{count >= target ? t('complete') : `${Math.max(0, target - count)} ${t('remaining')}`}</span><div className="fine-progress"><i style={{ '--fill': ratio } as React.CSSProperties} /></div></>
           : <span>{t('noTarget')}</span>}
       </div>
     </section>
