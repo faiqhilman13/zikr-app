@@ -1,5 +1,6 @@
 import type { ActiveTimer, DailyLog, DhikrPreset, ZikrState } from './types';
 import type { Language, ThemePreference } from './types';
+import { DEFAULT_PRESET, presetIds } from '../theme';
 
 export const starterPresets: DhikrPreset[] = [
   { id: 'tasbih', title: 'Tasbih', arabic: 'سُبْحَانَ ٱللَّٰهِ', transliteration: 'SubhanAllah', target: 33 },
@@ -28,6 +29,7 @@ export const initialState = (): ZikrState => ({
   settings: {
     language: 'en',
     theme: 'system',
+    palette: DEFAULT_PRESET,
     haptics: true,
     reducedMotion: false,
     analyticsOptIn: false,
@@ -144,6 +146,8 @@ export const sanitizeState = (value: unknown): ZikrState => {
     settings: {
       language: languages.includes(rawSettings.language as Language) ? rawSettings.language as Language : defaults.settings.language,
       theme: themes.includes(rawSettings.theme as ThemePreference) ? rawSettings.theme as ThemePreference : defaults.settings.theme,
+      // An unknown id falls back rather than throwing, so an older backup still restores.
+      palette: typeof rawSettings.palette === 'string' && presetIds.includes(rawSettings.palette) ? rawSettings.palette : defaults.settings.palette,
       haptics: rawSettings.haptics !== false,
       reducedMotion: rawSettings.reducedMotion === true,
       analyticsOptIn: rawSettings.analyticsOptIn === true,

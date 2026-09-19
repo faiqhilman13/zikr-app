@@ -29,6 +29,9 @@ export interface ReminderSettings {
 export interface UserSettings {
   language: Language;
   theme: ThemePreference;
+  /** Id of a curated palette. Only ids the app ships resolve, so nothing a backup
+   * carries can reach a style attribute. */
+  palette: string;
   haptics: boolean;
   reducedMotion: boolean;
   analyticsOptIn: boolean;

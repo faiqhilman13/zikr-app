@@ -123,7 +123,10 @@ export const resources = {
     timerCountNote: 'Repetitions are added to today at your chosen pace and saved as you go. Counting stops at midnight, or after {{minutes}} minutes.',
     seoTitle: 'Free Tasbih Counter & Dhikr Tracker, Works Offline | Zikr',
     seoDescription: 'Free tasbih counter for daily dhikr. Track tasbih, tahmid, takbir and salawat with targets and streaks. Works offline, no account, stays on your device.',
-    otherLanguages: 'Also available in'
+    otherLanguages: 'Also available in',
+    palette: 'Palette',
+    paletteNote: 'Each palette carries its own light and dark.',
+    paletteRoyal: 'Royal', paletteGarden: 'Garden', paletteDusk: 'Dusk', paletteInk: 'Ink', paletteRose: 'Rose'
   } },
   ms: { translation: {
     feedbackTitle: "Bantu membentuk Zikr",
@@ -229,7 +232,10 @@ export const resources = {
     timerCountNote: 'Ulangan ditambah pada hari ini mengikut kadar pilihan anda dan disimpan sepanjang sesi. Pengiraan berhenti pada tengah malam, atau selepas {{minutes}} minit.',
     seoTitle: 'Kaunter Tasbih & Penjejak Zikir Percuma, Luar Talian | Zikr',
     seoDescription: 'Kaunter tasbih percuma untuk zikir harian. Jejaki tasbih, tahmid, takbir dan selawat dengan sasaran dan rentak harian. Berfungsi luar talian, tanpa akaun.',
-    otherLanguages: 'Juga tersedia dalam'
+    otherLanguages: 'Juga tersedia dalam',
+    palette: 'Palet',
+    paletteNote: 'Setiap palet membawa versi cerah dan gelapnya sendiri.',
+    paletteRoyal: 'Diraja', paletteGarden: 'Taman', paletteDusk: 'Senja', paletteInk: 'Dakwat', paletteRose: 'Mawar'
   } },
   id: { translation: {
     feedbackTitle: "Bantu membentuk Zikr",
@@ -335,7 +341,10 @@ export const resources = {
     timerCountNote: 'Pengulangan ditambahkan ke hari ini sesuai irama pilihan Anda dan tersimpan seiring sesi berjalan. Penghitungan berhenti pada tengah malam, atau setelah {{minutes}} menit.',
     seoTitle: 'Penghitung Tasbih & Pelacak Zikir Gratis, Luring | Zikr',
     seoDescription: 'Penghitung tasbih gratis untuk zikir harian. Lacak tasbih, tahmid, takbir, dan salawat dengan target dan rentetan harian. Berfungsi luring, tanpa akun.',
-    otherLanguages: 'Tersedia juga dalam'
+    otherLanguages: 'Tersedia juga dalam',
+    palette: 'Palet',
+    paletteNote: 'Setiap palet memiliki versi terang dan gelapnya sendiri.',
+    paletteRoyal: 'Kerajaan', paletteGarden: 'Taman', paletteDusk: 'Senja', paletteInk: 'Tinta', paletteRose: 'Mawar'
   } },
   tr: { translation: {
     feedbackTitle: "Zikr'i birlikte şekillendirin",
@@ -441,7 +450,10 @@ export const resources = {
     timerCountNote: "Tekrarlar seçtiğiniz tempoya göre bugüne eklenir ve siz devam ederken kaydedilir. Sayım gece yarısı veya {{minutes}} dakika sonra durur.",
     seoTitle: "Ücretsiz Tesbih Sayacı ve Zikir Takibi, Çevrimdışı | Zikr",
     seoDescription: "Günlük zikir için ücretsiz tesbih sayacı. Tesbih, tahmid, tekbir ve salavatı hedefler ve serilerle takip edin. Çevrimdışı çalışır, hesap gerekmez.",
-    otherLanguages: "Şu dillerde de var"
+    otherLanguages: "Şu dillerde de var",
+    palette: "Palet",
+    paletteNote: "Her palet kendi açık ve koyu tonunu taşır.",
+    paletteRoyal: "Kraliyet", paletteGarden: "Bahçe", paletteDusk: "Akşam", paletteInk: "Mürekkep", paletteRose: "Gül"
   } },
   ar: { translation: {
     feedbackTitle: "ساعد في تحسين ذكر",
@@ -547,6 +559,9 @@ export const resources = {
     timerCountNote: 'تُضاف التكرارات إلى اليوم وفق الإيقاع الذي اخترته وتُحفظ أولًا بأول. يتوقف العدّ عند منتصف الليل أو بعد {{minutes}} دقيقة.',
     seoTitle: 'عدّاد تسبيح وذِكر مجاني يعمل دون اتصال | ذِكر',
     seoDescription: 'عدّاد تسبيح مجاني للذكر اليومي. تابع التسبيح والتحميد والتكبير والصلاة على النبي بأهداف ومتابعة يومية. يعمل دون اتصال وبلا حساب.',
-    otherLanguages: 'متوفر أيضًا بـ'
+    otherLanguages: 'متوفر أيضًا بـ',
+    palette: 'لوحة الألوان',
+    paletteNote: 'لكل لوحة نسختها الفاتحة والداكنة.',
+    paletteRoyal: 'ملكي', paletteGarden: 'حديقة', paletteDusk: 'غَسَق', paletteInk: 'حِبر', paletteRose: 'ورد'
   } }
 } as const;

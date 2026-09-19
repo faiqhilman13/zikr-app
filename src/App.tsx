@@ -9,6 +9,7 @@ import { Onboarding } from './components/Onboarding';
 import { ProgressView } from './components/ProgressView';
 import { SettingsView } from './components/SettingsView';
 import { dayKey, selectedPreset } from './domain/state';
+import { paletteFor } from './theme';
 import { disablePushNotifications } from './services/push';
 import { track } from './data/analytics';
 import { usePwaUpdate } from './hooks/usePwaUpdate';
@@ -28,6 +29,7 @@ export function App() {
   const pwa = usePwaUpdate();
 
   const theme = controller.state.settings.theme;
+  const palette = controller.state.settings.palette;
   const reducedMotion = controller.state.settings.reducedMotion;
   useEffect(() => {
     const media = window.matchMedia('(prefers-color-scheme: dark)');
@@ -35,13 +37,20 @@ export function App() {
       const dark = theme === 'dark' || (theme === 'system' && media.matches);
       document.documentElement.dataset.theme = dark ? 'dark' : 'light';
       document.documentElement.classList.toggle('reduce-motion', reducedMotion);
-      document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#0a1628' : '#faf8f5');
-      try { localStorage.setItem('zikr-theme', theme); } catch { /* pre-paint hint only */ }
+      // Derived here from the shipped seeds, never from stored text, then cached for the
+      // pre-paint script so a chosen palette does not flash the default on next launch.
+      const resolved = paletteFor(palette, dark ? 'dark' : 'light');
+      for (const [name, value] of Object.entries(resolved)) document.documentElement.style.setProperty(name, value);
+      document.querySelector('meta[name="theme-color"]')?.setAttribute('content', resolved['--bg']);
+      try {
+        localStorage.setItem('zikr-theme', theme);
+        localStorage.setItem('zikr-palette', JSON.stringify(resolved));
+      } catch { /* pre-paint hint only */ }
     };
     apply();
     media.addEventListener('change', apply);
     return () => media.removeEventListener('change', apply);
-  }, [theme, reducedMotion]);
+  }, [theme, palette, reducedMotion]);
 
   // Single source of truth for language: whatever lands in state (settings screen,
   // backup restore, reset) is mirrored to i18next, the document, and the pre-boot hint.

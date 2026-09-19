@@ -231,3 +231,25 @@ describe('counting the timer into repetitions', () => {
   it.each([[3, 3], [2.55, 2.6], [0.1, 0.5], [9999, 600], [0, null], [-1, null], [NaN, null], ['3', null], [undefined, null]])(
     'reads a pace of %s as %s', (input, output) => expect(clampPace(input)).toBe(output));
 });
+
+
+describe('palette choice', () => {
+  it('defaults to the shipped palette', () => {
+    expect(initialState().settings.palette).toBe('royal');
+  });
+
+  it('keeps a palette the app ships', () => {
+    const s = initialState();
+    s.settings.palette = 'garden';
+    expect(sanitizeState(JSON.parse(JSON.stringify(s))).settings.palette).toBe('garden');
+  });
+
+  // The id is the only thing stored; colours are derived from the app's own seeds. An
+  // imported backup therefore cannot put arbitrary text anywhere near a style attribute.
+  it.each(['nonsense', '', 'red; } body { display: none } /*', 42, null, {}])(
+    'falls back to the default rather than trusting %s', (value) => {
+      const s = initialState();
+      const restored = sanitizeState({ ...JSON.parse(JSON.stringify(s)), settings: { ...s.settings, palette: value } });
+      expect(restored.settings.palette).toBe('royal');
+    });
+});
