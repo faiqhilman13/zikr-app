@@ -128,6 +128,7 @@ const composite = (base: Palette, primary: string): Palette => {
     '--orb-glow': rgba(base['--orb-2'], 0.35),
     '--orb-glow-ring': rgba(base['--orb-2'], 0.55),
     '--on-orb-soft': rgba(base['--on-orb'], 0.82),
+    '--nav-shadow': rgba(deep, 0.1),
     '--soil': rgba(deep, 0.45),
     '--scrim': rgba(deep, 0.72)
   };
@@ -236,9 +237,11 @@ export const presets: Preset[] = [
   },
   {
     id: 'garden',
+    // Leaf rather than brass. The accent drives the counting orb, which dominates the
+    // screen, and a warm gold there left Garden reading as a tint of Royal.
     seeds: {
-      light: { primary: '#1f5137', secondary: '#a8760f', tertiary: '#f7f6f0' },
-      dark: { primary: '#1f5137', secondary: '#b8860b', tertiary: '#e6e9e2' }
+      light: { primary: '#1f5137', secondary: '#6f8f33', tertiary: '#f7f6f0' },
+      dark: { primary: '#1f5137', secondary: '#7ea33c', tertiary: '#e6e9e2' }
     }
   },
   {
@@ -257,9 +260,11 @@ export const presets: Preset[] = [
   },
   {
     id: 'rose',
+    // Dusty rose rather than gold, and kept off Dusk's orange-brown so the two do not
+    // collide at the centre of the screen.
     seeds: {
-      light: { primary: '#6d2338', secondary: '#a8762f', tertiary: '#fbf5f4' },
-      dark: { primary: '#6d2338', secondary: '#c2924a', tertiary: '#eee2e4' }
+      light: { primary: '#6d2338', secondary: '#b05a74', tertiary: '#fbf5f4' },
+      dark: { primary: '#6d2338', secondary: '#c46d88', tertiary: '#eee2e4' }
     }
   }
 ];
