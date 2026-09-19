@@ -18,6 +18,10 @@ import { requestDurableStorage } from './services/storage';
 export function App() {
   const controller = useZikrState();
   const { t } = useTranslation();
+  // Read once, before storage opens, the same way the theme and language hints are read.
+  const [returning] = useState(() => {
+    try { return localStorage.getItem('zikr-onboarded') === '1'; } catch { return false; }
+  });
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [timerSetup, setTimerSetup] = useState(false);
   const [tab, setTab] = useState<Tab>('count');
@@ -53,6 +57,17 @@ export function App() {
     try { localStorage.setItem('zikr-language', language); } catch { /* first-run hint only */ }
   }, [language, controller.ready]);
 
+  // Mirrors onboarding status for the next cold start, so the boot screen matches what
+  // the person will actually land on. Cleared by a reset along with everything else.
+  const onboarded = controller.state.onboardingComplete;
+  useEffect(() => {
+    if (!controller.ready) return;
+    try {
+      if (onboarded) localStorage.setItem('zikr-onboarded', '1');
+      else localStorage.removeItem('zikr-onboarded');
+    } catch { /* pre-boot hint only */ }
+  }, [onboarded, controller.ready]);
+
   // Installed PWAs stay resident overnight; refresh state when the day rolls over so
   // the header date and today's counts do not show yesterday.
   const refresh = controller.refresh;
@@ -78,7 +93,13 @@ export function App() {
     {(pwa.needRefresh || pwa.offlineReady) && <aside className="update-toast" role="status"><span>{pwa.needRefresh ? t('updateReady') : t('offlineReady')}</span>{pwa.needRefresh && <button className="button small" disabled={controller.pending} onClick={() => void pwa.update()}>{t('updateNow')}</button>}<button className="text-link" onClick={pwa.close}>{t('done')}</button></aside>}
   </>;
 
-  if (!controller.ready) return <div className="splash" aria-label={t('loadingLabel')}><span>ذِكر</span></div>;
+  // A first visit paints the prerendered landing before any script runs. Replacing it
+  // with a splash while IndexedDB opens would flash the page for the one audience that
+  // arrived from search, so the landing stands in as the loading state for anyone who
+  // has not onboarded. Returning visitors still get the splash on their way to the app.
+  if (!controller.ready) return returning
+    ? <div className="splash" aria-label={t('loadingLabel')}><span>ذِكر</span></div>
+    : <Landing onBegin={() => setShowOnboarding(true)} />;
 
   if (controller.storageFailed) return <main className="recovery-screen" role="alert"><h1>{t('storageBlockedTitle')}</h1><p>{t('storageBlockedBody')}</p><button className="button" onClick={() => window.location.reload()}>{t('retryLoad')}</button><a href="/support.html">{t('support')}</a>{notices}</main>;
 

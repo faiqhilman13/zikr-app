@@ -317,6 +317,7 @@ input, select { min-height: 44px; border: 1px solid var(--line); border-radius: 
 .update-toast { position: fixed; z-index: 60; bottom: 100px; left: 50%; transform: translateX(-50%); width: min(92%, 560px); padding: 14px 16px; display: flex; align-items: center; gap: 12px; border: 1px solid var(--line); border-radius: 18px; background: var(--surface); box-shadow: var(--shadow); }
 .update-toast span { flex: 1; }
 .update-toast.storage-warning { bottom: 176px; border-color: rgba(159,51,45,.5); }
+:root[data-boot="app"] #root > .landing[data-prerendered] { display: none; }
 .splash { min-height: 100dvh; display: grid; place-items: center; background: var(--bg); color: var(--gold-text); }
 .splash span { font-family: 'Noto Sans Arabic Variable', sans-serif; font-size: 4rem; }
 

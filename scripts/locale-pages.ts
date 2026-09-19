@@ -42,11 +42,53 @@ const ICONS = {
   noAccount: trustIcon('<path d="M2 21a8 8 0 0 1 11.3-7.3"/><circle cx="10" cy="8" r="5"/><path d="m17 17 5 5"/><path d="m22 17-5 5"/>')
 };
 
+/**
+ * The landing markup itself, shared by the locale pages and by the English copy
+ * injected into the app shell. Mirrors Landing.tsx so the same stylesheet applies and
+ * React replacing it on mount is not visible.
+ */
+export function landingBody(locale: AppLanguage, options: { marker?: boolean } = {}): string {
+  const t = stringsFor(locale);
+  const others = supported.filter((other) => other !== locale);
+  return `    <main class="landing"${options.marker ? ' data-prerendered' : ''}>
+      <header class="landing-nav">
+        <a class="brand" href="${localePath(locale)}" aria-label="${esc(t.brandHome)}"><span class="brand-mark"><img src="/brand-symbol.png" alt="" /></span><span>${esc(t.brand)}</span></a>
+        <a class="text-link" href="#privacy">${esc(t.privacy)}</a>
+      </header>
+      <section class="hero" id="top">
+        <div class="hero-copy">
+          <p class="eyebrow">${esc(t.tagline)}</p>
+          <h1>${esc(t.landingTitle)}</h1>
+          <p class="hero-body">${esc(t.landingBody)}</p>
+          <div class="hero-actions"><a class="button" href="/?lang=${locale}">${esc(t.begin)}</a></div>
+          <div class="trust-row">
+            <span>${ICONS.lock}${esc(t.private)}</span><span>${ICONS.offline}${esc(t.offline)}</span><span>${ICONS.noAccount}${esc(t.noAccount)}</span>
+          </div>
+        </div>
+        <div class="ritual-preview" aria-label="${esc(t.previewLabel)}">
+          <div class="preview-orbit"><span lang="ar" dir="rtl">سُبْحَانَ ٱللَّٰهِ</span><small>SubhanAllah</small><strong>33</strong></div>
+          <p>${esc(t.previewTagline)}</p>
+        </div>
+      </section>
+      <section class="landing-section" id="privacy">
+        <p class="eyebrow">${esc(t.private)}</p>
+        <h2>${esc(t.privacyTitle)}</h2>
+        <p>${esc(t.privacyBody)}</p>
+        <div class="footer-links"><a href="/privacy.html">${esc(t.privacy)}</a><a href="/support.html">${esc(t.support)}</a></div>
+      </section>
+      <section class="landing-section">
+        <p class="eyebrow">${esc(t.otherLanguages)}</p>
+        <div class="footer-links">
+${others.map((other) => `          <a href="${localePath(other)}" hreflang="${other}" lang="${other}">${esc(languageNames[other])}</a>`).join('\n')}
+        </div>
+      </section>
+    </main>`;
+}
+
 export function page(locale: AppLanguage, site: string, css: string): string {
   const t = stringsFor(locale);
   const dir = rtl.includes(locale) ? 'rtl' : 'ltr';
   const canonical = `${site}${localePath(locale)}`;
-  const others = supported.filter((other) => other !== locale);
 
   return `<!doctype html>
 <html lang="${locale}" dir="${dir}">
@@ -91,39 +133,7 @@ ${JSON.stringify({
     </script>
   </head>
   <body>
-    <main class="landing">
-      <header class="landing-nav">
-        <a class="brand" href="${localePath(locale)}" aria-label="${esc(t.brandHome)}"><span class="brand-mark"><img src="/brand-symbol.png" alt="" /></span><span>${esc(t.brand)}</span></a>
-        <a class="text-link" href="#privacy">${esc(t.privacy)}</a>
-      </header>
-      <section class="hero" id="top">
-        <div class="hero-copy">
-          <p class="eyebrow">${esc(t.tagline)}</p>
-          <h1>${esc(t.landingTitle)}</h1>
-          <p class="hero-body">${esc(t.landingBody)}</p>
-          <div class="hero-actions"><a class="button" href="/?lang=${locale}">${esc(t.begin)}</a></div>
-          <div class="trust-row">
-            <span>${ICONS.lock}${esc(t.private)}</span><span>${ICONS.offline}${esc(t.offline)}</span><span>${ICONS.noAccount}${esc(t.noAccount)}</span>
-          </div>
-        </div>
-        <div class="ritual-preview" aria-label="${esc(t.previewLabel)}">
-          <div class="preview-orbit"><span lang="ar" dir="rtl">سُبْحَانَ ٱللَّٰهِ</span><small>SubhanAllah</small><strong>33</strong></div>
-          <p>${esc(t.previewTagline)}</p>
-        </div>
-      </section>
-      <section class="landing-section" id="privacy">
-        <p class="eyebrow">${esc(t.private)}</p>
-        <h2>${esc(t.privacyTitle)}</h2>
-        <p>${esc(t.privacyBody)}</p>
-        <div class="footer-links"><a href="/privacy.html">${esc(t.privacy)}</a><a href="/support.html">${esc(t.support)}</a></div>
-      </section>
-      <section class="landing-section">
-        <p class="eyebrow">${esc(t.otherLanguages)}</p>
-        <div class="footer-links">
-${others.map((other) => `          <a href="${localePath(other)}" hreflang="${other}" lang="${other}">${esc(languageNames[other])}</a>`).join('\n')}
-        </div>
-      </section>
-    </main>
+${landingBody(locale)}
   </body>
 </html>
 `;
@@ -173,10 +183,14 @@ export function localePages(options: { site: string }): Plugin {
       if (!css) throw new Error('locale-pages: could not find the built stylesheet in dist/index.html');
 
       // The default locale must carry the same annotations, or its alternates have no
-      // return link and Google discards the whole cluster.
-      if (!index.includes('hreflang=')) {
-        await fs.writeFile(path.join(dist, 'index.html'), index.replace('  </head>', `${hreflang(site)}\n  </head>`));
-      }
+      // return link and Google discards the whole cluster. English also gets the landing
+      // prerendered into the root element: it is the one locale served by the app shell,
+      // which otherwise ships no text for a crawler to read. React clears the container
+      // on mount and renders the same markup, so nothing visibly changes.
+      let shell = index;
+      if (!shell.includes('hreflang=')) shell = shell.replace('  </head>', `${hreflang(site)}\n  </head>`);
+      shell = shell.replace('<div id="root"></div>', `<div id="root">\n${landingBody(DEFAULT, { marker: true })}\n    </div>`);
+      if (shell !== index) await fs.writeFile(path.join(dist, 'index.html'), shell);
 
       for (const locale of supported.filter((item) => item !== DEFAULT)) {
         const dir = path.join(dist, locale);

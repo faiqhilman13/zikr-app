@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { supported } from '../src/locales';
-import { localePath, page, sitemap } from './locale-pages';
+import { landingBody, localePath, page, sitemap } from './locale-pages';
 
 const SITE = 'https://myzikr.netlify.app';
 const pages = supported.filter((locale) => locale !== 'en').map((locale) => ({ locale, html: page(locale, SITE, '/assets/index-test.css') }));
@@ -66,5 +66,14 @@ describe('locale landing pages', () => {
     }
     expect(xml).toContain('xmlns:xhtml="http://www.w3.org/1999/xhtml"');
     expect(xml).toContain('hreflang="x-default"');
+  });
+
+  // Only the copy injected into the app shell may carry the marker. The stylesheet hides
+  // it for returning visitors, and React's own Landing must never match that rule or the
+  // landing would stay hidden after a reset.
+  it('marks only the prerendered copy, never a locale page', () => {
+    expect(landingBody('en', { marker: true })).toContain('<main class="landing" data-prerendered>');
+    expect(landingBody('en')).toContain('<main class="landing">');
+    for (const { html } of pages) expect(html).not.toContain('data-prerendered');
   });
 });
