@@ -28,6 +28,7 @@
   --orb-1: #efc967;
   --orb-2: #d4a017;
   --orb-3: #9d7611;
+  --orb-arc: #a67d12;
   --on-orb: #0f172e;
   --button-shadow: rgba(30, 58, 138, 0.22);
   --line: rgba(30, 58, 138, 0.14);
@@ -72,6 +73,7 @@
   --orb-1: #efc967;
   --orb-2: #d4a017;
   --orb-3: #9d7611;
+  --orb-arc: #d4a017;
   --on-orb: #0f172e;
   --button-shadow: rgba(30, 58, 138, 0.3);
   --line: rgba(234, 230, 225, 0.2);
@@ -204,7 +206,7 @@ h2 { font-size: clamp(2rem, 5vw, 3.2rem); line-height: 1; font-weight: 520; }
 .fine-progress i { display: block; width: 100%; height: 100%; background: var(--gold-strong); transform-origin: left; transform: scaleX(var(--fill, 0)); transition: transform .4s ease; }
 [dir='rtl'] .fine-progress i { transform-origin: right; }
 .count-stage { min-height: 560px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-.count-orb { --progress: 0deg; width: min(76vw, 330px); aspect-ratio: 1; border: 0; border-radius: 50%; padding: 9px; background: conic-gradient(var(--orb-2) var(--progress), var(--surface-2) 0); cursor: pointer; box-shadow: 0 22px 58px var(--orb-glow); transition: transform .08s ease; }
+.count-orb { --progress: 0deg; width: min(76vw, 330px); aspect-ratio: 1; border: 0; border-radius: 50%; padding: 9px; background: conic-gradient(var(--orb-arc) var(--progress), var(--surface-2) 0); cursor: pointer; box-shadow: 0 22px 58px var(--orb-glow); transition: transform .08s ease; }
 .count-orb:active { transform: scale(.975); }
 .orb-inner { width: 100%; height: 100%; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: radial-gradient(circle at 38% 32%, var(--orb-1) 0%, var(--orb-2) 52%, var(--orb-3) 100%); color: var(--on-orb); padding: 30px; }
 .orb-inner .arabic { font-family: 'Noto Sans Arabic Variable', sans-serif; font-size: clamp(1.5rem, 7vw, 2.25rem); line-height: 1.7; text-align: center; }

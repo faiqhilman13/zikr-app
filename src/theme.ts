@@ -172,6 +172,9 @@ export function derive(mode: ThemeMode, seeds: Seeds): Palette {
       '--orb-1': withHsl(secondary, { l: 0.67 }),
       '--orb-2': secondary,
       '--orb-3': shift(secondary, -0.12),
+      // The progress ring reads against the unfilled track behind it, not against the orb
+      // it wraps, so it is walked to 3:1 there rather than taken straight from the accent.
+      '--orb-arc': readable(secondary, surface2, 3),
       '--on-orb': readable(withHsl(primary, { s: Math.min(toHsl(primary).s, 0.5), l: 0.12 }), secondary, 4.5),
       '--button-shadow': rgba(primary, 0.22),
       '--line': rgba(primary, 0.14),
@@ -214,6 +217,7 @@ export function derive(mode: ThemeMode, seeds: Seeds): Palette {
     '--orb-1': withHsl(secondary, { l: 0.67 }),
     '--orb-2': secondary,
     '--orb-3': shift(secondary, -0.12),
+    '--orb-arc': readable(secondary, surface2, 3),
     '--on-orb': readable(withHsl(primary, { s: Math.min(tint, 0.5), l: 0.12 }), secondary, 4.5),
     '--button-shadow': rgba(primary, 0.3),
     '--line': rgba(ink, 0.2),

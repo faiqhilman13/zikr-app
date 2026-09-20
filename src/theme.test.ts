@@ -1,5 +1,7 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { contrast, derive, isHex, paletteFor, presets, readable, type ThemeMode } from './theme';
+import { contrast, DEFAULT_PRESET, derive, isHex, paletteFor, presets, readable, type ThemeMode } from './theme';
 
 const MODES: ThemeMode[] = ['light', 'dark'];
 const every = presets.flatMap((preset) => MODES.map((mode) => ({ id: preset.id, mode, palette: paletteFor(preset.id, mode) })));
@@ -62,6 +64,13 @@ describe('every preset, in both modes', () => {
     expect(contrast(palette['--focus'], palette['--bg'])).toBeGreaterThanOrEqual(3);
   });
 
+  // The counting ring is the only indicator of how far through a round you are, and it is
+  // read against the unfilled track it shares an edge with, so that is the pair to check.
+  // Taking the accent straight through left Royal's gold at 2:1 on its own pale track.
+  it.each(every)('$id/$mode keeps the progress arc visible against its track', ({ palette }) => {
+    expect(contrast(palette['--orb-arc'], palette['--surface-2'])).toBeGreaterThanOrEqual(3);
+  });
+
   it.each(every)('$id/$mode separates its surfaces from the page', ({ palette }) => {
     expect(palette['--surface']).not.toBe(palette['--bg']);
     expect(palette['--surface-2']).not.toBe(palette['--surface']);
@@ -95,6 +104,27 @@ describe('presets', () => {
 
   it('falls back to the default for an id it does not know', () => {
     expect(paletteFor('nope', 'light')).toEqual(paletteFor('royal', 'light'));
+  });
+
+  /**
+   * The stylesheet repeats the default palette as literal values so a first paint has
+   * colours before any script runs. That copy is written by hand, and a variable added to
+   * the derivation but missed in either block silently falls back to nothing.
+   */
+  it('keeps the stylesheet defaults equal to the derived default palette', () => {
+    const css = fs.readFileSync(path.join(import.meta.dirname, 'styles.css'), 'utf8');
+    const block = (selector: string) => {
+      const start = css.indexOf(`${selector} {`);
+      const declarations = css.slice(start, css.indexOf('\n}', start));
+      return Object.fromEntries([...declarations.matchAll(/^\s*(--[a-z0-9-]+):\s*(.+?);$/gm)].map(([, name, value]) => [name, value]));
+    };
+
+    for (const [selector, mode] of [[':root', 'light'], [":root[data-theme='dark']", 'dark']] as const) {
+      const declared = block(selector);
+      for (const [name, value] of Object.entries(paletteFor(DEFAULT_PRESET, mode))) {
+        expect(declared[name], `${selector} ${name}`).toBe(value);
+      }
+    }
   });
 
   it('derives from seeds rather than reading them straight through', () => {
