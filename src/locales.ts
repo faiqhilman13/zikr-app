@@ -75,7 +75,7 @@ export const resources = {
     progressSummary: 'Progress summary', lastSeven: 'Last seven days', rhythmTitle: 'Your rhythm',
     chartNote: 'Each bar fills toward your {{target}}-repetition daily intention.', weekTotal: '{{total}} total', daysUnit: 'days',
     barAria: '{{total}} of {{target}} repetitions',
-    gardenStage0: 'A seed for today', gardenStage1: 'A new shoot', gardenStage2: 'Taking root', gardenStage3: 'Ready to bloom', gardenStage4: 'In full bloom',
+    gardenStage0: 'One bare tree', gardenStage1: 'Coming into leaf', gardenStage2: 'The garden takes root', gardenStage3: 'Almost in fruit', gardenStage4: 'The garden in full fruit',
     gardenAria: 'Garden growth stage {{stage}} of 5',
     intentionSummary: '{{percent}}% of today’s intention · {{count}} of {{target}}',
     historyTitle: 'History', daysStored: '{{count}} days stored', showMore: 'Show more',

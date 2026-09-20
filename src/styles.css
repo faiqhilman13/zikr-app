@@ -43,6 +43,10 @@
   --nav-shadow: rgba(13, 19, 38, 0.1);
   --soil: rgba(13, 19, 38, 0.45);
   --scrim: rgba(13, 19, 38, 0.72);
+  --garden-trunk: #516cb9;
+  --garden-canopy: #d4a017;
+  --garden-canopy-light: #f1d17e;
+  --garden-fruit: #85630a;
   --radius: 20px;
 }
 
@@ -88,6 +92,10 @@
   --nav-shadow: rgba(13, 19, 38, 0.1);
   --soil: rgba(13, 19, 38, 0.45);
   --scrim: rgba(13, 19, 38, 0.72);
+  --garden-trunk: #516cb9;
+  --garden-canopy: #d4a017;
+  --garden-canopy-light: #f1d17e;
+  --garden-fruit: #85630a;
 }
 
 /* The surfaces nobody draws: selection, caret, form accents and the scrollbar all ship
@@ -281,26 +289,21 @@ button.heat-cell:hover { transform: scale(1.18); }
 .heatmap-legend { margin-top: 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 5px; color: var(--muted); font-size: .68rem; }
 .heatmap-legend .heat-cell { width: 12px; display: inline-block; }
 .legend-done { display: inline-flex; align-items: center; gap: 6px; margin-inline-start: 14px; }
-.garden-card { margin: 34px 0; padding: clamp(24px, 5vw, 42px); border-radius: var(--radius); display: grid; grid-template-columns: 210px 1fr; gap: 35px; align-items: center; background: var(--panel); color: var(--on-panel); }
+.garden-card { margin: 34px 0; padding: clamp(20px, 4vw, 34px); border-radius: var(--radius); display: grid; gap: 22px; background: var(--panel); color: var(--on-panel); }
 .garden-card .eyebrow { color: var(--accent-on-panel); }
 .garden-card p:not(.eyebrow), .garden-card small { color: var(--on-panel-soft); }
 .garden-card .fine-progress { background: var(--panel-line); }
 .garden-card .fine-progress i { background: var(--gold); }
-.garden-visual { width: 190px; aspect-ratio: 1; border: 1px solid var(--panel-line); border-radius: 50%; display: grid; place-items: center; }
-.garden-plant { width: 150px; height: 150px; overflow: visible; }
-.garden-plant * { vector-effect: non-scaling-stroke; }
-.garden-soil { fill: var(--soil); stroke: var(--panel-line); }
-.garden-seed { fill: var(--orb-2); stroke: var(--accent-on-panel); stroke-width: 2; }
-.garden-spark { fill: none; stroke: var(--accent-ring); stroke-width: 2; stroke-linecap: round; }
-.garden-stem { fill: none; stroke: var(--accent-on-panel); stroke-width: 4; stroke-linecap: round; }
-.garden-leaf { fill: var(--accent-soft); stroke: var(--accent-on-panel); stroke-width: 2.5; stroke-linejoin: round; }
-.garden-bud { fill: var(--accent-ring); stroke: var(--accent-on-panel); stroke-width: 2.5; }
-.garden-flower path { fill: var(--accent-ring); stroke: var(--accent-on-panel); stroke-width: 2; stroke-linejoin: round; }
-.garden-flower circle { fill: var(--accent-on-panel); stroke: var(--orb-2); stroke-width: 2; }
+/* The garden is one complete 4:3 world, progressing through authored gouache plates. */
+.garden-visual { position: relative; width: 100%; aspect-ratio: 4 / 3; border: 1px solid var(--panel-line); border-radius: calc(var(--radius) - 10px); overflow: hidden; background: #d6c092; box-shadow: 0 18px 40px rgba(8, 18, 44, .24); isolation: isolate; }
+.garden-scene { display: block; width: 100%; height: 100%; }
+.garden-scene-image { object-fit: cover; transform-origin: 50% 58%; }
+@media (min-width: 760px) {
+  .garden-card { grid-template-columns: minmax(280px, 1fr) 1fr; align-items: center; column-gap: 34px; }
+}
 @media (prefers-reduced-motion: no-preference) {
-  .garden-leaf, .garden-bud, .garden-flower { transform-box: fill-box; transform-origin: center bottom; animation: garden-grow .55s cubic-bezier(.2,.8,.25,1) both; }
-  .leaf-right-low { animation-delay: .05s; } .leaf-left-high { animation-delay: .1s; } .leaf-right-high { animation-delay: .15s; } .garden-bud, .garden-flower { animation-delay: .2s; }
-  @keyframes garden-grow { from { opacity: 0; transform: scale(.25) rotate(-5deg); } to { opacity: 1; transform: scale(1) rotate(0); } }
+  .garden-scene-image { animation: garden-plate-reveal .65s cubic-bezier(.2,.8,.25,1) both; }
+  @keyframes garden-plate-reveal { from { opacity: 0; transform: scale(1.012); } to { opacity: 1; transform: scale(1); } }
 }
 .history-list { display: grid; gap: 8px; }
 .show-more { justify-self: center; margin-top: 10px; }
