@@ -6,6 +6,7 @@ import { createEncryptedBackup, readEncryptedBackup, saveTextFile } from '../dat
 import { disablePushNotifications, enablePushNotifications, pushConfigured } from '../services/push';
 import type { DhikrPreset, Language, ThemePreference, UserSettings, ZikrState } from '../domain/types';
 import { isAppleMobile, isStandalone } from '../services/platform';
+import { privacySignalSet } from '../data/usage';
 import { clampTarget } from '../domain/state';
 import { FeedbackCard } from './FeedbackCard';
 import { version } from '../../package.json';
@@ -30,6 +31,10 @@ export function SettingsView({ state, setState, patchSettings, setLanguage, setT
   const [status, setStatus] = useState('');
   const [custom, setCustom] = useState({ title: '', arabic: '', transliteration: '', target: 100 });
   const pushEnabled = state.settings.reminders.pushEnabled;
+  // Read once, like the other pre-boot hints. A browser-level opt-out silently wins over
+  // the toggle, so the card says so rather than leaving someone to wonder why the
+  // dashboard never moves.
+  const [privacySignal] = useState(privacySignalSet);
 
   const announce = (message: string) => { setStatus(message); window.setTimeout(() => setStatus(''), 5000); };
   const exportBackup = async () => {
@@ -108,7 +113,10 @@ export function SettingsView({ state, setState, patchSettings, setLanguage, setT
       <div className="button-stack"><button className="button secondary" disabled={busy} onClick={() => void exportBackup()}><Download />{t('export')}</button><button className="button secondary" disabled={busy} onClick={() => fileInput.current?.click()}><Upload />{t('import')}</button><input hidden aria-label={t('import')} ref={fileInput} type="file" accept="application/json,.json" onChange={(e) => void importBackup(e.target.files?.[0])} /></div>
     </section>
 
-    <section className="settings-card" aria-labelledby="privacy-title"><div className="settings-heading"><ShieldCheck /><div><h2 id="privacy-title">{t('privacyAnalytics')}</h2><p>{t('analyticsBody')}</p></div></div>{import.meta.env.VITE_ANALYTICS_ENDPOINT && <Toggle label={t('analyticsToggle')} checked={state.settings.analyticsOptIn} onChange={(checked) => patchSettings({ analyticsOptIn: checked })} />}<div className="footer-links"><a href="/privacy.html">{t('privacy')}</a><a href="/support.html">{t('support')}</a></div></section>
+    <section className="settings-card" aria-labelledby="privacy-title"><div className="settings-heading"><ShieldCheck /><div><h2 id="privacy-title">{t('privacyAnalytics')}</h2><p>{t('analyticsBody')}</p></div></div>
+      <Toggle label={t('analyticsToggle')} checked={state.settings.analyticsOptIn} onChange={(checked) => patchSettings({ analyticsOptIn: checked })} />
+      {state.settings.analyticsOptIn && privacySignal && <p className="fine-print">{t('usageSignalNote')}</p>}
+      <div className="footer-links"><a href="/privacy.html">{t('privacy')}</a><a href="/support.html">{t('support')}</a></div></section>
 
     <section className="danger-zone"><div><h2>{t('startOver')}</h2><p>{t('startOverBody')}</p></div><button className="button danger" disabled={busy} onClick={() => { if (window.confirm(t('resetConfirm'))) { setBusy(true); void onReset().catch((error: Error) => announce(error.message)).finally(() => setBusy(false)); } }}><RotateCcw />{t('reset')}</button></section>
     <p className="status-message" role="status" aria-live="polite">{status}</p>

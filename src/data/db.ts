@@ -7,6 +7,9 @@ interface StateRow { id: 'current'; value: ZikrState; revision?: number; generat
 
 class ZikrDatabase extends Dexie {
   records!: EntityTable<StateRow, 'id'>;
+  // Nothing writes here any more: per-interaction events were replaced by a daily
+  // presence report that never touches the database. The store stays in the schema so
+  // an install that still holds those rows keeps a reset that erases them.
   analytics!: EntityTable<AnalyticsEvent, 'id'>;
   constructor() {
     super('zikr-pwa');

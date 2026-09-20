@@ -4,6 +4,7 @@ import i18n, { detectedLanguage } from './i18n';
 import { AppShell, type Tab } from './components/AppShell';
 import { CounterView } from './components/CounterView';
 import { TimerSetup } from './components/TimerSetup';
+import { AnalyticsChoice } from './components/AnalyticsChoice';
 import { Landing } from './components/Landing';
 import { Onboarding } from './components/Onboarding';
 import { ProgressView } from './components/ProgressView';
@@ -11,7 +12,7 @@ import { SettingsView } from './components/SettingsView';
 import { dayKey, selectedPreset } from './domain/state';
 import { paletteFor } from './theme';
 import { disablePushNotifications } from './services/push';
-import { track } from './data/analytics';
+import { reportUsage } from './data/usage';
 import { usePwaUpdate } from './hooks/usePwaUpdate';
 import { useZikrState } from './hooks/useZikrState';
 import { requestDurableStorage } from './services/storage';
@@ -77,6 +78,25 @@ export function App() {
     } catch { /* pre-boot hint only */ }
   }, [onboarded, controller.ready]);
 
+  // Optional usage reporting, off unless it was turned on, and never carrying anything
+  // that was counted. Re-running is cheap: the reporter remembers what it already sent
+  // today. The interval is here for an installed app left open across a UTC midnight,
+  // and the listeners for a tab coming back or the network returning.
+  const analyticsOptIn = controller.state.settings.analyticsOptIn;
+  useEffect(() => {
+    if (!controller.ready) return;
+    const report = () => void reportUsage(analyticsOptIn, onboarded);
+    report();
+    const interval = window.setInterval(report, 60_000);
+    window.addEventListener('online', report);
+    document.addEventListener('visibilitychange', report);
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener('online', report);
+      document.removeEventListener('visibilitychange', report);
+    };
+  }, [analyticsOptIn, onboarded, controller.ready]);
+
   // Installed PWAs stay resident overnight; refresh state when the day rolls over so
   // the header date and today's counts do not show yesterday.
   const refresh = controller.refresh;
@@ -114,14 +134,16 @@ export function App() {
 
   if (!controller.state.onboardingComplete) return <>
     {notices}
-    <Landing onBegin={() => setShowOnboarding(true)} />
-    {showOnboarding && <Onboarding presets={controller.state.presets} onClose={() => setShowOnboarding(false)} onComplete={(id, target) => { controller.completeOnboarding(id, target, language); void requestDurableStorage(); void track(controller.state, 'onboarding_complete'); }} />}
+    <Landing onBegin={() => setShowOnboarding(true)} analyticsChoice={
+      <AnalyticsChoice enabled={analyticsOptIn} onEnable={() => controller.patchSettings({ analyticsOptIn: true })} />
+    } />
+    {showOnboarding && <Onboarding presets={controller.state.presets} onClose={() => setShowOnboarding(false)} onComplete={(id, target) => { controller.completeOnboarding(id, target, language); void requestDurableStorage(); }} />}
   </>;
 
   return <>
     <a className="skip-link" href="#main-content">{t('skipToContent')}</a>
-    <AppShell tab={tab} setTab={(next) => { setTab(next); void track(controller.state, 'tab_view', { tab: next }); }}>
-      {tab === 'count' && <CounterView state={controller.state} onIncrement={() => { controller.increment(); void track(controller.state, 'count_increment'); }} onUndo={controller.decrement} onSelect={controller.selectPreset} onStartTimer={() => setTimerSetup(true)} onStopTimer={() => { void controller.stopTimer(); void track(controller.state, 'timer_stop'); }} onTimerRollover={controller.refresh} />}
+    <AppShell tab={tab} setTab={setTab}>
+      {tab === 'count' && <CounterView state={controller.state} onIncrement={controller.increment} onUndo={controller.decrement} onSelect={controller.selectPreset} onStartTimer={() => setTimerSetup(true)} onStopTimer={() => void controller.stopTimer()} onTimerRollover={controller.refresh} />}
       {tab === 'progress' && <ProgressView state={controller.state} />}
       {tab === 'settings' && <SettingsView state={controller.state} setState={controller.setState} patchSettings={controller.patchSettings} setLanguage={controller.setLanguage} setTheme={controller.setTheme} updatePreset={controller.updatePreset} addPreset={controller.addPreset} removePreset={controller.removePreset} onReset={async () => { await disablePushNotifications(); if (await controller.reset()) setTab('count'); }} />}
     </AppShell>
@@ -131,7 +153,6 @@ export function App() {
       onStart={(secondsPerRep) => {
         setTimerSetup(false);
         void controller.startTimer(secondsPerRep);
-        void track(controller.state, 'timer_start', { counting: secondsPerRep !== null, ...(secondsPerRep === null ? {} : { secondsPerRep }) });
       }}
     />}
     {notices}

@@ -155,6 +155,9 @@ h2 { font-size: clamp(2rem, 5vw, 3.2rem); line-height: 1; font-weight: 520; }
 .landing-section { max-width: 920px; margin: auto; padding: 110px clamp(20px, 5vw, 72px); border-top: 1px solid var(--line); text-align: center; }
 .landing-section p:not(.eyebrow) { max-width: 650px; margin: 0 auto 25px; color: var(--muted); font-size: 1.05rem; }
 .footer-links { display: flex; justify-content: center; gap: 22px; }
+/* A question, not a pitch, so it sits lighter than the sections above it. */
+.analytics-choice { padding-block: clamp(54px, 9vw, 82px); }
+.analytics-choice .button-stack { justify-content: center; align-items: center; margin-bottom: 24px; }
 
 .modal-backdrop { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 20px; background: var(--scrim); backdrop-filter: blur(12px); }
 .backdrop-dismiss { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: transparent; cursor: default; }

@@ -17,11 +17,14 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,svg,png,woff2,json}'],
         // Digital Asset Links is read by Android over the network, never through the
         // service worker. Precaching it would only risk serving a stale signing key.
-        globIgnores: ['**/.well-known/**'],
+        // The private dashboard is not part of the app: precaching it would serve a
+        // stale copy and keep it on the device of anyone who once opened it.
+        globIgnores: ['**/.well-known/**', 'analytics.html', 'analytics-admin.js'],
         navigateFallback: '/index.html',
         // Without this a returning visitor navigating to /tr/ gets the English app
-        // shell from the cache instead of the Turkish landing page.
-        navigateFallbackDenylist: [/^\/(ms|id|tr|ar)(\/|$)/],
+        // shell from the cache instead of the Turkish landing page, and a navigation to
+        // the dashboard or a function gets the app shell instead of the real response.
+        navigateFallbackDenylist: [/^\/(ms|id|tr|ar)(\/|$)/, /^\/analytics\.html$/, /^\/\.netlify\//],
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         importScripts: ['/push-handler.js']

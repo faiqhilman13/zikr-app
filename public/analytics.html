@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Zikr — usage</title>
+<style>
+:root { color-scheme: dark; --bg: #0a1229; --panel: #121c37; --line: #2b3a5e; --ink: #eae6e1; --soft: #a9b1c6; --gold: #efc967 }
+* { box-sizing: border-box }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.6 -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif }
+main { max-width: 1000px; margin: auto; padding: 40px 20px 80px }
+h1 { font: 500 2.4rem/1.15 Georgia, serif; margin: 18px 0 8px }
+h2 { font-size: 1.05rem; font-weight: 600; margin: 40px 0 12px; letter-spacing: .02em }
+p { color: var(--soft); max-width: 68ch }
+a { color: var(--gold) }
+label { display: grid; gap: 8px; margin-bottom: 14px }
+input, button { font: inherit; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--line) }
+input { background: var(--panel); color: inherit; width: 100% }
+button { cursor: pointer; background: var(--gold); color: #121c37; font-weight: 600; border-color: transparent; margin: 0 10px 10px 0 }
+button.quiet { background: transparent; color: var(--ink); border-color: var(--line); font-weight: 400 }
+button:disabled { opacity: .55; cursor: default }
+form { max-width: 460px }
+.metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px }
+.metric { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 18px 20px }
+.metric span { color: var(--soft); font-size: .82rem; display: block; line-height: 1.35 }
+.metric strong { display: block; font-size: 2.1rem; font-weight: 500; margin-top: 8px; font-variant-numeric: tabular-nums }
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 16px }
+table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums }
+th, td { padding: 9px 14px; text-align: start; border-bottom: 1px solid var(--line); white-space: nowrap }
+th { color: var(--soft); font-weight: 500; font-size: .82rem }
+tr:last-child td { border-bottom: 0 }
+.fine { font-size: .88rem }
+:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px }
+[hidden] { display: none !important }
+@media (max-width: 560px) { h1 { font-size: 1.9rem } main { padding: 28px 16px 60px } }
+</style>
+<script src="/analytics-admin.js" defer></script>
+</head>
+<body>
+<main>
+  <a href="/">← Zikr</a>
+  <h1>Usage, without practice history.</h1>
+  <p>Browsers that chose to be counted. Nobody's counts, phrases or timers are here, because they are never sent. All dates are UTC.</p>
+
+  <form id="login">
+    <label>Dashboard key<input id="key" type="password" required autocomplete="current-password"></label>
+    <button>Open</button>
+  </form>
+  <p id="status" class="fine" role="status"></p>
+
+  <section id="results" hidden>
+    <div>
+      <button id="refresh">Refresh</button>
+      <button id="export" class="quiet">Export CSV</button>
+      <button id="logout" class="quiet">Lock</button>
+    </div>
+    <h2>Last 30 days</h2>
+    <div id="metrics" class="metrics"></div>
+    <h2>Day by day</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Date (UTC)</th><th>Visiting</th><th>Active</th><th>Home screen</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+
+    <h2>Reading these numbers</h2>
+    <p class="fine"><b>Visiting</b> is a browser that opened the site. <b>Active</b> is one that used the app after finishing setup. <b>Home screen</b> is a browser running the installed app, which is the closest thing to an install count that the web will give — iOS reports no install event at all. Each browser counts once per day per column however long it stays.</p>
+    <p class="fine"><b>Returning</b> is a browser seen on two or more separate days in the window. <b>Weekly retention</b> is how many of the previous seven days' active browsers were active again in the last seven.</p>
+    <p class="fine">These are browsers, not people: two devices are two browsers, and a cleared site data or a private window starts a new one. They are also only the browsers that opted in, so treat every figure as a floor rather than a total, and the trend as more useful than the number. Records older than 90 days are deleted nightly, and nothing exists from before this feature shipped.</p>
+  </section>
+</main>
+</body>
+</html>

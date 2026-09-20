@@ -5,6 +5,9 @@
 [build.environment]
   NODE_VERSION = "22"
 
+[functions]
+  directory = "netlify/functions"
+
 # Digital Asset Links must be served as application/json for Android to verify the
 # TWA. A stale copy would keep an old signing key trusted, so cache it briefly.
 [[headers]]
@@ -33,6 +36,14 @@
   for = "/theme-init.js"
   [headers.values]
     Cache-Control = "no-cache"
+
+# The private usage dashboard. Nothing here should be indexed or cached, and it must not
+# be framed by anything: it holds the key someone just typed.
+[[headers]]
+  for = "/analytics.html"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+    Cache-Control = "no-store"
 
 [[headers]]
   for = "/assets/*"

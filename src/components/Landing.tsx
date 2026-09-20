@@ -1,8 +1,9 @@
 import { CloudOff, LockKeyhole, UserRoundX } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { InstallCard } from './InstallCard';
 
-export function Landing({ onBegin }: { onBegin: () => void }) {
+export function Landing({ onBegin, analyticsChoice }: { onBegin: () => void; analyticsChoice?: ReactNode }) {
   const { t } = useTranslation();
   return <main className="landing">
     <header className="landing-nav">
@@ -30,5 +31,6 @@ export function Landing({ onBegin }: { onBegin: () => void }) {
       <p>{t('privacyBody')}</p>
       <div className="footer-links"><a href="/privacy.html">{t('privacy')}</a><a href="/support.html">{t('support')}</a></div>
     </section>
+    {analyticsChoice}
   </main>;
 }

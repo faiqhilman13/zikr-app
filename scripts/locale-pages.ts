@@ -178,6 +178,9 @@ Allow: /
 # Form thank-you page, no standalone value in search.
 Disallow: /feedback-received.html
 
+# Private usage dashboard.
+Disallow: /analytics.html
+
 Sitemap: ${site}/sitemap.xml
 `;
 }

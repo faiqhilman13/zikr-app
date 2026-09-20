@@ -8,4 +8,6 @@ interface BeforeInstallPromptEvent extends Event {
 
 interface Navigator {
   standalone?: boolean;
+  // Global Privacy Control, honoured alongside Do Not Track before any usage report.
+  globalPrivacyControl?: boolean;
 }

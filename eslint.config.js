@@ -8,6 +8,11 @@ import tseslint from 'typescript-eslint';
 export default tseslint.config(
   { ignores: ['dist', 'node_modules', 'ZikrApp', 'ZikrWidgetExtension', 'Sources', 'Tests'] },
   {
+    extends: [js.configs.recommended],
+    files: ['netlify/**/*.mjs'],
+    languageOptions: { ecmaVersion: 2022, globals: globals.node }
+  },
+  {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ['src/**/*.{ts,tsx}', 'vite.config.ts'],
     languageOptions: { ecmaVersion: 2022, globals: { ...globals.browser, ...globals.node } },
