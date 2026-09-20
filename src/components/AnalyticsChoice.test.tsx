@@ -11,7 +11,7 @@ it('asks before anything is sent, and explains what would be', () => {
   render(<AnalyticsChoice enabled={false} onEnable={vi.fn()} />);
   expect(screen.getByRole('heading', { name: 'Share anonymous usage?' })).toBeInTheDocument();
   expect(screen.getByText(/no counts, no phrases, no account/)).toBeInTheDocument();
-  expect(screen.getByRole('link', { name: 'Privacy' })).toHaveAttribute('href', '/privacy.html');
+  expect(screen.getByRole('link', { name: 'Privacy' })).toHaveAttribute('href', '/privacy');
 });
 
 it('turns it on and steps out of the way', async () => {

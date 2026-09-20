@@ -116,7 +116,7 @@ export function SettingsView({ state, setState, patchSettings, setLanguage, setT
     <section className="settings-card" aria-labelledby="privacy-title"><div className="settings-heading"><ShieldCheck /><div><h2 id="privacy-title">{t('privacyAnalytics')}</h2><p>{t('analyticsBody')}</p></div></div>
       <Toggle label={t('analyticsToggle')} checked={state.settings.analyticsOptIn} onChange={(checked) => patchSettings({ analyticsOptIn: checked })} />
       {state.settings.analyticsOptIn && privacySignal && <p className="fine-print">{t('usageSignalNote')}</p>}
-      <div className="footer-links"><a href="/privacy.html">{t('privacy')}</a><a href="/support.html">{t('support')}</a></div></section>
+      <div className="footer-links"><a href="/privacy">{t('privacy')}</a><a href="/support">{t('support')}</a></div></section>
 
     <section className="danger-zone"><div><h2>{t('startOver')}</h2><p>{t('startOverBody')}</p></div><button className="button danger" disabled={busy} onClick={() => { if (window.confirm(t('resetConfirm'))) { setBusy(true); void onReset().catch((error: Error) => announce(error.message)).finally(() => setBusy(false)); } }}><RotateCcw />{t('reset')}</button></section>
     <p className="status-message" role="status" aria-live="polite">{status}</p>

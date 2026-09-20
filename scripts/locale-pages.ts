@@ -75,7 +75,7 @@ export function landingBody(locale: AppLanguage, options: { marker?: boolean } =
         <p class="eyebrow">${esc(t.private)}</p>
         <h2>${esc(t.privacyTitle)}</h2>
         <p>${esc(t.privacyBody)}</p>
-        <div class="footer-links"><a href="/privacy.html">${esc(t.privacy)}</a><a href="/support.html">${esc(t.support)}</a></div>
+        <div class="footer-links"><a href="/privacy">${esc(t.privacy)}</a><a href="/support">${esc(t.support)}</a></div>
       </section>
       <section class="landing-section">
         <p class="eyebrow">${esc(t.otherLanguages)}</p>
@@ -155,7 +155,7 @@ export function sitemap(site: string, lastmod: string): string {
 ${alternates}
   </url>`).join('\n');
 
-  const staticUrls = ['/privacy.html', '/support.html'].map((page) => `  <url>
+  const staticUrls = ['/privacy', '/support'].map((page) => `  <url>
     <loc>${site}${page}</loc>
     <lastmod>${lastmod}</lastmod>
     <changefreq>yearly</changefreq>
@@ -176,10 +176,11 @@ export function robots(site: string): string {
 Allow: /
 
 # Form thank-you page, no standalone value in search.
-Disallow: /feedback-received.html
+Disallow: /feedback-received
 
-# Private usage dashboard.
-Disallow: /analytics.html
+# Private usage dashboard, and the script that reads it. Written without an extension:
+# the host serves these pages without one, and a prefix rule covers every spelling.
+Disallow: /analytics
 
 Sitemap: ${site}/sitemap.xml
 `;

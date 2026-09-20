@@ -33,6 +33,6 @@ export function AnalyticsChoice({ enabled, onEnable }: { enabled: boolean; onEna
       }}>{t('usageAllow')}</button>
       <button className="text-link" disabled={busy} onClick={close}>{t('notNow')}</button>
     </div>
-    <div className="footer-links"><a href="/privacy.html">{t('privacy')}</a></div>
+    <div className="footer-links"><a href="/privacy">{t('privacy')}</a></div>
   </section>;
 }

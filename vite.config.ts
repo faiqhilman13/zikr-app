@@ -24,7 +24,7 @@ export default defineConfig({
         // Without this a returning visitor navigating to /tr/ gets the English app
         // shell from the cache instead of the Turkish landing page, and a navigation to
         // the dashboard or a function gets the app shell instead of the real response.
-        navigateFallbackDenylist: [/^\/(ms|id|tr|ar)(\/|$)/, /^\/analytics\.html$/, /^\/\.netlify\//],
+        navigateFallbackDenylist: [/^\/(ms|id|tr|ar)(\/|$)/, /^\/analytics(\.html)?$/, /^\/\.netlify\//],
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         importScripts: ['/push-handler.js']

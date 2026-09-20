@@ -29,7 +29,7 @@ export function Landing({ onBegin, analyticsChoice }: { onBegin: () => void; ana
     <section className="landing-section" id="privacy">
       <p className="eyebrow">{t('private')}</p><h2>{t('privacyTitle')}</h2>
       <p>{t('privacyBody')}</p>
-      <div className="footer-links"><a href="/privacy.html">{t('privacy')}</a><a href="/support.html">{t('support')}</a></div>
+      <div className="footer-links"><a href="/privacy">{t('privacy')}</a><a href="/support">{t('support')}</a></div>
     </section>
     {analyticsChoice}
   </main>;

@@ -1,7 +1,9 @@
+import { readdirSync, readFileSync } from 'node:fs';
+import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { supported } from '../src/locales';
 import { SITE_URL } from '../src/site';
-import { landingBody, localePath, page, sitemap } from './locale-pages';
+import { landingBody, localePath, page, robots, sitemap } from './locale-pages';
 
 const SITE = SITE_URL;
 const pages = supported.filter((locale) => locale !== 'en').map((locale) => ({ locale, html: page(locale, SITE, '/assets/index-test.css') }));
@@ -76,5 +78,35 @@ describe('locale landing pages', () => {
     expect(landingBody('en', { marker: true })).toContain('<main class="landing" data-prerendered>');
     expect(landingBody('en')).toContain('<main class="landing">');
     for (const { html } of pages) expect(html).not.toContain('data-prerendered');
+  });
+});
+
+/**
+ * The host strips `.html` from these paths and redirects the extension form to the bare
+ * one. Anything still carrying it costs a redirect Google reports as "page with
+ * redirect", stops a robots rule from matching, and — on the feedback POST — gets
+ * downgraded to a GET, which loses the submission while still looking like a success.
+ */
+describe('static page paths', () => {
+  const pagePath = /["'](\/(privacy|support|feedback-received|analytics)\.html)["']/;
+
+  it('are linked, listed and disallowed the way they are served', () => {
+    expect(landingBody('en')).toContain('href="/privacy"');
+    expect(landingBody('en')).not.toMatch(pagePath);
+    for (const { html } of pages) expect(html).not.toMatch(pagePath);
+    expect(sitemap(SITE, '2026-09-19')).not.toContain('.html');
+    expect(robots(SITE)).not.toContain('.html');
+  });
+
+  it('are not written with an extension anywhere the app links or posts', () => {
+    const root = path.join(import.meta.dirname, '..');
+    const sources = readdirSync(path.join(root, 'src'), { recursive: true, encoding: 'utf8' })
+      .filter((name) => /\.(ts|tsx)$/.test(name))
+      .map((name) => path.join(root, 'src', name))
+      .concat(path.join(root, 'index.html'));
+
+    for (const file of sources) {
+      expect(readFileSync(file, 'utf8'), path.relative(root, file)).not.toMatch(pagePath);
+    }
   });
 });

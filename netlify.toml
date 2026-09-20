@@ -37,8 +37,14 @@
   [headers.values]
     Cache-Control = "no-cache"
 
-# The private usage dashboard. Nothing here should be indexed or cached, and it must not
-# be framed by anything: it holds the key someone just typed.
+# The private usage dashboard. Nothing here should be indexed or cached: it holds the key
+# someone just typed. Both spellings, because the host serves the page at either.
+[[headers]]
+  for = "/analytics"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+    Cache-Control = "no-store"
+
 [[headers]]
   for = "/analytics.html"
   [headers.values]

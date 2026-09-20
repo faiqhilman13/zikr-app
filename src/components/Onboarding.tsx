@@ -24,7 +24,7 @@ export function Onboarding({ presets, analyticsEnabled, onComplete, onClose }: {
         <div className="onboarding-analytics-heading"><ShieldCheck aria-hidden="true" /><div><p className="eyebrow">{t('usageEyebrow')}</p><h3 id="onboarding-analytics-title">{t('usageTitle')}</h3></div></div>
         <p>{t('usageBody')}</p>
         <label className="toggle-row"><span>{t('analyticsToggle')}</span><input type="checkbox" checked={shareUsage} onChange={(event) => setShareUsage(event.target.checked)} /><i aria-hidden="true" /></label>
-        <a className="text-link" href="/privacy.html">{t('privacy')}</a>
+        <a className="text-link" href="/privacy">{t('privacy')}</a>
       </section>
       <button className="button full" onClick={() => onComplete(selected, target, shareUsage)}>{t('startCounting')}</button>
     </section>

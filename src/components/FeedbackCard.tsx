@@ -22,7 +22,7 @@ export function FeedbackCard() {
         const body = new URLSearchParams({ 'form-name': 'zikr-feedback', message,
           rating: String(data.get('rating') ?? ''), email: String(data.get('email') ?? '').trim(),
           language: i18n.resolvedLanguage ?? 'en', 'bot-field': String(data.get('bot-field') ?? '') });
-        const response = await fetch('/feedback-received.html', { method: 'POST',
+        const response = await fetch('/feedback-received', { method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: body.toString(),
           signal: AbortSignal.timeout(15000) });
         if (!response.ok || !(await response.text()).includes('zikr-feedback-received')) throw new Error('Not acknowledged');
@@ -35,7 +35,7 @@ export function FeedbackCard() {
         <label className="full-field">{t('feedbackMessage')}<textarea name="message" required maxLength={3000} rows={5} /></label>
         <label className="full-field">{t('feedbackEmail')}<input name="email" type="email" maxLength={254} autoComplete="email" /></label>
         <div hidden><label>Leave this empty<input name="bot-field" tabIndex={-1} autoComplete="off" /></label></div>
-        <p className="fine-print">{t('feedbackPrivacy')} <a href="/privacy.html">{t('privacy')}</a></p>
+        <p className="fine-print">{t('feedbackPrivacy')} <a href="/privacy">{t('privacy')}</a></p>
         <button type="submit" className="button secondary">{t(busy ? 'feedbackSending' : 'feedbackSend')}</button>
       </fieldset>
       {status !== 'idle' && <p role={status === 'sent' ? 'status' : 'alert'}>{t(status === 'sent' ? 'feedbackSent' : status === 'offline' ? 'feedbackOffline' : 'feedbackError')}</p>}

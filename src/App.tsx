@@ -130,7 +130,7 @@ export function App() {
     ? <div className="splash" aria-label={t('loadingLabel')}><span>ذِكر</span></div>
     : <Landing onBegin={() => setShowOnboarding(true)} />;
 
-  if (controller.storageFailed) return <main className="recovery-screen" role="alert"><h1>{t('storageBlockedTitle')}</h1><p>{t('storageBlockedBody')}</p><button className="button" onClick={() => window.location.reload()}>{t('retryLoad')}</button><a href="/support.html">{t('support')}</a>{notices}</main>;
+  if (controller.storageFailed) return <main className="recovery-screen" role="alert"><h1>{t('storageBlockedTitle')}</h1><p>{t('storageBlockedBody')}</p><button className="button" onClick={() => window.location.reload()}>{t('retryLoad')}</button><a href="/support">{t('support')}</a>{notices}</main>;
 
   if (!controller.state.onboardingComplete) return <>
     {notices}

@@ -8,7 +8,7 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, { failed: 
     if (this.state.failed) return <main className="recovery-screen" role="alert">
       <h1>{i18n.t('appErrorTitle')}</h1><p>{i18n.t('appErrorBody')}</p>
       <button className="button" onClick={() => window.location.reload()}>{i18n.t('retryLoad')}</button>
-      <a href="/support.html">{i18n.t('support')}</a>
+      <a href="/support">{i18n.t('support')}</a>
     </main>;
     return this.props.children;
   }
