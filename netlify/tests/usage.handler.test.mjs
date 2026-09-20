@@ -23,8 +23,8 @@ const fake = {
 };
 vi.mock('@netlify/blobs', () => ({ getStore: () => fake }));
 
-const { default: handler } = await import('./usage.mjs');
-const { default: cleanup } = await import('./usage-cleanup.mjs');
+const { default: handler } = await import('../functions/usage.mjs');
+const { default: cleanup } = await import('../functions/usage-cleanup.mjs');
 
 const ORIGIN = 'https://myzikr.netlify.app';
 const ID = 'd1f0a2b4-1c3e-4a5b-8c7d-9e0f1a2b3c4d';

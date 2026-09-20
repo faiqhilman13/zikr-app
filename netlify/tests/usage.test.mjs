@@ -1,6 +1,8 @@
+import { readdirSync } from 'node:fs';
+import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { authorized, dayBefore, dayKey, summarize, validPayload } from './usage.mjs';
-import { expiring } from './usage-cleanup.mjs';
+import { authorized, dayBefore, dayKey, summarize, validPayload } from '../functions/usage.mjs';
+import { expiring } from '../functions/usage-cleanup.mjs';
 
 const NOW = new Date('2026-09-20T11:30:00Z');
 const day = (offset) => dayBefore(offset, NOW);
@@ -144,5 +146,22 @@ describe('UTC day arithmetic', () => {
     expect(dayBefore(1, new Date('2026-03-01T00:30:00Z'))).toBe('2026-02-28');
     expect(dayBefore(1, new Date('2026-01-01T23:30:00Z'))).toBe('2025-12-31');
     expect(dayBefore(0, new Date('2026-09-20T23:59:59Z'))).toBe('2026-09-20');
+  });
+});
+
+// Netlify deploys every file sitting in the functions directory, so anything in there
+// that is not a function is a broken build. That is how these tests first shipped: as
+// two extra "functions", one of which could not even be bundled.
+describe('the functions directory', () => {
+  const entries = readdirSync(path.join(import.meta.dirname, '../functions'));
+
+  it('holds only deployable functions, each with a handler', async () => {
+    expect(entries).not.toHaveLength(0);
+    for (const entry of entries) {
+      expect(entry, `${entry} would be deployed as a function`).not.toMatch(/\.(test|spec)\./);
+      expect(entry).toMatch(/\.mjs$/);
+      const module = await import(`../functions/${entry}`);
+      expect(typeof module.default, `${entry} exports no handler`).toBe('function');
+    }
   });
 });
