@@ -96,7 +96,7 @@ export function useZikrState() {
     refresh: useCallback(() => { if (!blocked.current) void loadState().then(accept).catch(fail); }, [accept, fail]),
     // The language in use at this moment becomes the stored preference; until now it
     // was only detected, and the state default would otherwise snap back to English.
-    completeOnboarding: (presetId: string, target: number, language: Language) => commit((s) => ({ ...s, onboardingComplete: true, selectedPresetId: presetId, settings: { ...s.settings, language }, presets: s.presets.map((p) => ({ ...p, target: p.id === presetId ? clampTarget(target) : 0 })) })),
+    completeOnboarding: (presetId: string, target: number, language: Language, analyticsOptIn: boolean) => commit((s) => ({ ...s, onboardingComplete: true, selectedPresetId: presetId, settings: { ...s.settings, language, analyticsOptIn }, presets: s.presets.map((p) => ({ ...p, target: p.id === presetId ? clampTarget(target) : 0 })) })),
     selectPreset: (id: string) => commit((s) => s.presets.some((p) => p.id === id) ? { ...stopTimer(s), selectedPresetId: id } : s),
     // Capture the visible phrase: another window changing its selection must not
     // redirect this tap to an unexpected phrase.

@@ -187,6 +187,14 @@ h2 { font-size: clamp(2rem, 5vw, 3.2rem); line-height: 1; font-weight: 520; }
 .target-control { display: grid; grid-template-columns: 1fr auto; align-items: center; margin-bottom: 28px; }
 .target-control output { font-family: ui-serif, Georgia, serif; font-size: 2rem; color: var(--gold-text); }
 .target-control input { grid-column: 1 / -1; width: 100%; accent-color: var(--brand); }
+.onboarding-analytics { margin: 0 0 24px; padding: 18px; border: 1px solid var(--line); border-radius: 18px; background: var(--bg); }
+.onboarding-analytics-heading { display: flex; align-items: center; gap: 12px; }
+.onboarding-analytics-heading > svg { width: 24px; color: var(--brand); flex-shrink: 0; }
+.onboarding-analytics .eyebrow { margin-bottom: 2px; }
+.onboarding-analytics h3 { margin: 0; font-family: ui-serif, Georgia, serif; font-size: 1.25rem; }
+.onboarding-analytics > p { margin: 12px 0 4px; color: var(--muted); font-size: .82rem; line-height: 1.6; }
+.onboarding-analytics .toggle-row { margin-top: 8px; }
+.onboarding-analytics > .text-link { display: inline-block; margin-top: 10px; font-size: .78rem; }
 
 .app-shell { min-height: 100dvh; padding-bottom: calc(92px + env(safe-area-inset-bottom)); }
 .app-header { height: 76px; padding: max(16px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) 10px max(20px, env(safe-area-inset-left)); display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--line); background: color-mix(in srgb, var(--bg) 90%, transparent); backdrop-filter: blur(18px); position: sticky; top: 0; z-index: 20; }

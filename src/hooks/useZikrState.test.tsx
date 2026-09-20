@@ -90,13 +90,14 @@ it('keeps a time-only session out of the counts', async () => {
   expect(stopped.state.logs.find((log) => log.date === dayKey())?.timedSeconds.tasbih).toBe(300);
 });
 
-it('records the language in use when onboarding completes', async () => {
+it('records the language and analytics choice when onboarding completes', async () => {
   const hook = renderHook(useZikrState);
   await waitFor(() => expect(hook.result.current.ready).toBe(true));
-  await act(async () => { expect(await hook.result.current.completeOnboarding('tasbih', 33, 'tr')).toBe(true); });
+  await act(async () => { expect(await hook.result.current.completeOnboarding('tasbih', 33, 'tr', true)).toBe(true); });
   const stored = await loadState();
   expect(stored.state.onboardingComplete).toBe(true);
   // Without this the stored default takes over the moment onboarding finishes and the
   // language silently reverts to English.
   expect(stored.state.settings.language).toBe('tr');
+  expect(stored.state.settings.analyticsOptIn).toBe(true);
 });

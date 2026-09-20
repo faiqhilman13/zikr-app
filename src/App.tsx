@@ -137,7 +137,7 @@ export function App() {
     <Landing onBegin={() => setShowOnboarding(true)} analyticsChoice={
       <AnalyticsChoice enabled={analyticsOptIn} onEnable={() => controller.patchSettings({ analyticsOptIn: true })} />
     } />
-    {showOnboarding && <Onboarding presets={controller.state.presets} onClose={() => setShowOnboarding(false)} onComplete={(id, target) => { controller.completeOnboarding(id, target, language); void requestDurableStorage(); }} />}
+    {showOnboarding && <Onboarding presets={controller.state.presets} analyticsEnabled={analyticsOptIn} onClose={() => setShowOnboarding(false)} onComplete={(id, target, shareUsage) => { controller.completeOnboarding(id, target, language, shareUsage); void requestDurableStorage(); }} />}
   </>;
 
   return <>
