@@ -9,6 +9,8 @@ import { Landing } from './components/Landing';
 import { Onboarding } from './components/Onboarding';
 import { ProgressView } from './components/ProgressView';
 import { SettingsView } from './components/SettingsView';
+import { ListenView, NowPlaying } from './components/ListenView';
+import { listenLibrary } from './data/listen';
 import { dayKey, selectedPreset } from './domain/state';
 import { paletteFor } from './theme';
 import { disablePushNotifications } from './services/push';
@@ -27,6 +29,8 @@ export function App() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [timerSetup, setTimerSetup] = useState(false);
   const [tab, setTab] = useState<Tab>('count');
+  const [playingId, setPlayingId] = useState<string | null>(null);
+  const playing = listenLibrary.find((item) => item.id === playingId);
   const pwa = usePwaUpdate();
 
   const theme = controller.state.settings.theme;
@@ -142,11 +146,16 @@ export function App() {
 
   return <>
     <a className="skip-link" href="#main-content">{t('skipToContent')}</a>
-    <AppShell tab={tab} setTab={setTab}>
+    <AppShell tab={tab} setTab={setTab} showListen={listenLibrary.length > 0}>
       {tab === 'count' && <CounterView state={controller.state} onIncrement={controller.increment} onUndo={controller.decrement} onSelect={controller.selectPreset} onStartTimer={() => setTimerSetup(true)} onStopTimer={() => void controller.stopTimer()} onTimerRollover={controller.refresh} />}
       {tab === 'progress' && <ProgressView state={controller.state} />}
+      {/* Kept mounted once something plays, so the player survives a switch to the counter. */}
+      {(tab === 'listen' || playing) && <div className={tab === 'listen' ? undefined : 'listen-parked'} inert={tab !== 'listen'}>
+        <ListenView items={listenLibrary} playingId={playingId} onPlay={setPlayingId} onStop={() => setPlayingId(null)} />
+      </div>}
       {tab === 'settings' && <SettingsView state={controller.state} setState={controller.setState} patchSettings={controller.patchSettings} setLanguage={controller.setLanguage} setTheme={controller.setTheme} updatePreset={controller.updatePreset} addPreset={controller.addPreset} removePreset={controller.removePreset} onReset={async () => { await disablePushNotifications(); if (await controller.reset()) setTab('count'); }} />}
     </AppShell>
+    {playing && tab !== 'listen' && <NowPlaying item={playing} onOpen={() => setTab('listen')} onStop={() => setPlayingId(null)} />}
     {timerSetup && <TimerSetup
       preset={selectedPreset(controller.state)}
       onClose={() => setTimerSetup(false)}

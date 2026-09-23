@@ -206,11 +206,44 @@ h2 { font-size: clamp(2rem, 5vw, 3.2rem); line-height: 1; font-weight: 520; }
 .view-title { max-width: 680px; margin-bottom: 34px; }
 .view-title h1 { font-size: clamp(2.6rem, 8vw, 4.8rem); }
 .view-title > p:last-child { color: var(--muted); max-width: 600px; }
-.bottom-nav { position: fixed; z-index: 30; bottom: 0; left: 50%; transform: translateX(-50%); width: min(100%, 520px); min-height: 72px; padding: 8px 10px calc(8px + env(safe-area-inset-bottom)); display: grid; grid-template-columns: repeat(3,1fr); background: color-mix(in srgb, var(--surface) 94%, transparent); border: 1px solid var(--line); border-bottom: 0; border-radius: 22px 22px 0 0; box-shadow: 0 -14px 40px var(--nav-shadow); backdrop-filter: blur(20px); }
+.bottom-nav { position: fixed; z-index: 30; bottom: 0; left: 50%; transform: translateX(-50%); width: min(100%, 520px); min-height: 72px; padding: 8px 10px calc(8px + env(safe-area-inset-bottom)); display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; background: color-mix(in srgb, var(--surface) 94%, transparent); border: 1px solid var(--line); border-bottom: 0; border-radius: 22px 22px 0 0; box-shadow: 0 -14px 40px var(--nav-shadow); backdrop-filter: blur(20px); }
 .bottom-nav button { min-height: 54px; border: 0; border-radius: 18px; display: grid; place-items: center; align-content: center; gap: 3px; background: transparent; color: var(--muted); cursor: pointer; }
 .bottom-nav button.active { background: var(--surface-2); color: var(--brand); }
 .bottom-nav svg { width: 20px; }
 .bottom-nav span { font-size: .7rem; font-weight: 650; }
+
+/* Listen: a plain list, no thumbnails, so nothing loads from YouTube before play. */
+.listen-filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+.listen-filters .selected { border-color: var(--gold); color: var(--gold-text); background: color-mix(in srgb, var(--gold-soft) 16%, var(--surface)); }
+.listen-offline { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: .85rem; }
+.listen-offline svg { width: 16px; }
+.listen-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.listen-item { border: 1px solid var(--line); border-radius: 18px; background: var(--surface); padding: 12px 12px 12px 14px; }
+.listen-item.playing { border-color: var(--gold); }
+.listen-row { display: grid; grid-template-columns: 44px 1fr 44px; gap: 12px; align-items: center; }
+.listen-glyph { width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; background: var(--surface-2); color: var(--brand); }
+.listen-glyph svg { width: 20px; }
+.listen-item.playing .listen-glyph { background: var(--gold-soft); color: var(--gold-text); }
+.listen-meta { display: grid; min-width: 0; }
+.listen-meta strong { overflow-wrap: anywhere; }
+.listen-arabic { font-family: 'Noto Sans Arabic Variable', sans-serif; justify-self: start; }
+.listen-meta small { color: var(--muted); font-size: .78rem; }
+.listen-toggle { background: var(--button-bg); color: var(--on-button); }
+.listen-toggle:disabled { opacity: .45; cursor: not-allowed; }
+.listen-toggle svg { width: 18px; }
+.listen-player { margin-top: 12px; aspect-ratio: 16 / 9; border-radius: 14px; overflow: hidden; background: #000; }
+.listen-player iframe { display: block; width: 100%; height: 100%; border: 0; }
+.listen-external { font-size: .78rem; gap: 6px; }
+.listen-external svg { width: 14px; }
+/* Off-screen but still rendering, so audio carries on while another tab is open. */
+.listen-parked { position: fixed; left: -10000px; top: 0; width: 320px; height: 180px; overflow: hidden; opacity: 0; pointer-events: none; }
+.now-playing { position: fixed; z-index: 29; left: 50%; transform: translateX(-50%); bottom: calc(80px + env(safe-area-inset-bottom)); width: min(calc(100% - 24px), 496px); display: flex; align-items: center; gap: 6px; padding: 6px 6px 6px 14px; border: 1px solid var(--gold); border-radius: 18px; background: var(--surface); box-shadow: var(--shadow); }
+.now-playing-open { flex: 1; min-width: 0; min-height: 44px; display: flex; align-items: center; gap: 10px; border: 0; background: none; color: var(--ink); text-align: start; cursor: pointer; }
+.now-playing-open svg { width: 18px; flex: none; color: var(--gold-text); }
+.now-playing-open span { display: grid; min-width: 0; }
+.now-playing-open small { color: var(--muted); font-size: .68rem; }
+.now-playing-open strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .88rem; }
+body:has(.now-playing) .app-shell { padding-bottom: calc(160px + env(safe-area-inset-bottom)); }
 
 .daily-summary { padding: 22px; border: 1px solid var(--line); border-radius: 22px; display: flex; align-items: end; justify-content: space-between; gap: 30px; background: var(--surface); }
 .daily-summary > div:first-child { display: grid; grid-template-columns: auto auto; gap: 0 8px; align-items: baseline; }

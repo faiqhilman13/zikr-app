@@ -1,14 +1,15 @@
-import { BarChart3, Hand, Settings } from 'lucide-react';
+import { BarChart3, Hand, Headphones, Settings } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { ReactNode } from 'react';
 
-export type Tab = 'count' | 'progress' | 'settings';
+export type Tab = 'count' | 'progress' | 'listen' | 'settings';
 
-export function AppShell({ tab, setTab, children }: { tab: Tab; setTab: (tab: Tab) => void; children: ReactNode }) {
+export function AppShell({ tab, setTab, showListen = false, children }: { tab: Tab; setTab: (tab: Tab) => void; showListen?: boolean; children: ReactNode }) {
   const { t, i18n } = useTranslation();
   const items = [
     { id: 'count' as const, label: t('count'), icon: Hand },
     { id: 'progress' as const, label: t('progress'), icon: BarChart3 },
+    ...(showListen ? [{ id: 'listen' as const, label: t('listen'), icon: Headphones }] : []),
     { id: 'settings' as const, label: t('settings'), icon: Settings }
   ];
   return <div className="app-shell">
