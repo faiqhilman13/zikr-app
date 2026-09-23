@@ -23,14 +23,13 @@ export interface ListenItem {
 }
 
 export const listenLibrary: ListenItem[] = [
-  { id: 'Gw0oEE9LFHA', title: 'Supreme Salawat', artist: 'emptyingthecup', kind: 'zikr', start: 153 },
+  { id: 'Gw0oEE9LFHA', title: 'Supreme Salawat: Salutations and Divine Blessings upon the Holy Prophet Muhammad ﷺ', artist: 'emptyingthecup', kind: 'zikr', start: 153 },
   { id: 'nXxv1rmVhek', title: 'Divine Meditation [Dhikr]: Allah The Eternal Refuge', artist: 'emptyingthecup', kind: 'zikr', start: 191 },
   { id: '0sBScYnDMjk', title: 'Divine Meditation [Dhikr]: The Great Light of the Warrior Spirit', artist: 'emptyingthecup', kind: 'zikr', start: 92 },
   { id: 'SqjyTaw9qMc', title: 'Divine Meditation [Dhikr]: The Litany of the Unveiling of the Reality of Oneness', artist: 'emptyingthecup', kind: 'zikr', start: 424 },
-  // Waiting on titles:
-  // { id: 'gS3d6ninTlE', title: '', artist: 'emptyingthecup', kind: 'zikr', start: 650 },
-  // { id: 'hG1nRCaubWg', title: '', artist: 'emptyingthecup', kind: 'zikr', start: 4065 },
-  // { id: 'arQq9Upjq-M', title: '', artist: 'emptyingthecup', kind: 'zikr', start: 878 },
+  { id: 'arQq9Upjq-M', title: 'Divine Meditation [Dhikr]: Death Meditation of the Illuminating Heart', artist: 'emptyingthecup', kind: 'zikr', start: 878 },
+  { id: 'hG1nRCaubWg', title: 'Salawat of Divine Majesty and Beauty [x313]', artist: 'emptyingthecup', kind: 'zikr', start: 4065 },
+  { id: 'gS3d6ninTlE', title: 'Salawat: The Poem of Muhammad ﷺ [Qasida Muhammadiyya]', artist: 'emptyingthecup', kind: 'nasheed', start: 650 },
 ];
 
 const ID = /^[A-Za-z0-9_-]{11}$/;
