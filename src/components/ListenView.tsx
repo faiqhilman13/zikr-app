@@ -37,16 +37,16 @@ export function ListenView({ items, playingId, onPlay, onStop }: {
             <div className="listen-meta">
               <strong>{item.title}</strong>
               {item.arabic && <span className="listen-arabic" lang="ar" dir="rtl">{item.arabic}</span>}
-              <small>{item.artist} · {t(`listenKind_${item.kind}`)}</small>
+              <small>{item.artist ? `${item.artist} · ` : ''}{t(`listenKind_${item.kind}`)}</small>
             </div>
             {playing
               ? <button type="button" className="icon-button listen-toggle" aria-label={t('listenStop', { title: item.title })} onClick={onStop}><Square /></button>
               : <button type="button" className="icon-button listen-toggle" aria-label={t('listenPlay', { title: item.title })} disabled={!online} onClick={() => onPlay(item.id)}><Play /></button>}
           </div>
           {playing && <div className="listen-player">
-            <iframe src={embedUrl(item.id)} title={item.title} allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" />
+            <iframe src={embedUrl(item.id, item.start)} title={item.title} allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" />
           </div>}
-          {playing && <a className="text-link listen-external" href={watchUrl(item.id)} target="_blank" rel="noopener noreferrer">{t('listenOpenYoutube')}<ExternalLink aria-hidden="true" /></a>}
+          {playing && <a className="text-link listen-external" href={watchUrl(item.id, item.start)} target="_blank" rel="noopener noreferrer">{t('listenOpenYoutube')}<ExternalLink aria-hidden="true" /></a>}
         </li>;
       })}
     </ul>

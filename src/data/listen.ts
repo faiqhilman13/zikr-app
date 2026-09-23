@@ -14,14 +14,23 @@ export interface ListenItem {
   id: string;
   title: string;
   /** Reciter, munshid or channel, as they credit themselves. */
-  artist: string;
+  artist?: string;
   kind: ListenKind;
   /** Optional Arabic title shown under the English one. */
   arabic?: string;
+  /** Seconds into the video to begin, for long gatherings where the recitation starts later. */
+  start?: number;
 }
 
 export const listenLibrary: ListenItem[] = [
-  // { id: 'xxxxxxxxxxx', title: 'Tala al-Badru Alayna', artist: 'Munshid name', kind: 'nasheed', arabic: 'طلع البدر علينا' },
+  { id: 'Gw0oEE9LFHA', title: 'Supreme Salawat', kind: 'zikr', start: 153 },
+  { id: '0sBScYnDMjk', title: 'Divine Meditation: The Great Light of the Warrior Spirit', kind: 'zikr', start: 92 },
+  { id: 'SqjyTaw9qMc', title: 'Divine Meditation: The Litany of the Unveiling of the Reality of Oneness', kind: 'zikr', start: 424 },
+  // Waiting on titles:
+  // { id: 'gS3d6ninTlE', title: '', kind: 'zikr', start: 650 },
+  // { id: 'hG1nRCaubWg', title: '', kind: 'zikr', start: 4065 },
+  // { id: 'arQq9Upjq-M', title: '', kind: 'zikr', start: 878 },
+  // { id: 'nXxv1rmVhek', title: '', kind: 'zikr', start: 191 },
 ];
 
 const ID = /^[A-Za-z0-9_-]{11}$/;
@@ -44,5 +53,5 @@ export function youtubeId(input: string): string | null {
 }
 
 /** Privacy-enhanced embed: YouTube sets no cookies until the viewer plays. */
-export const embedUrl = (id: string) => `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0&playsinline=1&modestbranding=1`;
-export const watchUrl = (id: string) => `https://www.youtube.com/watch?v=${id}`;
+export const embedUrl = (id: string, start = 0) => `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0&playsinline=1&modestbranding=1${start > 0 ? `&start=${Math.floor(start)}` : ''}`;
+export const watchUrl = (id: string, start = 0) => `https://www.youtube.com/watch?v=${id}${start > 0 ? `&t=${Math.floor(start)}s` : ''}`;

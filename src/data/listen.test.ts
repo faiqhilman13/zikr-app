@@ -24,12 +24,18 @@ describe('listenLibrary', () => {
     for (const item of listenLibrary) {
       expect(youtubeId(item.id)).toBe(item.id);
       expect(item.title.trim()).not.toBe('');
-      expect(item.artist.trim()).not.toBe('');
+      if (item.artist !== undefined) expect(item.artist.trim()).not.toBe('');
+      if (item.start !== undefined) expect(Number.isInteger(item.start) && item.start >= 0).toBe(true);
       expect(['nasheed', 'zikr']).toContain(item.kind);
     }
   });
 
   it('embeds through the privacy-enhanced host only', () => {
     expect(new URL(embedUrl('dQw4w9WgXcQ')).host).toBe('www.youtube-nocookie.com');
+  });
+
+  it('starts where the entry says', () => {
+    expect(new URL(embedUrl('dQw4w9WgXcQ', 153)).searchParams.get('start')).toBe('153');
+    expect(new URL(embedUrl('dQw4w9WgXcQ')).searchParams.has('start')).toBe(false);
   });
 });
