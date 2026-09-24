@@ -26,22 +26,27 @@ const subscribe = (notify: () => void) => {
 };
 const getPrompt = () => capturedPrompt;
 
+/** What an install attempt came to: the browser's own prompt answered, or the manual steps shown instead. */
+export type InstallOutcome = 'accepted' | 'dismissed' | 'instructions';
+
 export function useInstallPrompt() {
   const prompt = useSyncExternalStore(subscribe, getPrompt, () => null);
   const [showInstructions, setShowInstructions] = useState(false);
   const standalone = useSyncExternalStore(subscribe, () => isStandalone() || installed, () => false);
   const isIos = isAppleMobile();
 
-  const install = async () => {
+  const install = async (): Promise<InstallOutcome> => {
     if (prompt) {
       capturedPrompt = null;
       listeners.forEach((notify) => notify());
-      try { await prompt.prompt(); await prompt.userChoice; }
-      catch { setShowInstructions(true); }
-    } else {
-      setShowInstructions(true);
+      try {
+        await prompt.prompt();
+        return (await prompt.userChoice).outcome;
+      } catch { /* The prompt could not be shown, so fall through to the manual steps. */ }
     }
+    setShowInstructions(true);
+    return 'instructions';
   };
 
-  return { canInstall: !standalone, standalone, isIos, showInstructions, setShowInstructions, install };
+  return { canInstall: !standalone, canPrompt: prompt !== null, standalone, isIos, showInstructions, setShowInstructions, install };
 }

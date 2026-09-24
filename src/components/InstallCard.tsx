@@ -18,10 +18,22 @@ export function InstallCard({ compact = false }: { compact?: boolean }) {
   </>;
 }
 
+/**
+ * How to add Zikr to the Home Screen by hand, for when the browser cannot offer it itself.
+ * An app's built-in browser cannot do it at all, hence the way out to a real one.
+ */
+export function InstallSteps({ isIos }: { isIos: boolean }) {
+  const { t } = useTranslation();
+  const steps = isIos ? ['iosStep1', 'iosStep2', 'iosStep3'] : ['androidStep1', 'androidStep2', 'androidStep3'];
+  return <>
+    <ol className="install-steps">{steps.map((step) => <li key={step}>{t(step)}</li>)}</ol>
+    <p className="fine-print">{t(isIos ? 'installInAppIos' : 'installInAppAndroid')}</p>
+  </>;
+}
+
 function InstallInstructions({ isIos, onClose }: { isIos: boolean; onClose: () => void }) {
   const { t } = useTranslation();
   const trapRef = useFocusTrap<HTMLElement>(onClose);
-  const steps = isIos ? ['iosStep1', 'iosStep2', 'iosStep3'] : ['androidStep1', 'androidStep2', 'androidStep3'];
   return <div className="modal-backdrop">
     <button className="backdrop-dismiss" aria-label={t('cancel')} onClick={onClose} />
     <section className="modal" role="dialog" aria-modal="true" aria-labelledby="install-dialog-title" ref={trapRef}>
@@ -29,8 +41,8 @@ function InstallInstructions({ isIos, onClose }: { isIos: boolean; onClose: () =
       <div className="modal-icon"><Share aria-hidden="true" /></div>
       <h2 id="install-dialog-title">{t('install')}</h2>
       <p>{isIos ? t('installIos') : t('installAndroid')}</p>
-      <ol className="install-steps">{steps.map((step) => <li key={step}>{t(step)}</li>)}</ol>
-      <button className="button full" onClick={onClose}>{t('done')}</button>
+      <InstallSteps isIos={isIos} />
+      <button className="button full install-done" onClick={onClose}>{t('done')}</button>
     </section>
   </div>;
 }
