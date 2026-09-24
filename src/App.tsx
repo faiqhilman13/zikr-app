@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useEffectEvent, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import i18n, { detectedLanguage } from './i18n';
 import { AppShell, type Tab } from './components/AppShell';
@@ -9,11 +9,13 @@ import { Landing } from './components/Landing';
 import { Onboarding } from './components/Onboarding';
 import { ProgressView } from './components/ProgressView';
 import { SettingsView } from './components/SettingsView';
+import { StreakChip } from './components/streak/StreakChip';
+import { StreakSheet } from './components/streak/StreakSheet';
 import { ListenView, NowPlaying } from './components/ListenView';
 import { listenLibrary } from './data/listen';
 import { dayKey, selectedPreset } from './domain/state';
 import { paletteFor } from './theme';
-import { disablePushNotifications } from './services/push';
+import { disablePushNotifications, pushConfigured, refreshPushSubscription } from './services/push';
 import { reportUsage } from './data/usage';
 import { usePwaUpdate } from './hooks/usePwaUpdate';
 import { useZikrState } from './hooks/useZikrState';
@@ -29,6 +31,7 @@ export function App() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [timerSetup, setTimerSetup] = useState(false);
   const [tab, setTab] = useState<Tab>('count');
+  const [streakOpen, setStreakOpen] = useState(false);
   const [playingId, setPlayingId] = useState<string | null>(null);
   const playing = listenLibrary.find((item) => item.id === playingId);
   const pwa = usePwaUpdate();
@@ -87,9 +90,11 @@ export function App() {
   // today. The interval is here for an installed app left open across a UTC midnight,
   // and the listeners for a tab coming back or the network returning.
   const analyticsOptIn = controller.state.settings.analyticsOptIn;
+  // Only reminders this build can deliver count as on, here and below.
+  const remindersOn = controller.ready && pushConfigured && controller.state.settings.reminders.pushEnabled;
   useEffect(() => {
     if (!controller.ready) return;
-    const report = () => void reportUsage(analyticsOptIn, onboarded);
+    const report = () => void reportUsage(analyticsOptIn, onboarded, remindersOn);
     report();
     const interval = window.setInterval(report, 60_000);
     window.addEventListener('online', report);
@@ -99,7 +104,7 @@ export function App() {
       window.removeEventListener('online', report);
       document.removeEventListener('visibilitychange', report);
     };
-  }, [analyticsOptIn, onboarded, controller.ready]);
+  }, [analyticsOptIn, onboarded, remindersOn, controller.ready]);
 
   // Installed PWAs stay resident overnight; refresh state when the day rolls over so
   // the header date and today's counts do not show yesterday.
@@ -120,6 +125,25 @@ export function App() {
       document.removeEventListener('visibilitychange', checkDay);
     };
   }, [refresh]);
+
+  // Keeps the server's copy of this browser's reminder in step whenever the app opens or
+  // comes back: a subscription the browser replaced, a move to another time zone, a copy
+  // the server lost. Once notifications are switched off for the site outside the app, the
+  // setting follows, so it never promises a reminder that cannot arrive.
+  const reminderTime = controller.state.settings.reminders.time;
+  const remindersBlocked = useEffectEvent(() => {
+    void controller.patchSettings({ reminders: { enabled: false, pushEnabled: false, time: reminderTime } });
+  });
+  useEffect(() => {
+    if (!remindersOn) return;
+    const check = () => {
+      if (document.visibilityState !== 'visible') return;
+      void refreshPushSubscription(reminderTime).then((on) => { if (!on) remindersBlocked(); });
+    };
+    check();
+    document.addEventListener('visibilitychange', check);
+    return () => document.removeEventListener('visibilitychange', check);
+  }, [remindersOn, reminderTime]);
 
   const notices = <>
     {controller.conflict && <aside className="update-toast storage-warning" role="alert"><span>{t('dataConflict')}</span><button className="text-link" onClick={controller.clearConflict}>{t('done')}</button></aside>}
@@ -144,9 +168,20 @@ export function App() {
     {showOnboarding && <Onboarding presets={controller.state.presets} analyticsEnabled={analyticsOptIn} onClose={() => setShowOnboarding(false)} onComplete={(id, target, shareUsage) => { controller.completeOnboarding(id, target, language, shareUsage); void requestDurableStorage(); }} />}
   </>;
 
+  // From the streak sheet straight to the switch that turns reminders on. Settings mounts
+  // on this render, so the scroll and focus wait a frame for it.
+  const openReminders = () => {
+    setStreakOpen(false);
+    setTab('settings');
+    requestAnimationFrame(() => {
+      document.getElementById('reminders-title')?.closest('section')?.scrollIntoView({ block: 'start' });
+      document.getElementById('enable-reminders')?.focus({ preventScroll: true });
+    });
+  };
+
   return <>
     <a className="skip-link" href="#main-content">{t('skipToContent')}</a>
-    <AppShell tab={tab} setTab={setTab} showListen={listenLibrary.length > 0}>
+    <AppShell tab={tab} setTab={setTab} showListen={listenLibrary.length > 0} leading={<StreakChip state={controller.state} onOpen={() => setStreakOpen(true)} />}>
       {tab === 'count' && <CounterView state={controller.state} onIncrement={controller.increment} onUndo={controller.decrement} onSelect={controller.selectPreset} onStartTimer={() => setTimerSetup(true)} onStopTimer={() => void controller.stopTimer()} onTimerRollover={controller.refresh} />}
       {tab === 'progress' && <ProgressView state={controller.state} />}
       {/* Kept mounted once something plays, so the player survives a switch to the counter. */}
@@ -163,6 +198,11 @@ export function App() {
         setTimerSetup(false);
         void controller.startTimer(secondsPerRep);
       }}
+    />}
+    {streakOpen && <StreakSheet
+      state={controller.state}
+      onClose={() => setStreakOpen(false)}
+      onReminders={pushConfigured && !controller.state.settings.reminders.pushEnabled ? openReminders : undefined}
     />}
     {notices}
   </>;

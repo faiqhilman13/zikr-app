@@ -1,14 +1,19 @@
-import { ArrowRight, Check, Clock3, Pause, Play, RotateCcw } from 'lucide-react';
+import { ArrowRight, Check, Clock3, Flame, Hourglass, Pause, Play, RotateCcw, Snowflake } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { dayKey, getToday, selectedPreset, totalForLog, uncreditedReps } from '../domain/state';
+import { isMilestone } from '../domain/streak';
 import type { ZikrState } from '../domain/types';
+import { formatDays, formatTimeLeft } from './streak/format';
+import { StreakNotices } from './streak/StreakNotices';
+import { useStreak } from './streak/useStreak';
 
 export function CounterView({ state, onIncrement, onUndo, onSelect, onStartTimer, onStopTimer, onTimerRollover }: {
   state: ZikrState; onIncrement: () => void; onUndo: () => void; onSelect: (id: string) => void;
   onStartTimer: () => void; onStopTimer: () => void; onTimerRollover: () => void;
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const language = i18n.language;
   const [now, setNow] = useState(() => Date.now());
   const [announce, setAnnounce] = useState('');
   const preset = selectedPreset(state);
@@ -54,13 +59,31 @@ export function CounterView({ state, onIncrement, onUndo, onSelect, onStartTimer
     const ordered = [...state.presets.slice(index + 1), ...state.presets.slice(0, index)];
     return ordered.find((item) => item.target > 0 && (counts[item.id] ?? 0) < item.target) ?? null;
   })();
+  const { streak, today: todayKey, status, msLeft, tracked } = useStreak(state);
+  // The moment today completes with this screen open, the line above the orb that was
+  // counting down turns into the streak's celebration, standing in for the note under the
+  // orb. Coming back to the tab later shows the quieter note instead. A milestone says the
+  // streak was kept, so it takes that line rather than adding one.
+  const [wasDone, setWasDone] = useState(streak.todayDone);
+  const [celebrating, setCelebrating] = useState(false);
+  if (wasDone !== streak.todayDone) {
+    setWasDone(streak.todayDone);
+    setCelebrating(streak.todayDone);
+  }
+
   const handleTap = () => {
     onIncrement();
     setAnnounce(`${preset.title}: ${hasTarget ? t('countOf', { count: count + 1, target }) : count + 1}`);
-    if (state.settings.haptics && 'vibrate' in navigator) navigator.vibrate(hasTarget && count + 1 === target ? [10, 70, 16] : 8);
+    if (!state.settings.haptics || !('vibrate' in navigator)) return;
+    const reachesTarget = hasTarget && count + 1 === target;
+    // The last repetition of the whole day gets its own pattern, distinct from finishing one phrase.
+    const completesDay = reachesTarget && !streak.todayDone
+      && state.presets.every((item) => item.target <= 0 || item.id === preset.id || (counts[item.id] ?? 0) >= item.target);
+    navigator.vibrate(completesDay ? [14, 60, 14, 60, 36] : reachesTarget ? [10, 70, 16] : 8);
   };
 
   return <div className="view counter-view">
+    {tracked && <StreakNotices streak={streak} today={todayKey} />}
     <section className="daily-summary" aria-labelledby="daily-title">
       <div><p className="eyebrow" id="daily-title">{t('today')}</p><strong>{totalForLog(today)}</strong><span>{t('repetitions')}</span></div>
       <div className="streak-whisper">
@@ -69,6 +92,23 @@ export function CounterView({ state, onIncrement, onUndo, onSelect, onStartTimer
           : <span>{t('noTarget')}</span>}
       </div>
     </section>
+    {celebrating
+      ? <div className="streak-celebration" role="status">
+        <div className="celebration-line">
+          <span className="celebration-flame" aria-hidden="true"><Flame /></span>
+          <p><strong>{t('streakDay', { count: streak.current.toLocaleString(language) })}</strong>
+            {isMilestone(streak.current)
+              ? <span className="celebration-milestone">{t('milestoneReached', { days: formatDays(streak.current, language) })}</span>
+              : <span>{t(streak.current === 1 ? 'streakStarted' : 'streakKept')}</span>}</p>
+        </div>
+        {streak.freezeEarnedToday && <span className="celebration-freeze"><Snowflake aria-hidden="true" />{t('freezeEarned')}</span>}
+      </div>
+      : tracked && status !== 'done' && <p className={`streak-nudge ${status}`}>
+        {status === 'at-risk' ? <Hourglass aria-hidden="true" /> : <Flame aria-hidden="true" />}
+        <span>{status === 'at-risk' ? t('streakNudgeAtRisk', { time: formatTimeLeft(msLeft, language), days: formatDays(streak.current, language) })
+          : status === 'pending' ? t('streakNudgePending', { days: formatDays(streak.current + 1, language) })
+            : t('streakNudgeStart')}</span>
+      </p>}
 
     <section className="count-stage">
       <button className={`count-orb${phraseDone ? ' complete' : ''}`} onClick={handleTap} aria-label={`${t('tap')}: ${preset.title}. ${countLabel}`} style={{ '--progress': `${ratio * 360}deg` } as React.CSSProperties}>
@@ -78,7 +118,7 @@ export function CounterView({ state, onIncrement, onUndo, onSelect, onStartTimer
         <button className="quiet-button" disabled={count === 0} onClick={onUndo}><RotateCcw />{t('undo')}</button>
         <button className={`quiet-button ${state.activeTimer ? 'active' : ''}`} onClick={state.activeTimer ? onStopTimer : onStartTimer}>{state.activeTimer ? <Pause /> : <Play />}{state.activeTimer ? t('pauseTimer') : t('startTimer')}</button>
       </div>
-      {phraseDone && <div className="completion-note" role="status">
+      {!celebrating && phraseDone && <div className="completion-note" role="status">
         <span className="completion-msg"><Check aria-hidden="true" />{t('phraseComplete', { title: preset.title })}</span>
         {nextPhrase
           ? <button className="quiet-button continue-chip" onClick={() => onSelect(nextPhrase.id)}>{t('continueWith', { title: nextPhrase.title })}<ArrowRight aria-hidden="true" /></button>

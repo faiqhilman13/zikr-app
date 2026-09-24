@@ -104,17 +104,20 @@ Required before review:
 
 - **Privacy policy URL**: https://myzikr.netlify.app/privacy.html (already live)
 - **Data safety form**: the app collects nothing by default. Analytics and reminders are
-  off until the user opts in, and counts never leave the device. Answer it honestly and
-  it is a short form.
+  off until the user opts in, and counts never leave the device. With reminders on, the
+  site keeps the browser's push subscription, the reminder time and the time zone to send
+  them; the privacy page lists exactly what each keeps. Answer it honestly and it is a
+  short form.
 - **Content rating questionnaire**
 - **Icon** 512x512: `public/icons/icon-512.png` works
 - **Feature graphic** 1024x500: **not in the repo yet, you need to make one**
 - **Screenshots**: at least two phone screenshots
 
-`enableNotifications` is set to `false` in `twa-manifest.json`. The app's reminders need
-`VITE_PUSH_ENDPOINT`, which is not configured, so requesting the notification permission
-would ask for something the app cannot use and adds a permission you would have to
-justify. Flip it to `true` once push is configured.
+`enableNotifications` is set to `false` in `twa-manifest.json`. The app's reminders only
+work once their environment variables are set in Netlify (see `.env.example`). Until
+then, requesting the notification permission would ask for something the app cannot use
+and adds a permission you would have to justify. Once reminders arrive on the website,
+flip it to `true` and build a new bundle.
 
 ## 5. Updating later
 

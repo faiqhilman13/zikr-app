@@ -10,6 +10,8 @@
   let key = '';
   let report = null;
 
+  const rate = (part, whole) => whole ? `${Math.round((part / whole) * 100)}% (${part}/${whole})` : 'Not enough history';
+
   const metrics = (data) => [
     ['Visiting browsers', data.visitors],
     ['Active today', data.activeToday],
@@ -17,9 +19,11 @@
     ['Active, last 30 days', data.active30d],
     ['Returning browsers', data.returning],
     ['Home-screen browsers', data.standalone],
-    ['Weekly retention', data.priorWeekActive
-      ? `${Math.round((data.retainedFromPriorWeek / data.priorWeekActive) * 100)}% (${data.retainedFromPriorWeek}/${data.priorWeekActive})`
-      : 'Not enough history']
+    ['Weekly retention', rate(data.retainedFromPriorWeek, data.priorWeekActive)],
+    ['Back the next day, last full week', rate(data.nextDayReturned, data.nextDayBase)],
+    ['Active every day, last full week', data.activeEveryDay],
+    ['Reminders on, last 7 days', rate(data.reminders7d, data.active7d)],
+    ['Opened from a reminder, last 7 days', rate(data.reminded7d, data.reminders7d)]
   ];
 
   const card = (label, value) => {
@@ -46,7 +50,8 @@
   const draw = () => {
     el('metrics').replaceChildren(...metrics(report).map(([label, value]) => card(label, value)));
     // Newest first: the day you are asking about is almost always today.
-    el('rows').replaceChildren(...[...report.daily].reverse().map((day) => row([day.date, day.visitors, day.active, day.standalone])));
+    el('rows').replaceChildren(...[...report.daily].reverse().map((day) =>
+      row([day.date, day.visitors, day.active, day.standalone, day.consecutive ?? '–', day.reminders, day.reminded])));
     el('status').textContent = `Updated ${new Date(report.generatedAt).toLocaleString()}`;
   };
 
@@ -93,8 +98,9 @@
   el('export').addEventListener('click', () => {
     if (!report) return;
     const csv = [
-      'date_utc,visiting_browsers,active_browsers,home_screen_browsers',
-      ...report.daily.map((day) => [day.date, day.visitors, day.active, day.standalone].join(','))
+      // New columns go on the end, so a spreadsheet built on an older export still lines up.
+      'date_utc,visiting_browsers,active_browsers,home_screen_browsers,consecutive_day_browsers,reminder_browsers,from_reminder_browsers',
+      ...report.daily.map((day) => [day.date, day.visitors, day.active, day.standalone, day.consecutive ?? '', day.reminders, day.reminded].join(','))
     ].join('\n');
     const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
     const link = document.createElement('a');

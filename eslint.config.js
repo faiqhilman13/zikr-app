@@ -13,6 +13,12 @@ export default tseslint.config(
     languageOptions: { ecmaVersion: 2022, globals: globals.node }
   },
   {
+    // Loaded into the generated service worker with importScripts, so a classic script.
+    extends: [js.configs.recommended],
+    files: ['public/push-handler.js'],
+    languageOptions: { ecmaVersion: 2022, sourceType: 'script', globals: globals.serviceworker }
+  },
+  {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ['src/**/*.{ts,tsx}', 'vite.config.ts'],
     languageOptions: { ecmaVersion: 2022, globals: { ...globals.browser, ...globals.node } },

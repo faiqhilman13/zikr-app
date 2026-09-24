@@ -22,10 +22,24 @@ async function render(size, filename, padding = 0.2) {
     .toFile(path.join(output, filename));
 }
 
+// Android draws a notification badge from its alpha channel alone, so the opaque app icon
+// would show as a white square. The badge is the eight-pointed star at the heart of the symbol.
+async function renderBadge() {
+  const star = `<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96">
+    <mask id="centre"><rect width="96" height="96" fill="#fff"/><circle cx="48" cy="48" r="12" fill="#000"/></mask>
+    <g fill="#fff" mask="url(#centre)">
+      <rect x="20" y="20" width="56" height="56"/>
+      <rect x="20" y="20" width="56" height="56" transform="rotate(45 48 48)"/>
+    </g>
+  </svg>`;
+  await sharp(Buffer.from(star)).png(PNG_OPTIONS).toFile(path.join(output, 'badge-96.png'));
+}
+
 await render(192, 'icon-192.png', 0.03);
 await render(512, 'icon-512.png', 0.03);
 await render(512, 'icon-maskable-512.png', 0.18);
 await render(180, 'apple-touch-icon.png', 0.03);
+await renderBadge();
 // The original symbol asset contains one fully opaque stray column on its far-right edge.
 // Crop only that artifact before producing the web header asset; preserve the artwork itself.
 const symbolMetadata = await sharp(sourceSymbol).metadata();

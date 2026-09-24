@@ -222,30 +222,6 @@ export const totalToday = (state: ZikrState) => totalForLog(getToday(state));
 export const selectedPreset = (state: ZikrState) => state.presets.find((p) => p.id === state.selectedPresetId) ?? state.presets[0];
 export const selectedCount = (state: ZikrState) => getToday(state).counts[state.selectedPresetId] ?? 0;
 
-export const calculateStreak = (state: ZikrState) => {
-  const completed = new Set(state.logs.filter((log) => log.completed).map((log) => log.date));
-  const cursor = new Date();
-  if (!completed.has(dayKey(cursor))) cursor.setDate(cursor.getDate() - 1);
-  let current = 0;
-  while (completed.has(dayKey(cursor))) {
-    current += 1;
-    cursor.setDate(cursor.getDate() - 1);
-  }
-  let longest = 0;
-  let run = 0;
-  const ascending = [...state.logs].sort((a, b) => a.date.localeCompare(b.date));
-  let previous: Date | null = null;
-  for (const log of ascending) {
-    if (!log.completed) continue;
-    const date = new Date(`${log.date}T12:00:00`);
-    const consecutive = previous && Math.round((date.getTime() - previous.getTime()) / 86_400_000) === 1;
-    run = consecutive ? run + 1 : 1;
-    longest = Math.max(longest, run);
-    previous = date;
-  }
-  return { current, longest };
-};
-
 export const withIncrement = (state: ZikrState, presetId: string, amount: number): ZikrState => {
   const today = dayKey();
   const presets = state.presets;

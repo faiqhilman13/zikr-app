@@ -15,6 +15,7 @@ describe('payload validation', () => {
   it('accepts exactly an id and known kinds', () => {
     expect(validPayload(good)).toBe(true);
     expect(validPayload({ id: id(1), kinds: ['visit', 'active', 'standalone'] })).toBe(true);
+    expect(validPayload({ id: id(1), kinds: ['visit', 'active', 'standalone', 'reminders', 'reminded'] })).toBe(true);
   });
 
   // The point of the endpoint is that practice data cannot reach it, so an extra key is
@@ -23,6 +24,8 @@ describe('payload validation', () => {
     expect(validPayload({ ...good, counts: 33 })).toBe(false);
     expect(validPayload({ ...good, phrase: 'SubhanAllah' })).toBe(false);
     expect(validPayload({ ...good, url: 'https://example.test' })).toBe(false);
+    expect(validPayload({ ...good, streak: 12 })).toBe(false);
+    expect(validPayload({ ...good, reminderTime: '21:00' })).toBe(false);
   });
 
   it('rejects a malformed or missing identifier', () => {
@@ -33,11 +36,13 @@ describe('payload validation', () => {
     expect(validPayload({ id: 'c232ab00-9414-11ec-b3c8-9e6bdeced846', kinds: ['visit'] })).toBe(false);
   });
 
-  it('rejects unknown, empty, oversized or non-array kinds', () => {
+  it('rejects unknown, empty, repeated, oversized or non-array kinds', () => {
     expect(validPayload({ id: id(1), kinds: [] })).toBe(false);
     expect(validPayload({ id: id(1), kinds: ['count_increment'] })).toBe(false);
+    expect(validPayload({ id: id(1), kinds: ['streak'] })).toBe(false);
     expect(validPayload({ id: id(1), kinds: 'visit' })).toBe(false);
-    expect(validPayload({ id: id(1), kinds: ['visit', 'visit', 'visit', 'visit'] })).toBe(false);
+    expect(validPayload({ id: id(1), kinds: ['visit', 'visit'] })).toBe(false);
+    expect(validPayload({ id: id(1), kinds: ['visit', 'active', 'standalone', 'reminders', 'reminded', 'visit'] })).toBe(false);
   });
 
   it('rejects values that are not a plain object', () => {
@@ -100,6 +105,41 @@ describe('summary', () => {
     expect(report.priorWeekActive).toBe(3);
     expect(report.retainedFromPriorWeek).toBe(1);
     expect(report.active7d).toBe(2);
+  });
+
+  // No streak is ever sent, so a streak shows up as the same browser active day after day.
+  it('reads streaks from consecutive days of use', () => {
+    const report = summarize([
+      // Browser 1 used the app on each of the seven full days before today.
+      ...[1, 2, 3, 4, 5, 6, 7].map((offset) => key(offset, 'active', 1)),
+      // Browser 2 came back once, the next day, and not since.
+      key(3, 'active', 2), key(2, 'active', 2),
+      // Browser 3 only today.
+      key(0, 'active', 3)
+    ], NOW);
+    // Pairs of days, each full: day 8 into 7, through day 2 into 1. Browser 1 is
+    // expected back yesterday and today, but today is still under way, so it is not
+    // counted as a day browser 1 failed to return.
+    expect(report.nextDayBase).toBe(8);
+    expect(report.nextDayReturned).toBe(7);
+    expect(report.activeEveryDay).toBe(1);
+    expect(report.daily.at(-3).consecutive).toBe(2);
+    expect(report.daily.at(-2).consecutive).toBe(1);
+    expect(report.daily.at(-1).consecutive).toBe(0);
+    // The oldest day shown has no day before it in the report to compare with.
+    expect(report.daily[0].consecutive).toBeNull();
+  });
+
+  it('counts browsers keeping reminders, and those a reminder brought back', () => {
+    const report = summarize([
+      key(0, 'reminders', 1), key(0, 'reminded', 1), key(3, 'reminders', 1),
+      key(2, 'reminders', 2),
+      key(9, 'reminders', 3), key(9, 'reminded', 3)
+    ], NOW);
+    expect(report.reminders7d).toBe(2);
+    expect(report.reminded7d).toBe(1);
+    expect(report.daily.at(-1)).toMatchObject({ reminders: 1, reminded: 1 });
+    expect(report.daily.at(-3)).toMatchObject({ reminders: 1, reminded: 0 });
   });
 
   it('drops records outside the window instead of folding them into a total', () => {

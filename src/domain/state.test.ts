@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { archivePreset, clampPace, clampTarget, creditTimerReps, startTimer, stopTimer, calculateStreak, dayKey, initialState, normalizeState, sanitizeState, totalToday, withDecrement, withIncrement } from './state';
+import { calculateStreak } from './streak';
+import { archivePreset, clampPace, clampTarget, creditTimerReps, startTimer, stopTimer, dayKey, initialState, normalizeState, sanitizeState, totalToday, withDecrement, withIncrement } from './state';
 
 describe('Zikr state', () => {
   it('keeps confirmed repetitions separate from timed practice', () => {

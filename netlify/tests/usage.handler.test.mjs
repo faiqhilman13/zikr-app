@@ -54,7 +54,8 @@ describe('collecting', () => {
   it('writes each record only if new, so a repeat cannot double a count', async () => {
     await handler(post({ id: ID, kinds: ['visit'] }));
     await handler(post({ id: ID, kinds: ['visit'] }));
-    await handler(post({ id: ID, kinds: ['visit', 'visit'] }));
+    // Repeating a fact inside one report is refused outright.
+    expect((await handler(post({ id: ID, kinds: ['visit', 'visit'] }))).status).toBe(400);
     expect(blobs.size).toBe(1);
     expect(writes.every((write) => write.options?.onlyIfNew === true)).toBe(true);
   });
@@ -101,12 +102,13 @@ describe('the dashboard read', () => {
   });
 
   it('summarises what was collected', async () => {
-    await handler(post({ id: ID, kinds: ['visit', 'active', 'standalone'] }));
+    await handler(post({ id: ID, kinds: ['visit', 'active', 'standalone', 'reminders', 'reminded'] }));
     const response = await handler(get('test-key'));
     expect(response.status).toBe(200);
     const report = await response.json();
-    expect(report).toMatchObject({ visitors: 1, activeToday: 1, standalone: 1, timezone: 'UTC' });
+    expect(report).toMatchObject({ visitors: 1, activeToday: 1, standalone: 1, reminders7d: 1, reminded7d: 1, timezone: 'UTC' });
     expect(report.daily).toHaveLength(30);
+    expect(report.daily.at(-1)).toMatchObject({ active: 1, reminders: 1, reminded: 1 });
   });
 
   // Ten seconds is the whole budget, so the read asks for the days it shows and no more.

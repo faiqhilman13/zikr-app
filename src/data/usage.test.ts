@@ -40,6 +40,18 @@ describe('what gets reported', () => {
     expect(sent()[0].kinds).toEqual(['visit']);
   });
 
+  it('adds reminders only for a browser in use with daily reminders on, as soon as they are', async () => {
+    await reportUsage(true, true);
+    await reportUsage(true, true, true);
+    expect(sent().map((body) => body.kinds)).toEqual([['visit', 'active'], ['reminders']]);
+
+    // Switched on before setup is finished is a visit and nothing else.
+    localStorage.clear();
+    vi.mocked(fetch).mockClear();
+    await reportUsage(true, false, true);
+    expect(sent()[0].kinds).toEqual(['visit']);
+  });
+
   // The whole promise of the feature. If this ever fails, the endpoint is being handed
   // something it was built never to receive.
   it('sends nothing but a random identifier and those flags', async () => {
@@ -58,6 +70,44 @@ describe('what gets reported', () => {
     await reportUsage(true, false);
     const [first, second] = sent();
     expect(second.id).toBe(first.id);
+  });
+});
+
+describe('opened from a reminder', () => {
+  // The marker is read once, as the app loads, so each case loads a fresh copy of the
+  // module from the address it is about.
+  const openedAt = async (address: string) => {
+    window.history.replaceState(null, '', address);
+    vi.resetModules();
+    return (await import('./usage')).reportUsage;
+  };
+  afterEach(() => { vi.useRealTimers(); window.history.replaceState(null, '', '/'); });
+
+  it('reports the open once the browser is in use, and takes the marker out of the address', async () => {
+    const report = await openedAt('/?source=reminder&lang=tr');
+    expect(window.location.search).toBe('?lang=tr');
+
+    await report(true, false, true);
+    await report(true, true, true);
+    await report(true, true, true);
+    expect(sent().map((body) => body.kinds)).toEqual([['visit'], ['active', 'reminders', 'reminded']]);
+  });
+
+  it('says nothing of a reminder for any other open', async () => {
+    const report = await openedAt('/?source=pwa');
+    expect(window.location.search).toBe('?source=pwa');
+    await report(true, true, true);
+    expect(sent()[0].kinds).toEqual(['visit', 'active', 'reminders']);
+  });
+
+  // A page left open overnight was opened from yesterday's reminder, not today's.
+  it('counts the open on the UTC day it happened and no other', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-09-20T23:59:00Z'));
+    const report = await openedAt('/?source=reminder');
+    vi.setSystemTime(new Date('2026-09-21T00:01:00Z'));
+    await report(true, true, true);
+    expect(sent()[0].kinds).toEqual(['visit', 'active', 'reminders']);
   });
 });
 

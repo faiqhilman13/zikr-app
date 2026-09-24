@@ -60,7 +60,7 @@ tr:last-child td { border-bottom: 0 }
     <h2>Day by day</h2>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Date (UTC)</th><th>Visiting</th><th>Active</th><th>Home screen</th></tr></thead>
+        <thead><tr><th>Date (UTC)</th><th>Visiting</th><th>Active</th><th>Home screen</th><th>Consecutive</th><th>Reminders on</th><th>From a reminder</th></tr></thead>
         <tbody id="rows"></tbody>
       </table>
     </div>
@@ -68,7 +68,9 @@ tr:last-child td { border-bottom: 0 }
     <h2>Reading these numbers</h2>
     <p class="fine"><b>Visiting</b> is a browser that opened the site. <b>Active</b> is one that used the app after finishing setup. <b>Home screen</b> is a browser running the installed app, which is the closest thing to an install count that the web will give — iOS reports no install event at all. Each browser counts once per day per column however long it stays.</p>
     <p class="fine"><b>Returning</b> is a browser seen on two or more separate days in the window. <b>Weekly retention</b> is how many of the previous seven days' active browsers were active again in the last seven.</p>
-    <p class="fine">These are browsers, not people: two devices are two browsers, and a cleared site data or a private window starts a new one. They are also only the browsers that opted in, so treat every figure as a floor rather than a total, and the trend as more useful than the number. Records older than 90 days are deleted nightly, and nothing exists from before this feature shipped.</p>
+    <p class="fine">Streaks show up as people coming back, because no streak, completion or milestone is ever sent. <b>Back the next day</b> takes the browsers active on each of the seven full days before today and asks how many were active again the day after. <b>Active every day</b> counts the browsers active on all seven of those days. <b>Consecutive</b>, day by day, is a browser active on that day and the one before, left blank on the oldest day shown. All three are built from the Active records, so they reach back past the release that added streaks: that is the before and after to watch.</p>
+    <p class="fine"><b>Reminders on</b> is the share of browsers active in the last seven days that had daily reminders switched on. <b>Opened from a reminder</b> is the share of those that opened Zikr by tapping one. A reminder on a day the app is never opened leaves no record, so neither figure counts reminders sent.</p>
+    <p class="fine">These are browsers, not people: two devices are two browsers, and a cleared site data or a private window starts a new one. They are also only the browsers that opted in, so treat every figure as a floor rather than a total, and the trend as more useful than the number. Records older than 90 days are deleted nightly. Nothing exists from before this feature shipped, and the reminder columns start with the release that added them.</p>
   </section>
 </main>
 </body>

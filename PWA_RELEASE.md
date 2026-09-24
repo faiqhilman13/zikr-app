@@ -15,10 +15,9 @@
 
 Copy `.env.example` to `.env` and configure only the services being deployed. The application works without any of them.
 
-- `VITE_ANALYTICS_ENDPOINT`: accepts anonymous JSON product events after explicit opt-in.
+- Usage analytics are served by this site's own function and need no endpoint. `ANALYTICS_ADMIN_KEY` (Functions scope) is the password for the private dashboard at `/analytics.html`.
 - Cloud sync is not shipped. Use encrypted backup export/import; never wire a public deployment to a shared backup blob.
-- `VITE_PUSH_ENDPOINT`: accepts a Web Push subscription.
-- `VITE_VAPID_PUBLIC_KEY`: the public VAPID key paired with the push service.
+- Daily reminders are sent by this site's own functions. Run `npm run vapid-keys` once, fill in its `VAPID_SUBJECT`, and set the four variables it prints in Netlify in the scopes it names: `VITE_PUSH_ENDPOINT`, `VITE_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` and `VAPID_SUBJECT`. Keep the pair once browsers are subscribed with it.
 
 Never put a private key in a `VITE_*` variable; Vite exposes these values to browsers.
 
@@ -33,6 +32,7 @@ Never put a private key in a `VITE_*` variable; Vite exposes these values to bro
 7. Deploy a new version and confirm the update prompt replaces the cached version.
 8. Export an encrypted backup, reset data, and restore the backup.
 9. Test VoiceOver/TalkBack, keyboard focus, 200% text zoom, dark mode, reduced motion, and 320px responsive reflow.
+10. With reminders configured, switch the reminder on in the installed app on a phone with a time about ten minutes ahead. Confirm it arrives within five minutes of that time, worded from the day's practice, and that the `push-send` function log shows the run that sent it.
 
 ## Truthful release assets
 

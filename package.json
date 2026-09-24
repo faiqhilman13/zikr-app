@@ -11,7 +11,8 @@
     "test:watch": "vitest",
     "lint": "eslint .",
     "icons": "node scripts/generate-pwa-icons.mjs",
-    "og": "node scripts/generate-og-image.mjs"
+    "og": "node scripts/generate-og-image.mjs",
+    "vapid-keys": "node scripts/vapid-keys.mjs"
   },
   "dependencies": {
     "@fontsource-variable/noto-sans-arabic": "^5.2.8",

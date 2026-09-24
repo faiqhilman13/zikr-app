@@ -108,6 +108,20 @@ export const readable = (colour: string, on: string, ratio = 4.5): string => {
 
 /* ------------------------------------------------------------------ derivation */
 
+/**
+ * The streak's two signals keep their own hues under every preset, because they mean the
+ * same thing everywhere: ice for a day a freeze covered, ember for a streak about to
+ * lapse. Only their lightness moves, walked against `--surface-2`, the surface each mode
+ * puts closest to them in luminance, so they clear the ratio on all three.
+ */
+const ICE = { light: '#2f6fb0', dark: '#8cc4f0' };
+const EMBER = { light: '#b4461b', dark: '#ff9d6b' };
+const streakSignals = (mode: ThemeMode, surface2: string): Palette => ({
+  '--freeze': readable(ICE[mode], surface2, 4.5),
+  '--freeze-soft': mode === 'light' ? withHsl(ICE.light, { s: 0.62, l: 0.92 }) : withHsl(ICE.dark, { s: 0.45, l: 0.2 }),
+  '--ember': readable(EMBER[mode], surface2, 4.5)
+});
+
 /** The custom properties `styles.css` reads, minus `--radius`, which is not a colour. */
 export type Palette = Record<string, string>;
 
@@ -178,7 +192,8 @@ export function derive(mode: ThemeMode, seeds: Seeds): Palette {
       '--on-orb': readable(withHsl(primary, { s: Math.min(toHsl(primary).s, 0.5), l: 0.12 }), secondary, 4.5),
       '--button-shadow': rgba(primary, 0.22),
       '--line': rgba(primary, 0.14),
-      '--shadow': `0 12px 30px ${rgba(primary, 0.09)}`
+      '--shadow': `0 12px 30px ${rgba(primary, 0.09)}`,
+      ...streakSignals(mode, surface2)
     }, primary);
   }
 
@@ -221,7 +236,8 @@ export function derive(mode: ThemeMode, seeds: Seeds): Palette {
     '--on-orb': readable(withHsl(primary, { s: Math.min(tint, 0.5), l: 0.12 }), secondary, 4.5),
     '--button-shadow': rgba(primary, 0.3),
     '--line': rgba(ink, 0.2),
-    '--shadow': '0 24px 60px rgba(0, 0, 0, .25)'
+    '--shadow': '0 24px 60px rgba(0, 0, 0, .25)',
+    ...streakSignals(mode, surface2)
   }, primary);
 }
 

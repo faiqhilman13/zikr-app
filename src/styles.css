@@ -43,6 +43,9 @@
   --nav-shadow: rgba(13, 19, 38, 0.1);
   --soil: rgba(13, 19, 38, 0.45);
   --scrim: rgba(13, 19, 38, 0.72);
+  --freeze: #2d6aa8;
+  --freeze-soft: #deebf7;
+  --ember: #b4461b;
   --garden-trunk: #516cb9;
   --garden-canopy: #d4a017;
   --garden-canopy-light: #f1d17e;
@@ -92,6 +95,9 @@
   --nav-shadow: rgba(13, 19, 38, 0.1);
   --soil: rgba(13, 19, 38, 0.45);
   --scrim: rgba(13, 19, 38, 0.72);
+  --freeze: #8cc4f0;
+  --freeze-soft: #1c364a;
+  --ember: #ff9d6b;
   --garden-trunk: #516cb9;
   --garden-canopy: #d4a017;
   --garden-canopy-light: #f1d17e;
@@ -301,10 +307,12 @@ body:has(.now-playing) .app-shell { padding-bottom: calc(160px + env(safe-area-i
 
 .metric-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 34px; }
 .metric-grid article { min-height: 170px; padding: 20px; border-radius: 22px; background: var(--surface); border: 1px solid var(--line); display: flex; flex-direction: column; align-items: flex-start; }
-.metric-grid svg { color: var(--gold); width: 20px; margin-bottom: 16px; }
+.metric-grid article > svg { color: var(--gold); width: 20px; margin-bottom: 16px; }
 .metric-grid span { color: var(--muted); font-size: .76rem; }
 .metric-grid strong { font-family: ui-serif, Georgia, serif; font-size: 3rem; line-height: 1.1; margin-top: auto; }
 .metric-grid small { color: var(--muted); }
+.metric-grid .metric-freezes { display: inline-flex; align-items: center; gap: 5px; margin-top: 6px; color: var(--freeze); font-size: .74rem; font-weight: 650; }
+.metric-freezes svg { width: 14px; height: 14px; flex-shrink: 0; }
 .chart-card { padding-bottom: 34px; }
 .chart-note { margin: 5px 0 0; color: var(--muted); font-size: .72rem; }
 .bar-chart { height: 230px; display: grid; grid-template-columns: repeat(7,1fr); gap: clamp(8px, 3vw, 22px); }
@@ -327,6 +335,10 @@ body:has(.now-playing) .app-shell { padding-bottom: calc(160px + env(safe-area-i
 button.heat-cell { cursor: pointer; transition: transform .15s ease; }
 button.heat-cell:hover { transform: scale(1.18); }
 .heat-cell.done::after { content: ''; position: absolute; inset: 34%; border-radius: 50%; background: var(--surface); }
+/* A missed day a freeze covered: ringed in ice, so the chain reads as unbroken without
+   pretending the day was practised. */
+.heat-cell.frozen { box-shadow: inset 0 0 0 2px var(--freeze); }
+.heat-cell.l0.frozen { background: var(--freeze-soft); }
 .heatmap-legend { margin-top: 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 5px; color: var(--muted); font-size: .68rem; }
 .heatmap-legend .heat-cell { width: 12px; display: inline-block; }
 .legend-done { display: inline-flex; align-items: center; gap: 6px; margin-inline-start: 14px; }
@@ -375,7 +387,7 @@ button.heat-cell:hover { transform: scale(1.18); }
 
 .settings-view { display: grid; gap: 18px; }
 .settings-view .view-title { margin-bottom: 10px; }
-.settings-card { padding: clamp(20px, 4vw, 32px); border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+.settings-card { scroll-margin-top: 92px; padding: clamp(20px, 4vw, 32px); border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
 .settings-heading { display: grid; grid-template-columns: 46px 1fr; gap: 15px; align-items: start; margin-bottom: 22px; }
 .settings-heading > svg, .leaf-icon { width: 46px; height: 46px; padding: 12px; border-radius: 14px; background: var(--surface-2); color: var(--brand); }
 .settings-heading h2 { font-size: 1.65rem; margin: 2px 0 3px; }
@@ -455,7 +467,7 @@ input, select { min-height: 44px; border: 1px solid var(--line); border-radius: 
   .install-card .button { grid-column: 1/-1; width: 100%; }
   .metric-grid { grid-template-columns: 1fr; }
   .metric-grid article { min-height: 120px; display: grid; grid-template-columns: auto 1fr auto; gap: 5px 12px; align-items: center; }
-  .metric-grid svg { grid-row: 1/3; margin: 0; }
+  .metric-grid article > svg { grid-row: 1/3; margin: 0; }
   .metric-grid strong { grid-column: 3; grid-row: 1/3; margin: 0; }
   .metric-grid small { grid-column: 2; }
   .garden-card { grid-template-columns: 1fr; text-align: center; }
@@ -481,6 +493,99 @@ input, select { min-height: 44px; border: 1px solid var(--line); border-radius: 
   .history-list span { grid-column: 1/-1; grid-row: 2; }
   .phrase-rows li { grid-template-columns: 1fr auto; }
   .phrase-arabic { grid-column: 1/-1; grid-row: 1; }
+}
+
+/* ------------------------------------------------------------------ streak */
+
+/* The chip shares the header with the centred brand mark, so at 320px each side has
+   about 110px. It stays inside that: count, and a short countdown only when at risk. */
+.streak-chip { flex-shrink: 0; min-height: 44px; padding-block: 0; padding-inline: 10px 12px; border: 1px solid var(--line); border-radius: 999px; display: inline-flex; align-items: center; gap: 5px; background: var(--surface); color: var(--ink); font-weight: 750; font-size: .95rem; font-variant-numeric: tabular-nums; line-height: 1; cursor: pointer; transition: border-color .2s ease; }
+.streak-chip:hover { border-color: var(--gold); }
+.streak-chip > svg { width: 18px; height: 18px; flex-shrink: 0; color: var(--muted); }
+.streak-chip.done > svg { color: var(--gold-strong); fill: var(--gold); }
+.streak-chip.none .streak-chip-count { color: var(--muted); }
+.streak-chip.at-risk { border-color: var(--ember); color: var(--ember); }
+.streak-chip.at-risk > svg { color: var(--ember); }
+.streak-chip-time { display: inline-flex; align-items: center; gap: 2px; margin-inline-start: 2px; padding-inline-start: 6px; border-inline-start: 1px solid color-mix(in srgb, currentColor 35%, transparent); font-size: .78rem; font-weight: 700; white-space: nowrap; }
+.streak-chip-time svg { width: 13px; height: 13px; flex-shrink: 0; }
+
+/* As tall as the celebration that replaces it, so the orb holds still on the tap that
+   completes the day. Only a freeze earned adds a row, once a week at most. */
+.streak-nudge { min-height: 44px; margin: 14px 0 0; display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--ink); font-size: .84rem; font-weight: 600; line-height: 1.4; text-align: center; }
+.streak-nudge svg { width: 16px; height: 16px; flex-shrink: 0; color: var(--muted); }
+.streak-nudge.pending svg { color: var(--gold-strong); }
+.streak-nudge.at-risk, .streak-nudge.at-risk svg { color: var(--ember); }
+
+.streak-notices { display: grid; gap: 8px; margin-bottom: 14px; }
+.streak-notice { display: flex; align-items: center; gap: 12px; padding-block: 6px; padding-inline: 16px 6px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); }
+.streak-notice > svg { width: 20px; height: 20px; flex-shrink: 0; color: var(--muted); }
+.streak-notice.freeze { border-color: color-mix(in srgb, var(--freeze) 40%, transparent); }
+.streak-notice.freeze > svg { color: var(--freeze); }
+.streak-notice p { flex: 1; min-width: 0; margin: 0; font-size: .86rem; line-height: 1.45; }
+.streak-notice .text-link { flex-shrink: 0; font-size: .82rem; }
+
+/* Takes the nudge's place above the orb at the moment the day completes. Just under the
+   Today card, it is in view whenever the orb is, however short the screen. */
+.streak-celebration { margin-top: 14px; display: grid; justify-items: center; gap: 10px; }
+.celebration-line { display: flex; align-items: center; gap: 12px; }
+.celebration-flame { flex-shrink: 0; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: var(--gold-soft); color: var(--gold-strong); }
+.celebration-flame svg { width: 24px; height: 24px; fill: var(--gold); }
+.celebration-line p { margin: 0; display: grid; }
+.celebration-line strong { font-family: ui-serif, Georgia, serif; font-size: 1.3rem; line-height: 1.15; color: var(--gold-text); }
+.celebration-line p span { color: var(--muted); font-size: .84rem; line-height: 1.4; }
+.celebration-line .celebration-milestone { color: var(--gold-text); font-weight: 650; }
+.celebration-freeze { padding: 6px 13px; border-radius: 999px; display: inline-flex; align-items: center; gap: 6px; background: var(--freeze-soft); color: var(--freeze); font-size: .8rem; font-weight: 650; text-align: center; }
+.celebration-freeze svg { width: 15px; height: 15px; flex-shrink: 0; }
+
+.streak-sheet { text-align: center; }
+.streak-sheet .eyebrow { margin-bottom: 14px; }
+.streak-hero { display: grid; justify-items: center; gap: 8px; }
+.streak-flame { width: 76px; height: 76px; border-radius: 50%; display: grid; place-items: center; background: var(--surface-2); color: var(--muted); }
+.streak-flame svg { width: 38px; height: 38px; }
+.streak-sheet.done .streak-flame { background: var(--gold-soft); color: var(--gold-strong); }
+.streak-sheet.done .streak-flame svg { fill: var(--gold); }
+.streak-sheet.at-risk .streak-flame { color: var(--ember); }
+.streak-hero h2 { margin: 0; display: grid; justify-items: center; gap: 4px; }
+.streak-hero h2 strong { font-size: clamp(3.4rem, 14vw, 4.6rem); line-height: 1; font-weight: 520; font-variant-numeric: tabular-nums; }
+.streak-hero h2 span { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif; font-size: .9rem; font-weight: 650; letter-spacing: 0; color: var(--muted); }
+.streak-line { max-width: 380px; margin: 14px auto 22px; color: var(--muted); font-size: .92rem; }
+.streak-sheet.at-risk .streak-line { color: var(--ember); font-weight: 650; }
+.streak-week { list-style: none; margin: 0 0 22px; padding: 0; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+.streak-week li { display: grid; justify-items: center; gap: 6px; min-width: 0; }
+.streak-day-mark { width: 34px; max-width: 100%; aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; background: var(--surface-2); color: var(--muted); }
+.streak-day-mark svg { width: 17px; height: 17px; }
+.streak-week .done .streak-day-mark { background: var(--gold-soft); color: var(--gold-strong); }
+.streak-week .done .streak-day-mark svg { fill: var(--gold); }
+.streak-week .frozen .streak-day-mark { background: var(--freeze-soft); color: var(--freeze); }
+.streak-week .missed .streak-day-mark { background: transparent; border: 1.5px dashed var(--line); }
+.streak-week .open .streak-day-mark { background: transparent; border: 2px solid var(--gold); }
+.streak-sheet.at-risk .streak-week .open .streak-day-mark { border-color: var(--ember); }
+.streak-day-name { color: var(--muted); font-size: .7rem; font-weight: 650; }
+.streak-week li:last-child .streak-day-name { color: var(--ink); }
+.streak-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-bottom: 18px; text-align: start; }
+.streak-fact { min-width: 0; padding: 14px 16px; border: 1px solid var(--line); border-radius: 18px; display: grid; align-content: start; gap: 4px; background: var(--bg); }
+.streak-fact.freeze-fact { grid-column: 1 / -1; }
+.streak-fact-label { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: .74rem; font-weight: 650; }
+.streak-fact-label svg { width: 15px; height: 15px; flex-shrink: 0; }
+.freeze-fact .streak-fact-label { color: var(--freeze); }
+.streak-fact strong { font-family: ui-serif, Georgia, serif; font-size: 1.35rem; line-height: 1.2; font-weight: 600; }
+.streak-fact p { margin: 2px 0 0; color: var(--muted); font-size: .78rem; line-height: 1.5; }
+.streak-fact small { color: var(--muted); font-size: .72rem; }
+.streak-fact .fine-progress { margin: 6px 0 2px; }
+@media (max-width: 440px) {
+  .streak-sheet { padding: 30px 20px 24px; }
+  .streak-week { gap: 4px; }
+}
+@media (max-width: 360px) {
+  .streak-chip { padding-inline: 8px 10px; gap: 4px; }
+  .streak-chip-time svg { display: none; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .celebration-flame { animation: flame-pop .7s cubic-bezier(.2, .9, .3, 1.3) both; }
+  .celebration-line p { animation: celebration-rise .5s .18s ease-out both; }
+  .celebration-freeze { animation: celebration-rise .5s .32s ease-out both; }
+  @keyframes flame-pop { 0% { opacity: 0; transform: scale(.4); } 60% { opacity: 1; transform: scale(1.12); } 100% { transform: scale(1); } }
+  @keyframes celebration-rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 }
 
 @media (prefers-reduced-motion: reduce) {

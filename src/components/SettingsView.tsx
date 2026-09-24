@@ -103,7 +103,7 @@ export function SettingsView({ state, setState, patchSettings, setLanguage, setT
       {pushConfigured && <div className="setting-row"><label htmlFor="reminder-time">{t('preferredTime')}</label><input id="reminder-time" type="time" disabled={busy} value={state.settings.reminders.time} onChange={(e) => { const time = e.target.value; if (/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) { if (pushEnabled) void setReminder(true, time); else void patchSettings({ reminders: { ...state.settings.reminders, time } }); } }} /></div>}
       {pushEnabled
         ? <><p className="fine-print push-state">{t('pushActive')}</p><button className="button secondary" disabled={busy} onClick={() => void setReminder(false)}><BellOff />{t('disablePush')}</button></>
-        : pushConfigured && <button className="button secondary" disabled={busy} onClick={() => void setReminder(true)}><Bell />{t('enablePush')}</button>}
+        : pushConfigured && <button id="enable-reminders" className="button secondary" disabled={busy} onClick={() => void setReminder(true)}><Bell />{t('enablePush')}</button>}
       <p className="fine-print">{t('prayerNote')}</p>
     </section>
 

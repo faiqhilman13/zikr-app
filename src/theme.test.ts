@@ -71,6 +71,17 @@ describe('every preset, in both modes', () => {
     expect(contrast(palette['--orb-arc'], palette['--surface-2'])).toBeGreaterThanOrEqual(3);
   });
 
+  // Ice marks a day a freeze covered and ember a streak about to lapse. Both are read as
+  // text on all three surfaces, and ice also on its own soft tint in the week chain.
+  it.each(every)('$id/$mode keeps the streak signals readable', ({ palette }) => {
+    for (const surface of ['--bg', '--surface', '--surface-2']) {
+      expect(contrast(palette['--freeze'], palette[surface])).toBeGreaterThanOrEqual(4.5);
+      expect(contrast(palette['--ember'], palette[surface])).toBeGreaterThanOrEqual(4.5);
+    }
+    expect(contrast(palette['--freeze'], palette['--freeze-soft'])).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(palette['--ink'], palette['--freeze-soft'])).toBeGreaterThanOrEqual(4.5);
+  });
+
   it.each(every)('$id/$mode separates its surfaces from the page', ({ palette }) => {
     expect(palette['--surface']).not.toBe(palette['--bg']);
     expect(palette['--surface-2']).not.toBe(palette['--surface']);
