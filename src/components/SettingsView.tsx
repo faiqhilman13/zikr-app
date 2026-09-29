@@ -1,9 +1,9 @@
-import { Bell, BellOff, Download, Languages, LockKeyhole, Moon, Plus, RotateCcw, ShieldCheck, Trash2, Upload } from 'lucide-react';
+import { Bell, BellOff, Download, Languages, LockKeyhole, Moon, Plus, RotateCcw, Send, ShieldCheck, Trash2, Upload } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PalettePicker } from './PalettePicker';
 import { createEncryptedBackup, readEncryptedBackup, saveTextFile } from '../data/backup';
-import { disablePushNotifications, enablePushNotifications, pushConfigured } from '../services/push';
+import { disablePushNotifications, enablePushNotifications, pushConfigured, sendTestReminder } from '../services/push';
 import type { DhikrPreset, Language, ThemePreference, UserSettings, ZikrState } from '../domain/types';
 import { isAppleMobile, isStandalone } from '../services/platform';
 import { privacySignalSet } from '../data/usage';
@@ -66,6 +66,11 @@ export function SettingsView({ state, setState, patchSettings, setLanguage, setT
     setBusy(false);
     if (fileInput.current) fileInput.current.value = '';
   };
+  const testReminder = async () => {
+    setBusy(true);
+    try { announce(await sendTestReminder(state.settings.reminders.time)); }
+    finally { setBusy(false); }
+  };
   const setReminder = async (enabled: boolean, time = state.settings.reminders.time) => {
     setBusy(true);
     try {
@@ -102,7 +107,7 @@ export function SettingsView({ state, setState, patchSettings, setLanguage, setT
       {!pushConfigured && <p>{t('remindersUnavailable')}</p>}
       {pushConfigured && <div className="setting-row"><label htmlFor="reminder-time">{t('preferredTime')}</label><input id="reminder-time" type="time" disabled={busy} value={state.settings.reminders.time} onChange={(e) => { const time = e.target.value; if (/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) { if (pushEnabled) void setReminder(true, time); else void patchSettings({ reminders: { ...state.settings.reminders, time } }); } }} /></div>}
       {pushEnabled
-        ? <><p className="fine-print push-state">{t('pushActive')}</p><button className="button secondary" disabled={busy} onClick={() => void setReminder(false)}><BellOff />{t('disablePush')}</button></>
+        ? <><p className="fine-print push-state">{t('pushActive')}</p><div className="button-stack"><button className="button secondary" disabled={busy} onClick={() => void testReminder()}><Send />{t('pushTest')}</button><button className="button secondary" disabled={busy} onClick={() => void setReminder(false)}><BellOff />{t('disablePush')}</button></div></>
         : pushConfigured && <button id="enable-reminders" className="button secondary" disabled={busy} onClick={() => void setReminder(true)}><Bell />{t('enablePush')}</button>}
       <p className="fine-print">{t('prayerNote')}</p>
     </section>

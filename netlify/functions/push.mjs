@@ -1,5 +1,5 @@
-import { isPushEndpoint, validKeys } from '../lib/webpush.mjs';
-import { endpointHash, recordKey, scheduleKey, store, update, validTime, validZone, vapidFromEnv } from '../lib/reminders.mjs';
+import { isPushEndpoint, sendPush, validKeys } from '../lib/webpush.mjs';
+import { endpointHash, localClock, recordKey, scheduleKey, store, update, validTime, validZone, vapidFromEnv } from '../lib/reminders.mjs';
 
 /**
  * Turns the daily reminder on and off for one browser.
@@ -31,6 +31,13 @@ export const validSubscribe = (body) => isObject(body) && keysOf(body) === 'acti
 
 export const validUnsubscribe = (body) => isObject(body) && keysOf(body) === 'action,endpoint'
   && body.action === 'unsubscribe' && isPushEndpoint(body.endpoint);
+
+export const validTest = (body) => isObject(body) && keysOf(body) === 'action,endpoint'
+  && body.action === 'test' && isPushEndpoint(body.endpoint);
+
+/** One test a minute per subscription, so the button cannot be used to flood a phone. */
+const TEST_EVERY_MS = 60_000;
+const TEST_TIMEOUT_MS = 8_000;
 
 async function subscribe({ subscription, preferredTime: time, timeZone }) {
   const reminders = store();
@@ -64,6 +71,38 @@ async function unsubscribe({ endpoint }) {
   return reply({ ok: true });
 }
 
+/**
+ * Sends one reminder now, to a subscription already stored, and says what its push service
+ * answered. It goes through the same record and signing key as the daily one, so a test
+ * that arrives means the daily one can too, and one that fails names the reason. It never
+ * counts as the day's reminder.
+ */
+async function test({ endpoint }, vapid) {
+  const reminders = store();
+  const key = recordKey(endpointHash(endpoint));
+  const record = await reminders.get(key, { type: 'json' });
+  // Not stored: the app registers again and retries.
+  if (!record || !isPushEndpoint(record.subscription?.endpoint) || !validKeys(record.subscription?.keys)) return reply({ outcome: 'unknown' });
+  const now = Date.now();
+  if (Number.isFinite(record.lastTestAt) && now - record.lastTestAt < TEST_EVERY_MS) return reply({ outcome: 'wait' });
+  await update(reminders, key, (current) => (current ? { ...current, lastTestAt: now } : undefined));
+  const day = validZone(record.timeZone) ? localClock(record.timeZone, new Date(now)).day : null;
+  let status;
+  try {
+    status = await sendPush(record.subscription, { v: 1, day, test: true }, { vapid, ttl: 300, topic: 'zikr-test', urgency: 'high', signal: AbortSignal.timeout(TEST_TIMEOUT_MS) });
+  } catch {
+    return reply({ outcome: 'unreachable' });
+  }
+  if (status >= 200 && status < 300) return reply({ outcome: 'sent' });
+  // Gone for good: forgotten here, and the app makes a new subscription.
+  if (status === 404 || status === 410) {
+    await reminders.delete(key);
+    if (validTime(record.time) && validZone(record.timeZone)) await reminders.delete(scheduleKey(record.time, record.timeZone, endpointHash(endpoint)));
+    return reply({ outcome: 'gone', status });
+  }
+  return reply({ outcome: 'refused', status });
+}
+
 export default async function handler(request) {
   try {
     if (request.method !== 'POST') return reply({ error: 'Method not allowed' }, 405);
@@ -78,10 +117,12 @@ export default async function handler(request) {
     try { body = JSON.parse(text); } catch { return reply({ error: 'Invalid JSON' }, 400); }
     // Turning reminders off always works, configured or not.
     if (validUnsubscribe(body)) return await unsubscribe(body);
-    if (!validSubscribe(body)) return reply({ error: 'Invalid request' }, 400);
+    const isTest = validTest(body);
+    if (!isTest && !validSubscribe(body)) return reply({ error: 'Invalid request' }, 400);
     // A reminder this site cannot send is worse than a failure the app can show.
-    if (!vapidFromEnv(process.env).vapid) return reply({ error: 'Reminders are not configured' }, 503);
-    return await subscribe(body);
+    const { vapid } = vapidFromEnv(process.env);
+    if (!vapid) return reply({ error: 'Reminders are not configured' }, 503);
+    return isTest ? await test(body, vapid) : await subscribe(body);
   } catch {
     return reply({ error: 'Temporarily unavailable' }, 503);
   }

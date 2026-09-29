@@ -20,6 +20,7 @@ export const rtl: AppLanguage[] = ['ar'];
 
 export const resources = {
   en: { translation: {
+    pushTest: "Send a test reminder", pushTestSent: "Test reminder sent. It should appear within a minute; if it does not, check that notifications are allowed for Zikr in your phone’s settings.", pushTestWait: "A test was just sent. Please wait a minute before sending another.", pushTestRefused: "Your phone’s push service turned the reminder away (code {{status}}). Turn reminders off and on again, then send another test.", pushTestUnreachable: "Could not reach the reminder server. Check your connection and try again.",
     listen: "Listen", listenTitle: "Nasheeds & dhikr", listenBody: "A small, hand-picked collection to listen to while you remember. Keeps playing while you count.", listenFilter: "Filter recordings", listenKind_all: "All", listenKind_nasheed: "Nasheed", listenKind_zikr: "Dhikr", listenPlay: "Play {{title}}", listenStop: "Stop {{title}}", listenOpenYoutube: "Open on YouTube", listenOffline: "You’re offline. Recordings play from YouTube, so reconnect to listen.", listenNowPlaying: "Now playing", listenPrivacy: "Recordings stream from YouTube’s privacy-enhanced player. Nothing is requested from YouTube until you tap play; after that, YouTube’s own privacy policy applies to the player.",
     feedbackTitle: "Help shape Zikr",
     feedbackBody: "What feels good? What could be better? We read every message.",
@@ -181,6 +182,7 @@ export const resources = {
     installLater: 'You can add Zikr to your Home Screen any time from Settings.'
   } },
   ms: { translation: {
+    pushTest: "Hantar peringatan ujian", pushTestSent: "Peringatan ujian dihantar. Ia sepatutnya muncul dalam seminit; jika tidak, pastikan pemberitahuan dibenarkan untuk Zikr dalam tetapan telefon anda.", pushTestWait: "Ujian baru sahaja dihantar. Sila tunggu seminit sebelum menghantar lagi.", pushTestRefused: "Perkhidmatan push telefon anda menolak peringatan itu (kod {{status}}). Matikan dan hidupkan semula peringatan, kemudian hantar ujian lagi.", pushTestUnreachable: "Tidak dapat menghubungi pelayan peringatan. Semak sambungan anda dan cuba lagi.",
     listen: "Dengar", listenTitle: "Nasyid & zikir", listenBody: "Koleksi kecil pilihan untuk didengar sambil berzikir. Terus dimainkan semasa anda mengira.", listenFilter: "Tapis rakaman", listenKind_all: "Semua", listenKind_nasheed: "Nasyid", listenKind_zikr: "Zikir", listenPlay: "Main {{title}}", listenStop: "Henti {{title}}", listenOpenYoutube: "Buka di YouTube", listenOffline: "Anda di luar talian. Rakaman dimainkan dari YouTube, jadi sambung semula untuk mendengar.", listenNowPlaying: "Sedang dimainkan", listenPrivacy: "Rakaman distrim melalui pemain YouTube mod privasi dipertingkat. Tiada apa-apa diminta daripada YouTube sehingga anda tekan main; selepas itu, dasar privasi YouTube terpakai pada pemain.",
     feedbackTitle: "Bantu membentuk Zikr",
     feedbackBody: "Apa yang anda suka? Apa yang boleh diperbaiki? Kami membaca setiap mesej.",
@@ -342,6 +344,7 @@ export const resources = {
     installLater: 'Anda boleh menambah Zikr ke Skrin Utama pada bila-bila masa melalui Tetapan.'
   } },
   id: { translation: {
+    pushTest: "Kirim pengingat uji", pushTestSent: "Pengingat uji terkirim. Seharusnya muncul dalam semenit; jika tidak, pastikan notifikasi diizinkan untuk Zikr di pengaturan ponsel Anda.", pushTestWait: "Uji baru saja dikirim. Tunggu semenit sebelum mengirim lagi.", pushTestRefused: "Layanan push ponsel Anda menolak pengingat itu (kode {{status}}). Matikan lalu nyalakan lagi pengingat, kemudian kirim uji lagi.", pushTestUnreachable: "Tidak dapat menghubungi server pengingat. Periksa koneksi Anda dan coba lagi.",
     listen: "Dengar", listenTitle: "Nasyid & zikir", listenBody: "Koleksi kecil pilihan untuk didengarkan sambil berzikir. Tetap diputar saat Anda menghitung.", listenFilter: "Saring rekaman", listenKind_all: "Semua", listenKind_nasheed: "Nasyid", listenKind_zikr: "Zikir", listenPlay: "Putar {{title}}", listenStop: "Hentikan {{title}}", listenOpenYoutube: "Buka di YouTube", listenOffline: "Anda sedang offline. Rekaman diputar dari YouTube, jadi sambungkan kembali untuk mendengarkan.", listenNowPlaying: "Sedang diputar", listenPrivacy: "Rekaman diputar melalui pemutar YouTube mode privasi yang ditingkatkan. Tidak ada yang diminta dari YouTube sampai Anda menekan putar; setelah itu, kebijakan privasi YouTube berlaku untuk pemutar.",
     feedbackTitle: "Bantu membentuk Zikr",
     feedbackBody: "Apa yang sudah terasa pas? Apa yang bisa lebih baik? Kami membaca setiap pesan.",
@@ -503,6 +506,7 @@ export const resources = {
     installLater: 'Anda bisa menambahkan Zikr ke Layar Utama kapan saja dari Pengaturan.'
   } },
   tr: { translation: {
+    pushTest: "Deneme hatırlatıcısı gönder", pushTestSent: "Deneme hatırlatıcısı gönderildi. Bir dakika içinde görünmesi gerekir; görünmezse telefon ayarlarında Zikr için bildirimlere izin verildiğini kontrol edin.", pushTestWait: "Az önce bir deneme gönderildi. Yenisini göndermeden önce bir dakika bekleyin.", pushTestRefused: "Telefonunuzun bildirim hizmeti hatırlatıcıyı reddetti (kod {{status}}). Hatırlatıcıları kapatıp yeniden açın, sonra tekrar deneyin.", pushTestUnreachable: "Hatırlatıcı sunucusuna ulaşılamadı. Bağlantınızı kontrol edip tekrar deneyin.",
     listen: "Dinle", listenTitle: "İlahiler ve zikir", listenBody: "Zikrederken dinlemek için özenle seçilmiş küçük bir koleksiyon. Sayarken de çalmaya devam eder.", listenFilter: "Kayıtları filtrele", listenKind_all: "Tümü", listenKind_nasheed: "İlahi", listenKind_zikr: "Zikir", listenPlay: "{{title}} oynat", listenStop: "{{title}} durdur", listenOpenYoutube: "YouTube’da aç", listenOffline: "Çevrimdışısınız. Kayıtlar YouTube’dan çalınır; dinlemek için yeniden bağlanın.", listenNowPlaying: "Şimdi çalıyor", listenPrivacy: "Kayıtlar YouTube’un gelişmiş gizlilik oynatıcısıyla çalınır. Oynat’a dokunana kadar YouTube’dan hiçbir şey istenmez; sonrasında oynatıcı için YouTube’un gizlilik politikası geçerlidir.",
     feedbackTitle: "Zikr'i birlikte şekillendirin",
     feedbackBody: "Ne iyi hissettiriyor? Ne daha iyi olabilir? Her mesajı okuyoruz.",
@@ -664,6 +668,7 @@ export const resources = {
     installLater: "Zikr'i istediğiniz zaman Ayarlar'dan Ana Ekranınıza ekleyebilirsiniz."
   } },
   ar: { translation: {
+    pushTest: "أرسل تذكيرًا تجريبيًا", pushTestSent: "أُرسل التذكير التجريبي. يُفترض أن يظهر خلال دقيقة؛ وإن لم يظهر فتأكد من السماح بإشعارات Zikr في إعدادات هاتفك.", pushTestWait: "أُرسل تذكير تجريبي للتو. انتظر دقيقة قبل إرسال آخر.", pushTestRefused: "رفضت خدمة الإشعارات في هاتفك التذكير (الرمز {{status}}). أوقف التذكيرات ثم شغّلها من جديد، ثم أرسل تجربة أخرى.", pushTestUnreachable: "تعذّر الوصول إلى خادم التذكيرات. تحقّق من اتصالك وحاول مرة أخرى.",
     listen: "استمع", listenTitle: "أناشيد وأذكار", listenBody: "مجموعة صغيرة مختارة للاستماع إليها أثناء الذكر. يستمر التشغيل أثناء العدّ.", listenFilter: "تصفية التسجيلات", listenKind_all: "الكل", listenKind_nasheed: "نشيد", listenKind_zikr: "ذكر", listenPlay: "تشغيل {{title}}", listenStop: "إيقاف {{title}}", listenOpenYoutube: "فتح في يوتيوب", listenOffline: "أنت غير متصل. تُشغَّل التسجيلات من يوتيوب، لذا أعد الاتصال للاستماع.", listenNowPlaying: "قيد التشغيل", listenPrivacy: "تُبث التسجيلات عبر مشغّل يوتيوب بوضع الخصوصية المحسّن. لا يُطلب أي شيء من يوتيوب حتى تضغط تشغيل؛ بعد ذلك تنطبق سياسة خصوصية يوتيوب على المشغّل.",
     feedbackTitle: "ساعد في تحسين ذكر",
     feedbackBody: "ما الذي أعجبك؟ وما الذي يمكن تحسينه؟ نقرأ كل رسالة.",

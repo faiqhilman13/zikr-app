@@ -204,7 +204,7 @@ describe('reading the practice on the device', () => {
 });
 
 describe('a push', () => {
-  async function deliver(scope: Record<string, unknown>) {
+  async function deliver(scope: Record<string, unknown>, payload: object = { v: 1, day: TODAY }) {
     const showNotification = vi.fn(async () => undefined);
     const unsubscribe = vi.fn(async () => true);
     const { listeners } = load({
@@ -213,7 +213,7 @@ describe('a push', () => {
       ...scope
     });
     let settled: unknown = Promise.resolve();
-    listeners.get('push')?.({ data: { json: () => ({ v: 1, day: TODAY }) }, waitUntil: (promise: unknown) => { settled = promise; } });
+    listeners.get('push')?.({ data: { json: () => payload }, waitUntil: (promise: unknown) => { settled = promise; } });
     await settled;
     return { showNotification, unsubscribe };
   }
@@ -236,5 +236,17 @@ describe('a push', () => {
     const { showNotification, unsubscribe } = await deliver({ indexedDB });
     expect(showNotification).toHaveBeenCalledWith('لحظة هادئة للذكر', expect.objectContaining({ silent: true, dir: 'rtl' }));
     expect(unsubscribe).toHaveBeenCalledOnce();
+  });
+
+  it('makes a test from Settings sound, even on a day already complete', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(EVENING);
+    try {
+      await mutateState('original', () => practice('xxxx', { todayDone: true }));
+      const { showNotification } = await deliver({ indexedDB }, { v: 1, day: TODAY, test: true });
+      expect(showNotification).toHaveBeenCalledWith('Streak: 5 days', expect.objectContaining({ silent: false, renotify: true }));
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

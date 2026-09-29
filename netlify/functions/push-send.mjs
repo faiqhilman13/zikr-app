@@ -41,7 +41,7 @@ async function refused(reminders, entry, day) {
   return 'gone';
 }
 
-async function remind(reminders, entry, { day, ttl }, vapid) {
+async function remind(reminders, entry, { day, ttl }, vapid, statuses) {
   const record = await reminders.get(recordKey(entry.hash), { type: 'json' });
   // Switched off, or moved to another time or zone since this entry was written.
   if (!record || record.time !== entry.time || record.timeZone !== entry.timeZone) {
@@ -67,7 +67,11 @@ async function remind(reminders, entry, { day, ttl }, vapid) {
     return 'gone';
   }
   // Tried again on the next run, while the reminder is still inside its window.
-  if (status < 200 || status >= 300) return await refused(reminders, entry, day);
+  if (status < 200 || status >= 300) {
+    // Tallied by status alone, so the logs say why sends fail without naming who.
+    statuses[status] = (statuses[status] ?? 0) + 1;
+    return await refused(reminders, entry, day);
+  }
   try {
     await update(reminders, recordKey(entry.hash), (current) => {
       if (!current) return undefined;
@@ -95,16 +99,18 @@ export async function run(now = new Date(), env = process.env, { budgetMs = BUDG
   }
 
   const counts = { due: queue.length, sent: 0, repeat: 0, stale: 0, gone: 0, failed: 0, deferred: 0 };
+  const statuses = {};
   await Promise.all(Array.from({ length: CONCURRENCY }, async () => {
     while (queue.length && Date.now() - started < budgetMs) {
       const { entry, timing } = queue.shift();
       let outcome;
-      try { outcome = await remind(reminders, entry, timing, vapid); } catch { outcome = 'failed'; }
+      try { outcome = await remind(reminders, entry, timing, vapid, statuses); } catch { outcome = 'failed'; }
       counts[outcome] += 1;
     }
   }));
   // Still inside their window, so the next run picks them up.
   counts.deferred = queue.length;
+  if (Object.keys(statuses).length) counts.refusedWith = statuses;
   return counts;
 }
 

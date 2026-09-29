@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import i18n from '../i18n';
-import { disablePushNotifications, enablePushNotifications, refreshPushSubscription } from './push';
+import { disablePushNotifications, enablePushNotifications, refreshPushSubscription, sendTestReminder } from './push';
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -25,7 +25,6 @@ it('does not report success when the browser refuses to unsubscribe',async()=>{
 
 const ENDPOINT = '/.netlify/functions/push';
 const HOUR = 60 * 60 * 1000;
-const DAY = 24 * HOUR;
 /** Shaped like an uncompressed P-256 point, which is all the app looks at. */
 const keyBytes = (seed: number) => Uint8Array.from({ length: 65 }, (_, index) => index === 0 ? 4 : (index * seed) % 256);
 const base64Url = (bytes: Uint8Array) => btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
@@ -97,18 +96,18 @@ describe('keeping the server in step', () => {
     inZone('Asia/Kuala_Lumpur');
   });
 
-  it('confirms once, then again only after a week', async () => {
+  it('confirms once, then again only after a day', async () => {
     const service = pushService();
     install(service);
     const fetch = server();
     expect(await refreshPushSubscription('21:00')).toBe(true);
     expect(sent(fetch)).toEqual([subscribed(service.current)]);
 
-    vi.setSystemTime(Date.now() + 6 * DAY);
+    vi.setSystemTime(Date.now() + 20 * HOUR);
     await refreshPushSubscription('21:00');
     expect(fetch).toHaveBeenCalledOnce();
 
-    vi.setSystemTime(Date.now() + 2 * DAY);
+    vi.setSystemTime(Date.now() + 5 * HOUR);
     await refreshPushSubscription('21:00');
     expect(sent(fetch)).toEqual([subscribed(service.current), subscribed(service.current)]);
   });
@@ -248,5 +247,63 @@ describe('turning reminders on and off', () => {
     await disablePushNotifications();
     expect(sent(fetch).slice(1)).toEqual([{ action: 'unsubscribe', endpoint: known.endpoint }]);
     expect(localStorage.getItem('zikr-push-confirmed')).toBeNull();
+  });
+});
+
+describe('a test reminder', () => {
+  beforeEach(() => {
+    vi.stubEnv('VITE_PUSH_ENDPOINT', ENDPOINT);
+    vi.stubEnv('VITE_VAPID_PUBLIC_KEY', base64Url(KEY));
+    inZone('Asia/Kuala_Lumpur');
+  });
+
+  /** A server answering each test with the next outcome in turn, and every subscribe with ok. */
+  function testServer(...outcomes: object[]) {
+    const fetch = vi.fn<typeof globalThis.fetch>(async (_url, init) => {
+      const body = JSON.parse(String(init?.body)) as { action: string };
+      return new Response(JSON.stringify(body.action === 'test' ? outcomes.shift() : { ok: true }), { status: 200 });
+    });
+    vi.stubGlobal('fetch', fetch);
+    return fetch;
+  }
+
+  it('says it was sent when the push service took it', async () => {
+    const service = pushService();
+    install(service);
+    const fetch = testServer({ outcome: 'sent' });
+    expect(await sendTestReminder('21:00')).toBe(i18n.t('pushTestSent'));
+    expect(sent(fetch)).toEqual([{ action: 'test', endpoint: service.current?.endpoint }]);
+  });
+
+  it('registers again a subscription the server lost, then tests once more', async () => {
+    const service = pushService();
+    install(service);
+    const fetch = testServer({ outcome: 'unknown' }, { outcome: 'sent' });
+    expect(await sendTestReminder('21:00')).toBe(i18n.t('pushTestSent'));
+    expect(sent(fetch).map((body) => body.action)).toEqual(['test', 'subscribe', 'test']);
+  });
+
+  it('replaces a subscription the push service turned away', async () => {
+    const service = pushService();
+    install(service);
+    const first = service.current?.endpoint;
+    const fetch = testServer({ outcome: 'refused', status: 403 }, { outcome: 'sent' });
+    expect(await sendTestReminder('21:00')).toBe(i18n.t('pushTestSent'));
+    const tests = sent(fetch).filter((body) => body.action === 'test');
+    expect(tests[0].endpoint).toBe(first);
+    expect(tests[1].endpoint).not.toBe(first);
+  });
+
+  it('names the status when even a fresh subscription is refused', async () => {
+    install(pushService());
+    testServer({ outcome: 'refused', status: 403 }, { outcome: 'refused', status: 403 });
+    expect(await sendTestReminder('21:00')).toBe(i18n.t('pushTestRefused', { status: 403 }));
+  });
+
+  it('asks for permission before anything is sent', async () => {
+    install(pushService(), { permission: 'denied' });
+    const fetch = testServer();
+    expect(await sendTestReminder('21:00')).toBe(i18n.t('pushDenied'));
+    expect(fetch).not.toHaveBeenCalled();
   });
 });

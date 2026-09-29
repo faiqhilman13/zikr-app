@@ -14,8 +14,8 @@ import { isStandalone } from './platform';
 export const pushConfigured = Boolean(import.meta.env.VITE_PUSH_ENDPOINT && import.meta.env.VITE_VAPID_PUBLIC_KEY);
 
 const CONFIRMED_KEY = 'zikr-push-confirmed';
-/** A confirmation is repeated after a week, which restores a copy the server lost. */
-const CONFIRM_EVERY_MS = 7 * 24 * 60 * 60 * 1000;
+/** A confirmation is repeated after a day, which restores a copy the server lost before the next reminder is missed. */
+const CONFIRM_EVERY_MS = 24 * 60 * 60 * 1000;
 /** One the server did not take is tried again an hour on, not every time the app comes back. */
 const RETRY_AFTER_MS = 60 * 60 * 1000;
 const TIMEOUT_MS = 10_000;
@@ -109,6 +109,50 @@ export async function enablePushNotifications(preferredTime: string) {
   // A subscription the server never heard of would only wait for reminders that never come.
   if (made?.created) await made.subscription.unsubscribe().catch(() => false);
   throw new Error(i18n.t('pushRegisterFailed'));
+}
+
+type TestOutcome = 'sent' | 'wait' | 'unknown' | 'gone' | 'refused' | 'unreachable';
+
+async function requestTest(url: string, endpoint: string): Promise<{ outcome: TestOutcome; status?: number }> {
+  const response = await post(url, { action: 'test', endpoint });
+  if (response.status === 503) throw new Error(i18n.t('pushNotConfigured'));
+  if (!response.ok) throw new Error(i18n.t('pushTestUnreachable'));
+  return await response.json() as { outcome: TestOutcome; status?: number };
+}
+
+/**
+ * Sends one reminder to this device now, and says in words what happened. On the way it
+ * repairs what it can: a subscription the server lost is registered again, and one the
+ * push service turned away is replaced with a fresh one, then tried once more.
+ */
+export async function sendTestReminder(preferredTime: string): Promise<string> {
+  const { url, key } = config();
+  if (!url || !key) return i18n.t('pushNotConfigured');
+  if (!supported()) return i18n.t('pushUnsupported');
+  if (Notification.permission !== 'granted') return i18n.t('pushDenied');
+  const registration = await navigator.serviceWorker.getRegistration();
+  if (!registration?.active) return i18n.t('pushRegisterFailed');
+  const applicationKey = urlBase64ToUint8Array(key);
+  try {
+    let { subscription } = await subscriptionFor(registration, url, applicationKey);
+    let result = await requestTest(url, subscription.endpoint);
+    if (result.outcome === 'gone' || result.outcome === 'refused') {
+      // A fresh subscription, for a browser that dropped the old one or made it for another key.
+      await subscription.unsubscribe().catch(() => false);
+      forgetOnServer(url, subscription.endpoint);
+      ({ subscription } = await subscriptionFor(registration, url, applicationKey));
+    }
+    if (result.outcome !== 'sent' && result.outcome !== 'wait') {
+      if (!await confirm(url, subscription, preferredTime, localZone())) return i18n.t('pushTestUnreachable');
+      result = await requestTest(url, subscription.endpoint);
+    }
+    if (result.outcome === 'sent') return i18n.t('pushTestSent');
+    if (result.outcome === 'wait') return i18n.t('pushTestWait');
+    if (result.outcome === 'refused' || result.outcome === 'gone') return i18n.t('pushTestRefused', { status: result.status ?? '?' });
+    return i18n.t('pushTestUnreachable');
+  } catch (error) {
+    return error instanceof Error && error.message ? error.message : i18n.t('pushTestUnreachable');
+  }
 }
 
 export async function disablePushNotifications() {
