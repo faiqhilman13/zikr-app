@@ -100,11 +100,46 @@ export function generateVapidKeys() {
 }
 
 /**
+ * The reason a push service gives for turning a message away, when it gives one: Apple
+ * answers `{"reason":"BadJwtToken"}`, others plain text. Cut to a short token so it can go
+ * in a log or back to the app, and never carries more than the service wrote about itself.
+ */
+async function refusalReason(response) {
+  try {
+    const text = (await response.text()).slice(0, 500);
+    let reason = text;
+    try { reason = JSON.parse(text)?.reason ?? text; } catch { /* Plain text. */ }
+    const token = String(reason).replace(/[^\w .:-]/g, '').trim().slice(0, 60);
+    return token || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/** As sendPush, with the push service's reason alongside any refusal. */
+export async function sendPushDetailed(subscription, payload, options) {
+  const response = await post(subscription, payload, options);
+  if (response.status >= 200 && response.status < 300) return { status: response.status };
+  return { status: response.status, reason: await refusalReason(response) };
+}
+
+/**
  * Sends one encrypted message. Resolves to the push service's status: 201 is delivered to
  * the service, 404 and 410 mean the subscription is gone for good.
  */
-export async function sendPush({ endpoint, keys }, payload, { vapid, ttl, topic, urgency = 'normal', signal }) {
-  const response = await fetch(endpoint, {
+export async function sendPush(subscription, payload, options) {
+  return (await sendPushDetailed(subscription, payload, options)).status;
+}
+
+/**
+ * A topic is sent as RFC 8030 asks: base64url, at most 32 characters. Apple also decodes it,
+ * so a length no base64 can have (one more than a multiple of four) is refused there.
+ */
+export const validTopic = (topic) => typeof topic === 'string' && /^[A-Za-z0-9_-]{1,32}$/.test(topic) && topic.length % 4 !== 1;
+
+function post({ endpoint, keys }, payload, { vapid, ttl, topic, urgency = 'normal', signal }) {
+  if (topic !== undefined && !validTopic(topic)) throw new Error('Push topic must be base64url that decodes, 32 characters at most');
+  return fetch(endpoint, {
     method: 'POST',
     signal,
     redirect: 'error',
@@ -118,7 +153,6 @@ export async function sendPush({ endpoint, keys }, payload, { vapid, ttl, topic,
     },
     body: encrypt(JSON.stringify(payload), keys)
   });
-  return response.status;
 }
 
 /** Whether the private key is the other half of the public one, so a mismatch is caught before any send. */

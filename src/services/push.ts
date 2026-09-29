@@ -113,11 +113,11 @@ export async function enablePushNotifications(preferredTime: string) {
 
 type TestOutcome = 'sent' | 'wait' | 'unknown' | 'gone' | 'refused' | 'unreachable';
 
-async function requestTest(url: string, endpoint: string): Promise<{ outcome: TestOutcome; status?: number }> {
+async function requestTest(url: string, endpoint: string): Promise<{ outcome: TestOutcome; status?: number; reason?: string }> {
   const response = await post(url, { action: 'test', endpoint });
   if (response.status === 503) throw new Error(i18n.t('pushNotConfigured'));
   if (!response.ok) throw new Error(i18n.t('pushTestUnreachable'));
-  return await response.json() as { outcome: TestOutcome; status?: number };
+  return await response.json() as { outcome: TestOutcome; status?: number; reason?: string };
 }
 
 /**
@@ -148,7 +148,7 @@ export async function sendTestReminder(preferredTime: string): Promise<string> {
     }
     if (result.outcome === 'sent') return i18n.t('pushTestSent');
     if (result.outcome === 'wait') return i18n.t('pushTestWait');
-    if (result.outcome === 'refused' || result.outcome === 'gone') return i18n.t('pushTestRefused', { status: result.status ?? '?' });
+    if (result.outcome === 'refused' || result.outcome === 'gone') return i18n.t('pushTestRefused', { status: [result.status ?? '?', result.reason].filter(Boolean).join(' ') });
     return i18n.t('pushTestUnreachable');
   } catch (error) {
     return error instanceof Error && error.message ? error.message : i18n.t('pushTestUnreachable');

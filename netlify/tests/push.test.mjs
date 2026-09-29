@@ -366,7 +366,7 @@ describe('a test from Settings', () => {
     await expect(test(browser)).resolves.toEqual({ outcome: 'sent' });
     const [push] = delivered(fetch, browser);
     expect(push.payload).toEqual({ v: 1, day: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/), test: true });
-    expect(push.headers.Topic).toBe('zikr-test');
+    expect(push.headers.Topic).toBeUndefined();
     expect((await record(browser)).lastSentDay).toBeNull();
   });
 
@@ -388,8 +388,8 @@ describe('a test from Settings', () => {
   it('names the status a push service refused with, and forgets one that is gone', async () => {
     const refused = subscriber();
     await subscribe(refused);
-    pushService(403);
-    await expect(test(refused)).resolves.toEqual({ outcome: 'refused', status: 403 });
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('{"reason":"BadJwtToken"}', { status: 403 })));
+    await expect(test(refused)).resolves.toEqual({ outcome: 'refused', status: 403, reason: 'BadJwtToken' });
     expect(await record(refused)).not.toBeNull();
 
     const gone = subscriber();

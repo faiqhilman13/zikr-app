@@ -1,4 +1,4 @@
-import { isPushEndpoint, sendPush, validKeys } from '../lib/webpush.mjs';
+import { isPushEndpoint, sendPushDetailed, validKeys } from '../lib/webpush.mjs';
 import { endpointHash, localClock, recordKey, scheduleKey, store, update, validTime, validZone, vapidFromEnv } from '../lib/reminders.mjs';
 
 /**
@@ -88,8 +88,10 @@ async function test({ endpoint }, vapid) {
   await update(reminders, key, (current) => (current ? { ...current, lastTestAt: now } : undefined));
   const day = validZone(record.timeZone) ? localClock(record.timeZone, new Date(now)).day : null;
   let status;
+  let reason;
   try {
-    status = await sendPush(record.subscription, { v: 1, day, test: true }, { vapid, ttl: 300, topic: 'zikr-test', urgency: 'high', signal: AbortSignal.timeout(TEST_TIMEOUT_MS) });
+    // No topic: a test should never replace, or be replaced by, the daily reminder.
+    ({ status, reason } = await sendPushDetailed(record.subscription, { v: 1, day, test: true }, { vapid, ttl: 300, urgency: 'high', signal: AbortSignal.timeout(TEST_TIMEOUT_MS) }));
   } catch {
     return reply({ outcome: 'unreachable' });
   }
@@ -100,7 +102,7 @@ async function test({ endpoint }, vapid) {
     if (validTime(record.time) && validZone(record.timeZone)) await reminders.delete(scheduleKey(record.time, record.timeZone, endpointHash(endpoint)));
     return reply({ outcome: 'gone', status });
   }
-  return reply({ outcome: 'refused', status });
+  return reply(reason ? { outcome: 'refused', status, reason } : { outcome: 'refused', status });
 }
 
 export default async function handler(request) {

@@ -1,6 +1,6 @@
 import { createECDH, createPublicKey, verify } from 'node:crypto';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { encrypt, generateVapidKeys, isPushEndpoint, keysMatch, sendPush, vapidAuthorization, validKeys } from '../lib/webpush.mjs';
+import { encrypt, generateVapidKeys, isPushEndpoint, keysMatch, sendPush, sendPushDetailed, validTopic, vapidAuthorization, validKeys } from '../lib/webpush.mjs';
 import { RFC, b64, decrypt } from './support/subscriber.mjs';
 
 describe('payload encryption', () => {
@@ -149,5 +149,26 @@ describe('sending', () => {
     expect(init.headers).toMatchObject({ 'Content-Encoding': 'aes128gcm', 'Content-Type': 'application/octet-stream', TTL: '3600', Urgency: 'normal', Topic: 'zikr-daily' });
     expect(init.headers.Authorization).toMatch(/^vapid t=.+, k=/);
     expect(JSON.parse(decrypt(init.body, RFC))).toEqual({ v: 1, day: '2026-09-24' });
+  });
+
+  const apple = () => ({ endpoint: 'https://web.push.apple.com/QGuQ', keys: { p256dh: RFC.uaPublic, auth: RFC.auth } });
+  const vapid = () => ({ ...generateVapidKeys(), subject: 'mailto:hello@example.com' });
+
+  it('reads the reason a push service gives for a refusal, as a short token', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('{"reason":"BadJwtToken"}', { status: 403 })));
+    await expect(sendPushDetailed(apple(), { v: 1 }, { vapid: vapid(), ttl: 60 })).resolves.toEqual({ status: 403, reason: 'BadJwtToken' });
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('<b>invalid</b> topic!', { status: 400 })));
+    await expect(sendPushDetailed(apple(), { v: 1 }, { vapid: vapid(), ttl: 60 })).resolves.toEqual({ status: 400, reason: 'binvalidb topic' });
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(null, { status: 201 })));
+    await expect(sendPushDetailed(apple(), { v: 1 }, { vapid: vapid(), ttl: 60 })).resolves.toEqual({ status: 201 });
+  });
+
+  it('only sends a topic that is base64url, decodes, and fits in 32 characters', async () => {
+    expect(validTopic('zikr-daily')).toBe(true);
+    expect(validTopic('zikr-test')).toBe(false);
+    expect(validTopic('a'.repeat(33))).toBe(false);
+    expect(validTopic('zikr daily')).toBe(false);
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(null, { status: 201 })));
+    await expect(sendPush(apple(), { v: 1 }, { vapid: vapid(), ttl: 60, topic: 'zikr-test' })).rejects.toThrow(/topic/);
   });
 });

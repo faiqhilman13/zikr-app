@@ -296,8 +296,8 @@ describe('a test reminder', () => {
 
   it('names the status when even a fresh subscription is refused', async () => {
     install(pushService());
-    testServer({ outcome: 'refused', status: 403 }, { outcome: 'refused', status: 403 });
-    expect(await sendTestReminder('21:00')).toBe(i18n.t('pushTestRefused', { status: 403 }));
+    testServer({ outcome: 'refused', status: 400 }, { outcome: 'refused', status: 400, reason: 'BadWebPushTopic' });
+    expect(await sendTestReminder('21:00')).toBe(i18n.t('pushTestRefused', { status: '400 BadWebPushTopic' }));
   });
 
   it('asks for permission before anything is sent', async () => {

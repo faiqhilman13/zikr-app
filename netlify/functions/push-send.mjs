@@ -1,4 +1,4 @@
-import { isPushEndpoint, sendPush, validKeys } from '../lib/webpush.mjs';
+import { isPushEndpoint, sendPushDetailed, validKeys } from '../lib/webpush.mjs';
 import { due, parseScheduleKey, recordKey, store, update, vapidFromEnv } from '../lib/reminders.mjs';
 
 /**
@@ -56,8 +56,9 @@ async function remind(reminders, entry, { day, ttl }, vapid, statuses) {
   if (record.lastSentDay === day) return 'repeat';
 
   let status;
+  let reason;
   try {
-    status = await sendPush(record.subscription, { v: 1, day }, { vapid, ttl, topic: 'zikr-daily', urgency: 'high', signal: AbortSignal.timeout(SEND_TIMEOUT_MS) });
+    ({ status, reason } = await sendPushDetailed(record.subscription, { v: 1, day }, { vapid, ttl, topic: 'zikr-daily', urgency: 'high', signal: AbortSignal.timeout(SEND_TIMEOUT_MS) }));
   } catch {
     return 'failed';
   }
@@ -68,8 +69,9 @@ async function remind(reminders, entry, { day, ttl }, vapid, statuses) {
   }
   // Tried again on the next run, while the reminder is still inside its window.
   if (status < 200 || status >= 300) {
-    // Tallied by status alone, so the logs say why sends fail without naming who.
-    statuses[status] = (statuses[status] ?? 0) + 1;
+    // Tallied by status and the service's own reason, so the logs say why sends fail without naming who.
+    const label = reason ? `${status} ${reason}` : String(status);
+    statuses[label] = (statuses[label] ?? 0) + 1;
     return await refused(reminders, entry, day);
   }
   try {
