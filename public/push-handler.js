@@ -217,23 +217,11 @@
 
   self.zikrReminder = { COPY, dayKey, streakOf, formatDays, formatTimeLeft, reminderFor, readState };
 
-  /** A test sent from Settings: shown as the real reminder would be, but always with sound. */
-  const isTest = (event) => {
-    try {
-      return Boolean(event.data && event.data.json().test === true);
-    } catch {
-      return false;
-    }
-  };
-  const asTest = (reminder) => ({ ...reminder, unsubscribe: false, options: { ...reminder.options, silent: false, renotify: true } });
-
   self.addEventListener('push', (event) => {
     const preferred = self.navigator && self.navigator.languages;
-    const test = isTest(event);
     event.waitUntil(readState()
       .then((state) => reminderFor(state, new Date(), preferred))
       .catch(() => reminderFor(null, new Date(), preferred))
-      .then((reminder) => (test ? asTest(reminder) : reminder))
       .then((reminder) => self.registration.showNotification(reminder.title, reminder.options)
         .then(() => reminder.unsubscribe && self.registration.pushManager.getSubscription()
           .then((subscription) => subscription && subscription.unsubscribe())

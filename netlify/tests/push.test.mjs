@@ -29,7 +29,7 @@ const fake = {
 };
 vi.mock('@netlify/blobs', () => ({ getStore: () => fake }));
 
-const { default: handler, validSubscribe, validTest } = await import('../functions/push.mjs');
+const { default: handler, validSubscribe } = await import('../functions/push.mjs');
 const { run } = await import('../functions/push-send.mjs');
 const { sweep } = await import('../functions/push-sweep.mjs');
 const { endpointHash, recordKey, scheduleKey } = await import('../lib/reminders.mjs');
@@ -48,7 +48,6 @@ const post = (body, overrides = {}) => new Request(`${ORIGIN}/.netlify/functions
 const subscribe = (browser, preferredTime = '21:00', timeZone = KL) =>
   handler(post({ action: 'subscribe', subscription: browser.subscription, preferredTime, timeZone }));
 const unsubscribe = (endpoint) => handler(post({ action: 'unsubscribe', endpoint }));
-const test = async (browser) => (await handler(post({ action: 'test', endpoint: browser.subscription.endpoint }))).json();
 const record = (browser) => fake.get(recordKey(endpointHash(browser.subscription.endpoint)));
 const scheduled = () => [...blobs.keys()].filter((key) => key.startsWith('at/'));
 
@@ -355,58 +354,6 @@ describe('sending', () => {
     expect(mismatched).toEqual({ error: expect.stringMatching(/private half/) });
     expect(JSON.stringify(mismatched)).not.toContain(ENV.VITE_VAPID_PUBLIC_KEY);
     expect(fetch).not.toHaveBeenCalled();
-  });
-});
-
-describe('a test from Settings', () => {
-  it('sends at once, marked as a test, without counting as the day’s reminder', async () => {
-    const browser = subscriber();
-    await subscribe(browser);
-    const fetch = pushService(201);
-    await expect(test(browser)).resolves.toEqual({ outcome: 'sent' });
-    const [push] = delivered(fetch, browser);
-    expect(push.payload).toEqual({ v: 1, day: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/), test: true });
-    expect(push.headers.Topic).toBeUndefined();
-    expect((await record(browser)).lastSentDay).toBeNull();
-  });
-
-  it('asks the app to register again when the server does not know the subscription', async () => {
-    const fetch = pushService(201);
-    await expect(test(subscriber())).resolves.toEqual({ outcome: 'unknown' });
-    expect(fetch).not.toHaveBeenCalled();
-  });
-
-  it('allows one test a minute per subscription', async () => {
-    const browser = subscriber();
-    await subscribe(browser);
-    const fetch = pushService(201);
-    await test(browser);
-    await expect(test(browser)).resolves.toEqual({ outcome: 'wait' });
-    expect(fetch).toHaveBeenCalledOnce();
-  });
-
-  it('names the status a push service refused with, and forgets one that is gone', async () => {
-    const refused = subscriber();
-    await subscribe(refused);
-    vi.stubGlobal('fetch', vi.fn(async () => new Response('{"reason":"BadJwtToken"}', { status: 403 })));
-    await expect(test(refused)).resolves.toEqual({ outcome: 'refused', status: 403, reason: 'BadJwtToken' });
-    expect(await record(refused)).not.toBeNull();
-
-    const gone = subscriber();
-    await subscribe(gone);
-    pushService(410);
-    await expect(test(gone)).resolves.toEqual({ outcome: 'gone', status: 410 });
-    expect(await record(gone)).toBeNull();
-    expect(scheduled().some((key) => key.endsWith(endpointHash(gone.subscription.endpoint)))).toBe(false);
-  });
-
-  it('fails honestly while the site cannot send reminders, and takes only an endpoint', async () => {
-    const browser = subscriber();
-    await subscribe(browser);
-    delete process.env.VAPID_PRIVATE_KEY;
-    expect((await handler(post({ action: 'test', endpoint: browser.subscription.endpoint }))).status).toBe(503);
-    expect(validTest({ action: 'test', endpoint: 'https://example.com/hook' })).toBe(false);
-    expect(validTest({ action: 'test', endpoint: browser.subscription.endpoint, extra: 1 })).toBe(false);
   });
 });
 
