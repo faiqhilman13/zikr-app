@@ -4,6 +4,16 @@ import { initialState, startTimer } from '../domain/state';
 import { CounterView } from './CounterView';
 
 describe('CounterView', () => {
+  it('shows today’s garden below the counter, above the phrase switcher', () => {
+    render(<CounterView state={initialState()} onIncrement={vi.fn()} onUndo={vi.fn()} onSelect={vi.fn()} onStartTimer={vi.fn()} onStopTimer={vi.fn()} onTimerRollover={vi.fn()} />);
+    const garden = screen.getByRole('img', { name: /Garden growth stage/i });
+    const orb = screen.getByRole('button', { name: /Tap to count/i });
+    const switcher = screen.getByText(/Switch dhikr/i);
+    expect(orb.compareDocumentPosition(garden) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(garden.compareDocumentPosition(switcher) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.queryByRole('group', { name: /Choose your tree/i })).not.toBeInTheDocument();
+  });
+
   it('exposes a clear accessible counting action', () => {
     const increment = vi.fn();
     render(<CounterView state={initialState()} onIncrement={increment} onUndo={vi.fn()} onSelect={vi.fn()} onStartTimer={vi.fn()} onStopTimer={vi.fn()} onTimerRollover={vi.fn()} />);

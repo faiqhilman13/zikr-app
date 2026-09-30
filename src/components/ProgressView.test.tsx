@@ -36,9 +36,9 @@ describe('ProgressView', () => {
     expect(screen.getByRole('heading', { name: 'Phrase by phrase' })).toBeInTheDocument();
   });
 
-  it('presents the garden as one unified scene without a species picker', () => {
+  it('leaves the garden to the counter screen', () => {
     render(<ProgressView state={stateWithHistory()} />);
-    expect(screen.getByRole('img', { name: /Garden growth stage/i })).toBeInTheDocument();
-    expect(screen.queryByRole('group', { name: /Choose your tree/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('img', { name: /Garden growth stage/i })).not.toBeInTheDocument();
   });
+
 });

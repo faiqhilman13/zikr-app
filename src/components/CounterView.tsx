@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { dayKey, getToday, selectedPreset, totalForLog, uncreditedReps } from '../domain/state';
 import { isMilestone } from '../domain/streak';
 import type { ZikrState } from '../domain/types';
+import { GardenCard } from './garden/GardenCard';
 import { formatDays, formatTimeLeft } from './streak/format';
 import { StreakNotices } from './streak/StreakNotices';
 import { useStreak } from './streak/useStreak';
@@ -130,6 +131,8 @@ export function CounterView({ state, onIncrement, onUndo, onSelect, onStartTimer
         <small>{counting ? t('timerCountNote', { minutes: 60 }) : t('timerNote')}</small>
       </div>
     </section>
+
+    <GardenCard state={state} />
 
     <section className="switcher" aria-labelledby="switch-title"><div className="section-heading"><p className="eyebrow" id="switch-title">{t('switchDhikr')}</p></div><div className="preset-scroll">
       {state.presets.map((item) => <button className={item.id === preset.id ? 'selected' : ''} key={item.id} onClick={() => onSelect(item.id)} aria-pressed={item.id === preset.id}><span lang="ar" dir="rtl">{item.arabic}</span><b>{item.title}</b><small>{item.target > 0 ? `${counts[item.id] ?? 0} / ${item.target}` : counts[item.id] ?? 0}</small></button>)}
