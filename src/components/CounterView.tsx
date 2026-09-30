@@ -2,9 +2,9 @@ import { ArrowRight, Check, Clock3, Flame, Hourglass, Pause, Play, RotateCcw, Sn
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { dayKey, getToday, selectedPreset, totalForLog, uncreditedReps } from '../domain/state';
-import { isMilestone } from '../domain/streak';
 import type { ZikrState } from '../domain/types';
-import { LivingGardenCard } from './garden/living/LivingGardenCard';
+import { gardenDays, UNLOCKS } from './garden/living/growth';
+import { LivingGardenCard, MiniGarden } from './garden/living/LivingGardenCard';
 import { formatDays, formatTimeLeft } from './streak/format';
 import { StreakNotices } from './streak/StreakNotices';
 import { useStreak } from './streak/useStreak';
@@ -72,6 +72,11 @@ export function CounterView({ state, onIncrement, onUndo, onSelect, onStartTimer
     setCelebrating(streak.todayDone);
   }
 
+  // The garden is the one place progress is rewarded: when today's tending brought
+  // something new, the celebration names it rather than a streak milestone.
+  const tendedDays = gardenDays(state.logs, state.presets).tended;
+  const arrival = UNLOCKS.find((unlock) => unlock.day === tendedDays && gardenDays(state.logs.filter((log) => log.date !== todayKey), state.presets).tended < unlock.day)?.id;
+
   const handleTap = () => {
     onIncrement();
     setAnnounce(`${preset.title}: ${hasTarget ? t('countOf', { count: count + 1, target }) : count + 1}`);
@@ -98,8 +103,8 @@ export function CounterView({ state, onIncrement, onUndo, onSelect, onStartTimer
         <div className="celebration-line">
           <span className="celebration-flame" aria-hidden="true"><Flame /></span>
           <p><strong>{t('streakDay', { count: streak.current.toLocaleString(language) })}</strong>
-            {isMilestone(streak.current)
-              ? <span className="celebration-milestone">{t('milestoneReached', { days: formatDays(streak.current, language) })}</span>
+            {arrival
+              ? <span className="celebration-milestone">{t('gardenArrivedToday', { item: t(`gardenUnlock_${arrival}`) })}</span>
               : <span>{t(streak.current === 1 ? 'streakStarted' : 'streakKept')}</span>}</p>
         </div>
         {streak.freezeEarnedToday && <span className="celebration-freeze"><Snowflake aria-hidden="true" />{t('freezeEarned')}</span>}
@@ -112,9 +117,12 @@ export function CounterView({ state, onIncrement, onUndo, onSelect, onStartTimer
       </p>}
 
     <section className="count-stage">
-      <button className={`count-orb${phraseDone ? ' complete' : ''}`} onClick={handleTap} aria-label={`${t('tap')}: ${preset.title}. ${countLabel}`} style={{ '--progress': `${ratio * 360}deg` } as React.CSSProperties}>
-        <span className="orb-inner"><span className="arabic" lang="ar" dir="rtl">{preset.arabic}</span><span>{preset.transliteration}</span><strong>{count}</strong><small>{t('tap')}</small></span>
-      </button>
+      <div className="orb-wrap">
+        <button className={`count-orb${phraseDone ? ' complete' : ''}`} onClick={handleTap} aria-label={`${t('tap')}: ${preset.title}. ${countLabel}`} style={{ '--progress': `${ratio * 360}deg` } as React.CSSProperties}>
+          <span className="orb-inner"><span className="arabic" lang="ar" dir="rtl">{preset.arabic}</span><span>{preset.transliteration}</span><strong>{count}</strong><small>{t('tap')}</small></span>
+        </button>
+        <MiniGarden state={state} />
+      </div>
       <div className="counter-tools">
         <button className="quiet-button" disabled={count === 0} onClick={onUndo}><RotateCcw />{t('undo')}</button>
         <button className={`quiet-button ${state.activeTimer ? 'active' : ''}`} onClick={state.activeTimer ? onStopTimer : onStartTimer}>{state.activeTimer ? <Pause /> : <Play />}{state.activeTimer ? t('pauseTimer') : t('startTimer')}</button>

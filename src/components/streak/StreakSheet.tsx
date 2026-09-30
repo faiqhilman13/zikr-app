@@ -1,6 +1,7 @@
 import { Bell, Flame, Snowflake, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { FREEZE_EVERY, MAX_FREEZES, milestoneProgress, recentDays, recentLoss, type DayMark } from '../../domain/streak';
+import { FREEZE_EVERY, MAX_FREEZES, recentDays, recentLoss, type DayMark } from '../../domain/streak';
+import { gardenDays, nextUnlock, UNLOCKS } from '../garden/living/growth';
 import type { ZikrState } from '../../domain/types';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { formatDays, formatTimeLeft } from './format';
@@ -14,7 +15,10 @@ export function StreakSheet({ state, onClose, onReminders }: { state: ZikrState;
   const trapRef = useFocusTrap<HTMLElement>(onClose);
   const { streak, today, status, msLeft } = useStreak(state);
   const week = recentDays({ logs: state.logs }, streak.frozenDays, today);
-  const milestone = milestoneProgress(streak.current);
+  // What comes next is told by the garden, the app's one story of progress.
+  const { tended } = gardenDays(state.logs, state.presets);
+  const next = nextUnlock(tended);
+  const previous = [...UNLOCKS].reverse().find((unlock) => unlock.day <= tended)?.day ?? 0;
   const narrow = new Intl.DateTimeFormat(language, { weekday: 'narrow' });
   const full = new Intl.DateTimeFormat(language, { weekday: 'long', day: 'numeric', month: 'long' });
   const time = formatTimeLeft(msLeft, language);
@@ -51,12 +55,12 @@ export function StreakSheet({ state, onClose, onReminders }: { state: ZikrState;
           <strong>{t('freezesHeld', { count: streak.freezes.toLocaleString(language), max: MAX_FREEZES.toLocaleString(language) })}</strong>
           <p>{t('freezeExplain', { every: FREEZE_EVERY.toLocaleString(language), max: MAX_FREEZES.toLocaleString(language) })}</p>
         </div>
-        <div className="streak-fact">
-          <span className="streak-fact-label">{t('nextMilestone')}</span>
-          <strong>{formatDays(milestone.next, language)}</strong>
-          <div className="fine-progress"><i style={{ '--fill': milestone.ratio } as React.CSSProperties} /></div>
-          <small>{t('milestoneToGo', { days: formatDays(milestone.remaining, language) })}</small>
-        </div>
+        {next && <div className="streak-fact">
+          <span className="streak-fact-label">{t('gardenNextLabel')}</span>
+          <strong>{t(`gardenUnlock_${next.id}`)}</strong>
+          <div className="fine-progress"><i style={{ '--fill': (tended - previous) / (next.day - previous) } as React.CSSProperties} /></div>
+          <small>{t('milestoneToGo', { days: formatDays(next.day - tended, language) })}</small>
+        </div>}
         <div className="streak-fact">
           <span className="streak-fact-label">{t('longest')}</span>
           <strong>{formatDays(streak.longest, language)}</strong>

@@ -1,15 +1,19 @@
 import { describe, expect, it } from 'vitest';
-import { blossomShare, completedDays, flowerCount, FLOWER_SLOTS, fruitShare, leafShare, maturity, nextUnlock, timeOfDay, todayStage, treeStage, unlockedIds, UNLOCKS } from './growth';
+import { blossomShare, dayRatio, gardenDays, flowerCount, FLOWER_SLOTS, fruitShare, leafShare, maturity, nextUnlock, timeOfDay, todayStage, treeStage, unlockedIds, UNLOCKS } from './growth';
 import { branchGrowth, growOlive } from './tree';
 
 describe('the living garden over time', () => {
-  it('counts each completed day once, and nothing for days left incomplete', () => {
-    expect(completedDays([
-      { date: '2026-09-01', counts: {}, timedSeconds: {}, completed: true },
-      { date: '2026-09-01', counts: {}, timedSeconds: {}, completed: true },
-      { date: '2026-09-02', counts: {}, timedSeconds: {}, completed: false },
-      { date: '2026-09-03', counts: {}, timedSeconds: {}, completed: true }
-    ])).toBe(2);
+  it('counts a day tended at half its intention, and grows the tree only on full days', () => {
+    const presets = [{ id: 'a', title: 'A', arabic: '', transliteration: '', target: 30 }, { id: 'b', title: 'B', arabic: '', transliteration: '', target: 10 }];
+    const log = (date: string, counts: Record<string, number>, completed = false) => ({ date, counts, timedSeconds: {}, completed });
+    expect(dayRatio(log('d', { a: 30, b: 0 }), presets)).toBe(0.75);
+    expect(dayRatio(log('d', { a: 99 }), presets)).toBe(0.75);
+    expect(gardenDays([
+      log('2026-09-01', { a: 30, b: 10 }, true),
+      log('2026-09-02', { a: 20 }),
+      log('2026-09-03', { a: 5 }),
+      log('2026-09-01', { a: 30, b: 10 }, true)
+    ], presets)).toEqual({ tended: 2, full: 1 });
   });
 
   it('only ever grows: the tree, the flowers and what has arrived never shrink as days are added', () => {
@@ -27,6 +31,9 @@ describe('the living garden over time', () => {
   it('always has something next until the hundredth day', () => {
     expect(nextUnlock(0)?.id).toBe('firstBloom');
     expect(nextUnlock(6)?.id).toBe('fountain');
+    // Never more than four days apart in the first month, never more than two weeks after.
+    const days = UNLOCKS.map((unlock) => unlock.day);
+    days.slice(1).forEach((day, i) => expect(day - days[i]).toBeLessThanOrEqual(days[i] < 28 ? 4 : 16));
     expect(nextUnlock(99)?.id).toBe('goldArch');
     expect(nextUnlock(100)).toBeNull();
     expect(UNLOCKS.map((unlock) => unlock.day)).toEqual([...UNLOCKS.map((unlock) => unlock.day)].sort((a, b) => a - b));

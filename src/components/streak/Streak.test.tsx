@@ -73,7 +73,8 @@ describe('the moment today completes', () => {
     rerender(counter(withIncrement(before, 'tasbih', 1)));
     const celebration = screen.getByRole('status');
     expect(celebration).toHaveTextContent('Day 5');
-    expect(celebration).toHaveTextContent('Streak kept. See you tomorrow.');
+    // The fifth tended day brings lavender to the garden, and the celebration says so.
+    expect(celebration).toHaveTextContent('Lavender arrived in your garden.');
     // Above the orb, where it is on screen while the orb is.
     const orb = screen.getByRole('button', { name: /^Tap to count: Tasbih/ });
     expect(celebration.compareDocumentPosition(orb) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
@@ -81,12 +82,12 @@ describe('the moment today completes', () => {
     expect(screen.queryByText(/extend your streak/)).not.toBeInTheDocument();
   });
 
-  it('marks the seventh day as a milestone and hands over a freeze', () => {
+  it('marks the seventh day with what arrives in the garden, and hands over a freeze', () => {
     const before = oneShort('xxxxxx');
     const { rerender } = render(counter(before));
     rerender(counter(withIncrement(before, 'tasbih', 1)));
     const celebration = screen.getByRole('status');
-    expect(celebration).toHaveTextContent('Milestone: 7 days in a row.');
+    expect(celebration).toHaveTextContent('A fountain arrived in your garden.');
     expect(celebration).not.toHaveTextContent('Streak kept');
     expect(celebration).toHaveTextContent('You earned a streak freeze.');
   });
@@ -112,7 +113,16 @@ describe('StreakSheet', () => {
     expect(days[5]).toHaveTextContent(/Friday.*: Covered by a freeze/);
     expect(days[6]).toHaveTextContent(/Saturday.*: Still open/);
     expect(within(dialog).getByText('0 of 2 held')).toBeInTheDocument();
-    expect(within(dialog).getByText('14 days')).toBeInTheDocument();
+    // What comes next is the garden's next arrival, not a separate streak milestone.
+    expect(within(dialog).getByText('Next in your garden')).toBeInTheDocument();
+    expect(within(dialog).getByText('Butterflies')).toBeInTheDocument();
+  });
+
+  it('keeps the plain streak line on a day that brings nothing new', () => {
+    const before = oneShort('xxx');
+    const { rerender } = render(counter(before));
+    rerender(counter(withIncrement(before, 'tasbih', 1)));
+    expect(screen.getByRole('status')).toHaveTextContent('Streak kept. See you tomorrow.');
   });
 
   it('warns while the day is at risk, and says when a freeze would cover it', () => {

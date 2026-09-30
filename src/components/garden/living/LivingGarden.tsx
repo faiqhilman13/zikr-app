@@ -14,8 +14,14 @@ import { branchGrowth, branchOutline, growOlive, pointOn, type Tree } from './tr
 export interface LivingGardenProps {
   /** Share of today's intention done, 0..1. */
   ratio: number;
-  /** Days the intention has been completed, ever. */
-  days: number;
+  /** Days tended to half the intention or more: flowers and arrivals. */
+  tended: number;
+  /** Days the intention was completed: the olive's growth. */
+  full: number;
+  /** An arrival to bring the camera in on, or null for the whole garden. */
+  focus?: UnlockId | null;
+  /** A small round view of just the tree, for beside the counter. */
+  mini?: boolean;
   now: Date;
   /** The intention was completed during this visit: play the arrival of the birds. */
   celebrate: boolean;
@@ -103,14 +109,15 @@ function sunAt(now: Date) {
   return { x: lerp(40, 360, t), y: 150 - Math.sin(t * Math.PI) * 112 };
 }
 
-export function LivingGarden({ ratio, days, now, celebrate, motion, fresh, freshFlower, label }: LivingGardenProps) {
+export function LivingGarden({ ratio, tended, full, now, celebrate, motion, fresh, freshFlower, label, focus = null, mini = false }: LivingGardenProps) {
   const id = useId().replace(/[^a-zA-Z0-9]/g, '');
   const ref = (name: string) => `${id}-${name}`;
   const url = (name: string) => `url(#${ref(name)})`;
   const time = timeOfDay(now);
   const palette = PALETTES[time];
   const tint = tinter(palette);
-  const growth = maturity(days);
+  const growth = maturity(full);
+  const days = tended;
   const unlocked = (unlock: UnlockId) => isUnlocked(unlock, days);
   const arrive = (unlock: UnlockId) => (fresh.includes(unlock) ? ' lg-arrive' : '');
   const sun = sunAt(now);
@@ -120,7 +127,10 @@ export function LivingGarden({ ratio, days, now, celebrate, motion, fresh, fresh
   // that arrive later, with a tap, pop in at once.
   const [firstLeaves] = useState(() => Math.round(OLIVE.anchors.length * leafShare(ratio)));
 
-  return <svg className={`living-garden${motion ? '' : ' still'}${complete ? ' complete' : ''} time-${time}`} viewBox={`0 0 ${W} ${H}`} role="img" aria-label={label} preserveAspectRatio="xMidYMid meet">
+  const zoom = focus ? zoomTo(focusBox(focus, growth)) : null;
+  const viewBox = mini ? crownView(growth) : `0 0 ${W} ${H}`;
+
+  return <svg className={`living-garden${motion ? '' : ' still'}${mini ? ' mini' : ''}${complete ? ' complete' : ''} time-${time}`} viewBox={viewBox} role="img" aria-label={label} preserveAspectRatio="xMidYMid slice">
     <defs>
       <clipPath id={ref('arch')}><path d={ARCH} /></clipPath>
       <linearGradient id={ref('sky')} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor={palette.skyTop} /><stop offset="1" stopColor={palette.skyBottom} /></linearGradient>
@@ -151,7 +161,8 @@ export function LivingGarden({ ratio, days, now, celebrate, motion, fresh, fresh
       </g>
     </defs>
 
-    <g clipPath={url('arch')}>
+    <g clipPath={mini ? undefined : url('arch')}>
+      <g className="lg-zoom" style={{ transform: zoom ? `translate(${zoom.x.toFixed(1)}px, ${zoom.y.toFixed(1)}px) scale(${zoom.k.toFixed(3)})` : 'none' }}>
       {/* Sky, light and weather */}
       <rect width={W} height={H} fill={url('sky')} />
       {palette.stars > 0 && <g className="lg-stars" opacity={palette.stars}>{STARS.map((star, i) => <circle key={i} className={star.twinkle ? 'lg-twinkle' : undefined} style={{ animationDelay: `${star.delay}s` }} cx={star.x} cy={star.y} r={star.r} fill="#f4f1ff" />)}</g>}
@@ -171,6 +182,7 @@ export function LivingGarden({ ratio, days, now, celebrate, motion, fresh, fresh
       <path d="M0 176 C40 150 90 158 130 168 C180 150 230 146 280 162 C320 150 360 152 400 164 L400 210 L0 210 Z" fill={palette.hillFar} />
       <Skyline fill={palette.skyline} />
       <path d="M0 192 C50 176 110 184 160 190 C220 180 280 178 330 188 C360 182 385 184 400 186 L400 212 L0 212 Z" fill={palette.hillNear} />
+      {unlocked('cypresses') && <g className={arrive('cypresses')}><Cypress x={74} tint={tint} /><Cypress x={318} tint={tint} tall /></g>}
       {unlocked('palm') && <Palm tint={tint} className={`lg-palm${arrive('palm')}`} />}
 
       {/* The courtyard */}
@@ -178,6 +190,7 @@ export function LivingGarden({ ratio, days, now, celebrate, motion, fresh, fresh
       <rect y="194" width={W} height="2.4" fill={tint(palette.wallShade)} />
       <rect y="199" width={W} height="8" fill={url('tiles')} />
       <rect y="214" width={W} height="3" fill={tint(palette.wallShade)} opacity=".7" />
+      {unlocked('lanternString') && <LanternString tint={tint} glow={url('lamp')} lit={palette.night ? 1 : time === 'golden' ? 0.6 : 0} className={arrive('lanternString')} />}
       <rect y="216" width={W} height={H - 216} fill={url('ground')} />
       <GroundTexture tint={tint} />
       <Beds tint={tint} url={url('soil')} />
@@ -191,15 +204,18 @@ export function LivingGarden({ ratio, days, now, celebrate, motion, fresh, fresh
 
       {unlocked('path') && <g className={`lg-path${arrive('path')}`}>{PATH_STONES.map((d, i) => <path key={i} d={d} fill={tint(i % 3 ? '#ddd0b8' : '#d2c3a8')} stroke={tint('#b8a88c')} strokeWidth=".5" />)}</g>}
 
+      {unlocked('bench') && <Bench tint={tint} className={arrive('bench')} />}
       {unlocked('pomegranate') && <Pomegranate tint={tint} days={days} className={`lg-pomegranate${arrive('pomegranate')}`} spray={ref('spray1')} />}
       {unlocked('fountain') && <Fountain tint={tint} motion={motion} water={url('water')} className={`lg-fountain${arrive('fountain')}`} />}
+      {unlocked('lemons') && <g className={arrive('lemons')}><LemonPot x={172} tint={tint} /><LemonPot x={228} tint={tint} /></g>}
+      {unlocked('roses') && <g className={arrive('roses')}><Roses x={26} tint={tint} /><Roses x={374} tint={tint} /></g>}
       {unlocked('lavender') && <g className={`lg-lavender${arrive('lavender')}`}><Lavender x={164} y={262} tint={tint} /><Lavender x={236} y={262} tint={tint} flip /></g>}
 
       {complete && <circle className="lg-bloom" cx={TREE_BASE.x} cy={TREE_BASE.y - 120 * (0.25 + 0.75 * growth)} r={40 + 90 * growth} fill={url('bloom')} />}
       <Olive tree={OLIVE} tint={tint} growth={growth} ratio={ratio} sprayRef={ref('spray')} blossom={ref('blossom')} firstLeaves={firstLeaves} />
       {unlocked('lantern') && <Lantern tint={tint} glow={url('lamp')} lit={palette.night ? 1 : time === 'golden' ? 0.55 : time === 'dawn' ? 0.3 : 0} className={arrive('lantern')} growth={growth} />}
 
-      <g className="lg-flowers">
+      {!mini && <g className="lg-flowers">
         {FLOWER_BEDS.map((slot, i) => {
           if (slot.planted === flowerCount(days) && slot.planted < FLOWER_SLOTS) {
             // Tomorrow's flower is already a sprout in its place.
@@ -218,9 +234,9 @@ export function LivingGarden({ ratio, days, now, celebrate, motion, fresh, fresh
             </g>
           </g>;
         })}
-      </g>
+      </g>}
 
-      {unlocked('butterflies') && <g className={`lg-butterflies${arrive('butterflies')}`}>
+      {unlocked('butterflies') && !mini && <g className={`lg-butterflies${arrive('butterflies')}`}>
         <Butterfly motion={motion} color={tint('#f0a52a')} path="M60 250 C90 210 140 230 120 260 C100 285 50 280 60 250 Z" dur={14} />
         <Butterfly motion={motion} color={tint('#6f8fe6')} path="M300 256 C330 226 370 244 352 270 C334 292 290 282 300 256 Z" dur={17} />
       </g>}
@@ -229,14 +245,16 @@ export function LivingGarden({ ratio, days, now, celebrate, motion, fresh, fresh
 
       {unlocked('vine') && <Vine tint={tint} className={arrive('vine')} />}
 
-      {(palette.night || time === 'golden') && motion && <g className="lg-fireflies" opacity={palette.night ? 1 : 0.55}>
+      {unlocked('fireflies') && (palette.night || time === 'golden') && motion && !mini && <g className="lg-fireflies" opacity={palette.night ? 1 : 0.55}>
         {FIREFLIES.map((fly, i) => <g key={i} transform={`translate(${fly.x.toFixed(1)} ${fly.y.toFixed(1)})`}><circle className={`lg-firefly f${i % 3}`} style={{ animationDelay: `${fly.delay.toFixed(2)}s` }} r="4.5" fill={url('firefly')} /></g>)}
       </g>}
 
-      {complete && celebrate && motion && <g className="lg-sparkles">{[[150, 110], [250, 120], [200, 80], [170, 150], [236, 160], [130, 150], [270, 90]].map(([x, y], i) => <path key={i} className="lg-sparkle" style={{ animationDelay: `${i * 0.18}s` }} transform={`translate(${x} ${y})`} d="M0 -5 L1.2 -1.2 L5 0 L1.2 1.2 L0 5 L-1.2 1.2 L-5 0 L-1.2 -1.2 Z" fill="#fff6d0" />)}</g>}
+      {unlocked('shootingStars') && palette.night && motion && !mini && <g className="lg-shooting">{[0, 1].map((i) => <line key={i} className="lg-shooting-star" style={{ animationDelay: `${i * 7 + 2}s` }} x1={120 + i * 110} y1={30 + i * 18} x2={140 + i * 110} y2={38 + i * 18} stroke="#fff" strokeWidth="1" strokeLinecap="round" />)}</g>}
+      {complete && celebrate && motion && !mini && <g className="lg-sparkles">{[[150, 110], [250, 120], [200, 80], [170, 150], [236, 160], [130, 150], [270, 90]].map(([x, y], i) => <g key={i} transform={`translate(${x} ${y})`}><path className="lg-sparkle" style={{ animationDelay: `${i * 0.18}s` }} d="M0 -5 L1.2 -1.2 L5 0 L1.2 1.2 L0 5 L-1.2 1.2 L-5 0 L-1.2 -1.2 Z" fill="#fff6d0" /></g>)}</g>}
+      </g>
     </g>
 
-    <ArchFrame gold={url('gold')} golden={unlocked('goldArch')} className={arrive('goldArch')} />
+    {!mini && <ArchFrame gold={url('gold')} golden={unlocked('goldArch')} className={arrive('goldArch')} />}
   </svg>;
 }
 
@@ -341,7 +359,7 @@ function Olive({ tree, tint, growth, ratio, sprayRef, blossom, firstLeaves }: {
       {/* Bark: the twisting grain of old olive wood */}
       {tree.branches.slice(0, 4).map((branch, i) => grown[i] > 0.2 && <path key={i} d={`M${branch.x0 - 2} ${branch.y0} Q${branch.cx - 1} ${branch.cy} ${lerp(branch.x0, branch.x1, grown[i]) - 1} ${lerp(branch.y0, branch.y1, grown[i])}`} stroke={tint('#4d3f33')} strokeWidth={1.2 * width + 0.3} fill="none" opacity=".55" />)}
       {tree.branches.slice(0, 2).map((branch, i) => grown[i] > 0.3 && <path key={i} d={`M${branch.x0 + 3 * width} ${branch.y0} Q${branch.cx + 2} ${branch.cy} ${lerp(branch.x0, branch.x1, grown[i]) + 2} ${lerp(branch.y0, branch.y1, grown[i])}`} stroke={tint('#93806a')} strokeWidth={0.9 * width + 0.2} fill="none" opacity=".45" />)}
-      {young && [0, 1, 2, 3].map((i) => <g key={`sprout${i}`} transform={`translate(${tip.x} ${tip.y}) rotate(${-60 + i * 40})`}><use href={`#${sprayRef}${i % 3}`} className="lg-leaf" style={{ color: tint(LEAF_TONES[i]) }} transform="scale(.8)" /></g>)}
+      {young && [0, 1, 2, 3].map((i) => <g key={`sprout${i}`} transform={`translate(${tip.x} ${tip.y}) rotate(${-60 + i * 40}) scale(.8)`}><use href={`#${sprayRef}${i % 3}`} className="lg-leaf" style={{ color: tint(LEAF_TONES[i]) }} /></g>)}
       {showing.map((anchor) => <g key={anchor.order} transform={`translate(${anchor.x.toFixed(1)} ${anchor.y.toFixed(1)}) rotate(${anchor.rotate.toFixed(0)}) scale(${anchor.scale.toFixed(2)})`}>
         <use href={`#${sprayRef}${anchor.variant}`} className="lg-leaf" style={{ color: tint(LEAF_TONES[anchor.tone]), animationDelay: anchor.order < firstLeaves ? `${Math.round((anchor.order / Math.max(firstLeaves, 1)) * 900)}ms` : '0ms' }} />
       </g>)}
@@ -355,11 +373,11 @@ function Olive({ tree, tint, growth, ratio, sprayRef, blossom, firstLeaves }: {
 
 function Pomegranate({ tint, days, className, spray }: { tint: Tint; days: number; className: string; spray: string }) {
   const tree = POMEGRANATE;
-  const growth = Math.min(1, 0.5 + maturity(days - 10) * 0.5);
+  const growth = Math.min(1, 0.5 + maturity(days - 12) * 0.5);
   const grown = tree.branches.map((branch) => branchGrowth(branch, growth, tree.maxDepth));
   const ready = tree.anchors.filter((anchor) => grown[anchor.branch] >= anchor.t);
-  const fruits = ready.filter((anchor) => anchor.order % 3 === 0).slice(0, Math.min(9, Math.floor((days - 10) / 2) + 1));
-  return <g transform={`translate(336 256) scale(${(0.42 + 0.2 * growth).toFixed(3)})`} className={className}>
+  const fruits = ready.filter((anchor) => anchor.order % 3 === 0).slice(0, Math.min(9, Math.floor((days - 12) / 2) + 1));
+  return <g transform={`translate(350 256) scale(${(0.42 + 0.2 * growth).toFixed(3)})`}><g className={className}>
     <ellipse cy="2" rx="22" ry="4" fill="#000" opacity=".14" />
     <g className="lg-sway slow">
       {tree.branches.map((branch, i) => grown[i] > 0 && <path key={i} d={branchOutline(branch, grown[i], 0.55)} fill={tint('#7a5b45')} />)}
@@ -368,11 +386,11 @@ function Pomegranate({ tint, days, className, spray }: { tint: Tint; days: numbe
         <circle r="4.2" fill={tint('#c3262f')} /><circle cx="-1.3" cy="-1.3" r="1.3" fill="#fff" opacity=".3" /><path d="M-1.2 -4 L0 -5.8 L1.2 -4" fill={tint('#8c1a22')} />
       </g>)}
     </g>
-  </g>;
+  </g></g>;
 }
 
 function Fountain({ tint, motion, water, className }: { tint: Tint; motion: boolean; water: string; className: string }) {
-  return <g transform="translate(88 256)" className={className}>
+  return <g transform="translate(88 256)"><g className={className}>
     <ellipse cy="4" rx="31" ry="5" fill="#000" opacity=".15" />
     <path d="M-30 -2 L-27 5 H27 L30 -2 Z" fill={tint('#e9e0cf')} />
     <path d="M-30 -2 L-27 5 H27 L30 -2 Z" fill="none" stroke={tint('#c4b59b')} strokeWidth=".6" />
@@ -387,7 +405,7 @@ function Fountain({ tint, motion, water, className }: { tint: Tint; motion: bool
       <path d="M0 -30 C-4 -38 -12 -30 -13 -23" /><path d="M0 -30 C4 -38 12 -30 13 -23" />
       <path d="M-11 -23 C-15 -18 -18 -10 -19 -3" /><path d="M11 -23 C15 -18 18 -10 19 -3" />
     </g>
-  </g>;
+  </g></g>;
 }
 
 function Lavender({ x, y, tint, flip = false }: { x: number; y: number; tint: Tint; flip?: boolean }) {
@@ -408,7 +426,7 @@ function Lantern({ tint, glow, lit, className, growth }: { tint: Tint; glow: str
   const at = pointOn(limb, 0.75);
   const x = TREE_BASE.x + at.x * scale;
   const y = TREE_BASE.y + at.y * scale;
-  return <g transform={`translate(${x.toFixed(1)} ${y.toFixed(1)})`} className={className}>
+  return <g transform={`translate(${x.toFixed(1)} ${y.toFixed(1)})`}><g className={className}>
     <g className="lg-lantern">
       <line y1="0" y2="12" stroke={tint('#3d3226')} strokeWidth=".5" />
       {lit > 0 && <circle className="lg-flicker" cy="20" r="26" fill={glow} opacity={lit} />}
@@ -417,19 +435,19 @@ function Lantern({ tint, glow, lit, className, growth }: { tint: Tint; glow: str
       <path d="M0 14 V25 M-3 16 C-4 20 -4 22 -2.5 25 M3 16 C4 20 4 22 2.5 25" stroke={tint('#a47a22')} strokeWidth=".5" fill="none" />
       <path d="M-2.5 26 H2.5 L1.2 28.5 H-1.2 Z" fill={tint('#b98a2a')} />
     </g>
-  </g>;
+  </g></g>;
 }
 
 function Palm({ tint, className }: { tint: Tint; className: string }) {
   const fronds = [-150, -120, -95, -70, -40, -15, 12, -170];
-  return <g transform="translate(34 214)" className={className}>
+  return <g transform="translate(34 214)"><g className={className}>
     <path d="M0 0 C-2 -30 4 -60 14 -86 L18 -85 C9 -60 4 -30 6 0 Z" fill={tint('#8a6d4a')} />
     {Array.from({ length: 12 }, (_, i) => <path key={i} d={`M${1 + i * 1.05} ${-i * 7.2} l4 -1.4`} stroke={tint('#6e5436')} strokeWidth=".7" />)}
-    <g transform="translate(16 -86)" className="lg-sway slow">
+    <g transform="translate(16 -86)"><g className="lg-sway slow">
       {fronds.map((angle, i) => <path key={i} transform={`rotate(${angle})`} d="M0 0 C10 -3 22 -2 32 4 C22 1 10 2 0 0 Z" fill={tint(i % 2 ? '#4f7a3f' : '#5f8c48')} />)}
       <circle cx="-2" cy="4" r="2.4" fill={tint('#c9782c')} /><circle cx="2" cy="5" r="2.2" fill={tint('#b8651f')} /><circle cx="0" cy="7.5" r="2" fill={tint('#d0883a')} />
-    </g>
-  </g>;
+    </g></g>
+  </g></g>;
 }
 
 function Butterfly({ motion, color, path, dur }: { motion: boolean; color: string; path: string; dur: number }) {
@@ -497,4 +515,119 @@ function ArchFrame({ gold, golden, className }: { gold: string; golden: boolean;
     <path d="M5 300 L5 117 A227 227 0 0 1 200 9 A227 227 0 0 1 395 117 L395 300" stroke={golden ? gold : 'var(--gold)'} strokeWidth=".6" opacity=".7" />
     <g transform="translate(200 3)"><path d="M0 -7 L2 -2 L7 0 L2 2 L0 7 L-2 2 L-7 0 L-2 -2 Z" fill={golden ? gold : 'var(--gold)'} stroke="none" /><rect x="-4" y="-4" width="8" height="8" transform="rotate(45)" fill="none" stroke={golden ? gold : 'var(--gold)'} strokeWidth=".6" /></g>
   </g>;
+}
+
+function Cypress({ x, tint, tall = false }: { x: number; tint: Tint; tall?: boolean }) {
+  const h = tall ? 84 : 70;
+  return <g transform={`translate(${x} 198)`}><g className="lg-sway slow">
+    <path d={`M0 0 C-9 -${h * 0.3} -8 -${h * 0.7} 0 -${h} C8 -${h * 0.7} 9 -${h * 0.3} 0 0 Z`} fill={tint('#2f5a3c')} />
+    <path d={`M0 -4 C-4 -${h * 0.35} -3 -${h * 0.7} 0 -${h - 6}`} stroke={tint('#3f7350')} strokeWidth="2" fill="none" opacity=".7" />
+  </g></g>;
+}
+
+function LanternString({ tint, glow, lit, className }: { tint: Tint; glow: string; lit: number; className: string }) {
+  const points = Array.from({ length: 11 }, (_, i) => {
+    const x = 18 + i * 36.4;
+    return { x, y: 186 + (i % 2 ? 7 : 0) };
+  });
+  const d = points.map((p, i) => (i === 0 ? `M${p.x} ${p.y - 6}` : `Q${(points[i - 1].x + p.x) / 2} ${Math.max(points[i - 1].y, p.y) + 4} ${p.x} ${p.y - 6}`)).join(' ');
+  return <g className={className}>
+    <path d={d} stroke={tint('#4a3b2b')} strokeWidth=".6" fill="none" />
+    {points.map((p, i) => <g key={i} transform={`translate(${p.x} ${p.y - 6})`}>
+      {lit > 0 && <circle className="lg-flicker" style={{ animationDelay: `${i * 0.3}s` }} cy="5" r="9" fill={glow} opacity={lit} />}
+      <path d="M-2 1 C-3 3 -3 6 -1.5 8 H1.5 C3 6 3 3 2 1 Z" fill={lit > 0 ? (i % 3 === 0 ? '#ffcf75' : i % 3 === 1 ? '#ff9f6b' : '#ffe39a') : tint(i % 2 ? '#d9674a' : '#e7b04a')} />
+      <rect x="-1.2" y="0" width="2.4" height="1.2" fill={tint('#8a6a2a')} />
+    </g>)}
+  </g>;
+}
+
+function LemonPot({ x, tint }: { x: number; tint: Tint }) {
+  return <g transform={`translate(${x} 250)`}>
+    <ellipse cy="1" rx="8" ry="2" fill="#000" opacity=".14" />
+    <path d="M-6 -8 L6 -8 L4.5 0 H-4.5 Z" fill={tint('#c96a3d')} /><rect x="-6.8" y="-9.5" width="13.6" height="2.2" rx=".8" fill={tint('#d98150')} />
+    <path d="M0 -9 V-15" stroke={tint('#6b5038')} strokeWidth="1.2" />
+    <g className="lg-sway slow"><circle cy="-21" r="9" fill={tint('#4f7f3f')} /><circle cx="-4" cy="-24" r="5" fill={tint('#5f9148')} /><circle cx="4" cy="-19" r="5.5" fill={tint('#467537')} />
+      {[[-4, -18], [3, -25], [5, -16], [-6, -23], [0, -21]].map(([lx, ly], i) => <ellipse key={i} cx={lx} cy={ly} rx="1.6" ry="1.3" fill={tint('#f2d33c')} />)}</g>
+  </g>;
+}
+
+function Bench({ tint, className }: { tint: Tint; className: string }) {
+  return <g transform="translate(292 246)"><g className={className}>
+    <ellipse cy="1" rx="22" ry="2.5" fill="#000" opacity=".14" />
+    <rect x="-17" y="-8" width="4" height="8" fill={tint('#cfc1a6')} /><rect x="13" y="-8" width="4" height="8" fill={tint('#cfc1a6')} />
+    <rect x="-20" y="-11" width="40" height="3.6" rx="1" fill={tint('#e2d6bf')} />
+    <rect x="-17" y="-13.6" width="34" height="2.8" rx="1.2" fill={tint('#2f56a8')} />
+    <path d="M-15 -13.6 h4 M-5 -13.6 h4 M5 -13.6 h4" stroke={tint('#e2b33c')} strokeWidth=".6" />
+  </g></g>;
+}
+
+function Roses({ x, tint }: { x: number; tint: Tint }) {
+  const blooms = [[-6, -14], [2, -18], [7, -11], [-2, -9], [-9, -7], [5, -5]];
+  return <g transform={`translate(${x} 266)`}>
+    <ellipse cy="1" rx="13" ry="2.5" fill="#000" opacity=".14" />
+    <g className="lg-sway slow">
+      <path d="M-12 0 C-13 -10 -6 -20 2 -21 C10 -20 14 -10 12 0 Z" fill={tint('#3e6b3a')} />
+      {blooms.map(([bx, by], i) => <g key={i} transform={`translate(${bx} ${by})`}><circle r="2.6" fill={tint(i % 2 ? '#d64566' : '#e8708a')} /><path d="M-1.2 0 A1.2 1.2 0 1 1 1.2 0" stroke={tint('#a82a4a')} strokeWidth=".5" fill="none" /></g>)}
+    </g>
+  </g>;
+}
+
+type Box = { x: number; y: number; w: number; h: number };
+
+/** Where the camera looks when something arrives. */
+function focusBox(unlock: UnlockId, growth: number): Box {
+  const scale = 0.62 + 0.4 * growth;
+  switch (unlock) {
+    case 'firstBloom': { const slot = FLOWER_BEDS.find((s) => s.planted === 0)!; return { x: slot.x - 35, y: slot.y - 40, w: 70, h: 50 }; }
+    case 'path': return { x: 150, y: 240, w: 100, h: 60 };
+    case 'lavender': return { x: 140, y: 225, w: 120, h: 55 };
+    case 'fountain': return { x: 45, y: 210, w: 90, h: 60 };
+    case 'butterflies': return { x: 30, y: 205, w: 140, h: 90 };
+    case 'pomegranate': return { x: 300, y: 185, w: 100, h: 80 };
+    case 'lantern': {
+      const limb = OLIVE.branches.find((branch) => branch.depth === 2 && branch.x1 > 25) ?? OLIVE.branches[2];
+      const at = pointOn(limb, 0.75);
+      return { x: TREE_BASE.x + at.x * scale - 35, y: TREE_BASE.y + at.y * scale - 15, w: 70, h: 60 };
+    }
+    case 'lemons': return { x: 145, y: 215, w: 110, h: 45 };
+    case 'pool': return { x: 10, y: 195, w: 380, h: 50 };
+    case 'bench': return { x: 255, y: 220, w: 75, h: 40 };
+    case 'palm': return { x: 0, y: 110, w: 100, h: 115 };
+    case 'songbirds': return { x: 120, y: 90, w: 160, h: 110 };
+    case 'lanternString': return { x: 0, y: 165, w: 210, h: 50 };
+    case 'cypresses': return { x: 30, y: 110, w: 100, h: 100 };
+    case 'roses': return { x: 0, y: 235, w: 80, h: 45 };
+    case 'vine': return { x: 0, y: 100, w: 110, h: 200 };
+    case 'fireflies': return { x: 80, y: 130, w: 240, h: 140 };
+    case 'shootingStars': return { x: 100, y: 10, w: 240, h: 110 };
+    default: return { x: 0, y: 0, w: W, h: H };
+  }
+}
+
+/** A translate and scale that brings `box` to the middle without showing past the scene's edges. */
+function zoomTo(box: Box) {
+  const k = Math.min(3.2, Math.max(1, Math.min(W / box.w, H / box.h) * 0.85));
+  const cx = box.x + box.w / 2;
+  const cy = box.y + box.h / 2;
+  const x = Math.min(0, Math.max(W - k * W, W / 2 - k * cx));
+  const y = Math.min(0, Math.max(H - k * H, H / 2 - k * cy));
+  return { k, x, y };
+}
+
+/** A square view around the tree as it stands, crown and trunk, for the small window beside the counter. */
+function crownView(growth: number) {
+  const scale = 0.62 + 0.4 * growth;
+  let top = 0; let left = 0; let right = 0;
+  OLIVE.branches.forEach((branch) => {
+    const grown = branchGrowth(branch, growth, OLIVE.maxDepth);
+    if (grown <= 0) return;
+    const end = pointOn(branch, grown);
+    top = Math.min(top, end.y - 12); left = Math.min(left, end.x - 12); right = Math.max(right, end.x + 12);
+  });
+  const width = (right - left) * scale;
+  const height = -top * scale + 10;
+  const size = Math.max(width, height, 46);
+  const cx = TREE_BASE.x + ((left + right) / 2) * scale;
+  const cy = TREE_BASE.y + 6 - height / 2;
+  return `${(cx - size / 2).toFixed(1)} ${(cy - size / 2).toFixed(1)} ${size.toFixed(1)} ${size.toFixed(1)}`;
 }
