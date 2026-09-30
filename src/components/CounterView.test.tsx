@@ -6,7 +6,7 @@ import { CounterView } from './CounterView';
 describe('CounterView', () => {
   it('shows today’s garden below the counter, above the phrase switcher', () => {
     render(<CounterView state={initialState()} onIncrement={vi.fn()} onUndo={vi.fn()} onSelect={vi.fn()} onStartTimer={vi.fn()} onStopTimer={vi.fn()} onTimerRollover={vi.fn()} />);
-    const garden = screen.getByRole('img', { name: /Garden growth stage/i });
+    const garden = screen.getByRole('img', { name: /Your garden/i });
     const orb = screen.getByRole('button', { name: /Tap to count/i });
     const switcher = screen.getByText(/Switch dhikr/i);
     expect(orb.compareDocumentPosition(garden) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();

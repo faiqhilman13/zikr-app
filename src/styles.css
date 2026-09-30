@@ -648,3 +648,82 @@ input, select { max-width: 100%; min-width: 0; font: inherit; }
 
 .feedback-fields { border: 0; padding: 0; margin: 0; min-width: 0; }
 .feedback-fields textarea { width: 100%; box-sizing: border-box; min-height: 120px; resize: vertical; background: var(--surface); color: inherit; border: 1px solid var(--line); border-radius: 12px; padding: 12px; font: inherit; font-size: 1rem; }
+
+/* ---------------------------------------------------------------------------------------
+   Living garden: an olive courtyard seen through an arch (src/components/garden/living).
+   Every moving part is a transform or opacity animation on a small group, so it stays
+   smooth on phones; `.still` (reduced motion) and the global rules below stop them all.
+   --------------------------------------------------------------------------------------- */
+.living-garden-card { margin: 26px 0; }
+.lg-stage { position: relative; }
+.living-garden { display: block; width: 100%; height: auto; overflow: visible; filter: drop-shadow(0 14px 26px rgba(8, 18, 44, .18)); }
+.lg-new-pill { position: absolute; top: 22%; left: 50%; transform: translateX(-50%); margin: 0; padding: 7px 14px; border-radius: 999px; background: color-mix(in srgb, var(--panel) 88%, transparent); color: #fff; font-size: .78rem; font-weight: 700; white-space: nowrap; box-shadow: 0 10px 24px rgba(8, 18, 44, .3); animation: lg-pill 5.5s ease both; pointer-events: none; }
+.lg-info { display: flex; align-items: end; justify-content: space-between; gap: 12px; margin: 14px 2px 8px; }
+.lg-info .eyebrow { margin: 0; }
+.lg-info h2 { font-size: 1.45rem; line-height: 1.15; margin: 2px 0 0; }
+.lg-journal-button { flex: none; min-height: 40px; font-size: .8rem; font-weight: 650; }
+.lg-journal-button svg { width: 16px; }
+.living-garden-card .fine-progress i { background: var(--gold-strong); }
+.lg-meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; margin: 0 2px; color: var(--muted); font-size: .76rem; }
+.lg-meta span:last-child { color: var(--gold-text); font-weight: 650; }
+
+.living-garden .lg-sway { animation: lg-sway 7s ease-in-out infinite; transform-origin: 0 0; }
+.living-garden .lg-sway.slow { animation-duration: 9s; }
+.living-garden .lg-flower { animation: lg-flower 6s ease-in-out infinite; transform-origin: 0 0; }
+.living-garden .lg-leaf { animation: lg-leaf-in .55s cubic-bezier(.2, 1.4, .4, 1) both; transform-box: fill-box; transform-origin: center; }
+.living-garden .lg-pop { animation: lg-leaf-in .5s cubic-bezier(.2, 1.5, .4, 1) both; transform-box: fill-box; transform-origin: center; }
+.living-garden .lg-cloud { animation: lg-drift 140s linear infinite alternate; }
+.living-garden .lg-cloud.b { animation-duration: 190s; animation-direction: alternate-reverse; }
+.living-garden .lg-cloud.c { animation-duration: 110s; }
+.living-garden .lg-twinkle { animation: lg-twinkle 3.6s ease-in-out infinite; }
+.living-garden .lg-firefly { animation: lg-firefly 7s ease-in-out infinite; }
+.living-garden .lg-firefly.f1 { animation-duration: 9s; }
+.living-garden .lg-firefly.f2 { animation-duration: 11s; animation-direction: reverse; }
+.living-garden .lg-water { stroke-dasharray: 3 3; animation: lg-flow .8s linear infinite; }
+.living-garden .lg-ripple { animation: lg-ripple 3.3s ease-out infinite; transform-box: fill-box; transform-origin: center; }
+.living-garden .lg-shimmer { animation: lg-shimmer 4.5s ease-in-out infinite; }
+.living-garden .lg-flicker { animation: lg-flicker 2.8s ease-in-out infinite; }
+.living-garden .lg-lantern { animation: lg-swing 5s ease-in-out infinite; transform-origin: 0 0; }
+.living-garden .lg-wing { animation: lg-wing .32s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: center; }
+.living-garden .lg-bird-idle { animation: lg-bird 5s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 100%; }
+.living-garden .lg-bloom { animation: lg-bloom 5s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+.living-garden .lg-sparkle { animation: lg-sparkle 1.6s ease-out 3 both; transform-box: fill-box; transform-origin: center; }
+.living-garden .lg-arrive { animation: lg-arrive 1.6s cubic-bezier(.2, 1.3, .35, 1) .35s both; transform-box: fill-box; transform-origin: 50% 100%; }
+.living-garden .lg-frame.golden { filter: drop-shadow(0 0 4px rgba(244, 196, 80, .75)); }
+.living-garden.still *, .reduce-motion .living-garden * { animation: none !important; }
+
+@keyframes lg-sway { 0%, 100% { transform: rotate(-.7deg); } 50% { transform: rotate(.7deg); } }
+@keyframes lg-flower { 0%, 100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg); } }
+@keyframes lg-leaf-in { from { opacity: 0; transform: scale(.1); } to { opacity: 1; transform: scale(1); } }
+@keyframes lg-drift { from { transform: translateX(-40px); } to { transform: translateX(120px); } }
+@keyframes lg-twinkle { 0%, 100% { opacity: 1; } 50% { opacity: .25; } }
+@keyframes lg-firefly { 0%, 100% { transform: translate(0, 0); opacity: .2; } 25% { opacity: 1; } 50% { transform: translate(9px, -12px); opacity: .5; } 75% { transform: translate(-6px, -4px); opacity: 1; } }
+@keyframes lg-flow { to { stroke-dashoffset: -6; } }
+@keyframes lg-ripple { from { transform: scale(.35); opacity: .9; } to { transform: scale(2.4); opacity: 0; } }
+@keyframes lg-shimmer { 0%, 100% { opacity: 0; transform: translateX(-6px); } 50% { opacity: .6; transform: translateX(6px); } }
+@keyframes lg-flicker { 0%, 100% { opacity: .95; } 40% { opacity: .75; } 60% { opacity: 1; } 80% { opacity: .82; } }
+@keyframes lg-swing { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }
+@keyframes lg-wing { from { transform: scaleX(1); } to { transform: scaleX(.25); } }
+@keyframes lg-bird { 0%, 80%, 100% { transform: rotate(0); } 85% { transform: rotate(-12deg) translateY(-1px); } 90% { transform: rotate(4deg); } }
+@keyframes lg-bloom { 0%, 100% { opacity: .75; transform: scale(.94); } 50% { opacity: 1; transform: scale(1.04); } }
+@keyframes lg-sparkle { 0% { opacity: 0; transform: scale(.2) rotate(0); } 40% { opacity: 1; transform: scale(1.2) rotate(45deg); } 100% { opacity: 0; transform: scale(.4) rotate(90deg); } }
+@keyframes lg-arrive { 0% { opacity: 0; transform: scale(.3) translateY(8px); } 70% { opacity: 1; transform: scale(1.08); } 100% { opacity: 1; transform: scale(1); } }
+@keyframes lg-pill { 0% { opacity: 0; transform: translate(-50%, 8px); } 12%, 80% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -4px); } }
+
+.garden-journal h2 { font-size: 1.9rem; margin: 2px 0 8px; }
+.journal-body { color: var(--muted); font-size: .88rem; }
+.journal-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 18px 0; }
+.journal-stats div { padding: 12px 14px; border-radius: 16px; background: var(--surface-2); }
+.journal-stats dt { color: var(--muted); font-size: .72rem; }
+.journal-stats dd { margin: 2px 0 0; font-family: ui-serif, Georgia, serif; font-size: 1.25rem; }
+.journal-next { margin-bottom: 18px; font-weight: 650; color: var(--gold-text); font-size: .86rem; }
+.journal-next .fine-progress i { background: var(--gold-strong); }
+.journal-grid { list-style: none; margin: 0 0 16px; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.journal-grid li { display: grid; justify-items: center; text-align: center; gap: 4px; padding: 12px 6px; border-radius: 16px; border: 1px solid var(--line); background: var(--surface); }
+.journal-grid li.open { border-color: color-mix(in srgb, var(--gold) 55%, transparent); background: color-mix(in srgb, var(--gold-soft) 22%, var(--surface)); }
+.journal-grid li.locked { opacity: .6; }
+.journal-grid strong { font-size: .74rem; line-height: 1.2; }
+.journal-grid small { color: var(--muted); font-size: .66rem; }
+.journal-icon { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--surface-2); color: var(--gold-text); }
+.journal-grid li.open .journal-icon { background: var(--panel); color: var(--accent-on-panel); }
+.journal-icon svg { width: 17px; }

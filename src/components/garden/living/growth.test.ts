@@ -1,0 +1,65 @@
+import { describe, expect, it } from 'vitest';
+import { blossomShare, completedDays, flowerCount, FLOWER_SLOTS, fruitShare, leafShare, maturity, nextUnlock, timeOfDay, todayStage, treeStage, unlockedIds, UNLOCKS } from './growth';
+import { branchGrowth, growOlive } from './tree';
+
+describe('the living garden over time', () => {
+  it('counts each completed day once, and nothing for days left incomplete', () => {
+    expect(completedDays([
+      { date: '2026-09-01', counts: {}, timedSeconds: {}, completed: true },
+      { date: '2026-09-01', counts: {}, timedSeconds: {}, completed: true },
+      { date: '2026-09-02', counts: {}, timedSeconds: {}, completed: false },
+      { date: '2026-09-03', counts: {}, timedSeconds: {}, completed: true }
+    ])).toBe(2);
+  });
+
+  it('only ever grows: the tree, the flowers and what has arrived never shrink as days are added', () => {
+    for (let day = 0; day < 150; day++) {
+      expect(maturity(day + 1)).toBeGreaterThanOrEqual(maturity(day));
+      expect(flowerCount(day + 1)).toBeGreaterThanOrEqual(flowerCount(day));
+      expect(unlockedIds(day + 1).length).toBeGreaterThanOrEqual(unlockedIds(day).length);
+      expect(treeStage(day + 1)).toBeGreaterThanOrEqual(treeStage(day));
+    }
+    expect(maturity(0)).toBeCloseTo(0.1);
+    expect(maturity(100)).toBeCloseTo(1);
+    expect(flowerCount(500)).toBe(FLOWER_SLOTS);
+  });
+
+  it('always has something next until the hundredth day', () => {
+    expect(nextUnlock(0)?.id).toBe('firstBloom');
+    expect(nextUnlock(6)?.id).toBe('fountain');
+    expect(nextUnlock(99)?.id).toBe('goldArch');
+    expect(nextUnlock(100)).toBeNull();
+    expect(UNLOCKS.map((unlock) => unlock.day)).toEqual([...UNLOCKS.map((unlock) => unlock.day)].sort((a, b) => a - b));
+  });
+});
+
+describe('the living garden through the day', () => {
+  it('rests in the morning, blossoms through the middle and fruits at completion', () => {
+    expect(leafShare(0)).toBe(0.25);
+    expect(leafShare(1)).toBeCloseTo(1);
+    expect(blossomShare(0.3)).toBe(0);
+    expect(blossomShare(0.85)).toBeCloseTo(1);
+    expect(fruitShare(0.79)).toBe(0);
+    expect(fruitShare(1)).toBe(1);
+    expect([0, 0.1, 0.3, 0.6, 1].map(todayStage)).toEqual([0, 1, 2, 3, 4]);
+  });
+
+  it('follows the local hour through dawn, day, golden hour and night', () => {
+    const at = (hour: number) => timeOfDay(new Date(2026, 8, 30, hour, 0));
+    expect([at(6), at(12), at(18), at(23), at(3)]).toEqual(['dawn', 'day', 'golden', 'night', 'night']);
+  });
+});
+
+describe('the olive tree', () => {
+  it('grows the same tree every time, from the trunk out', () => {
+    const tree = growOlive(11, 6);
+    expect(growOlive(11, 6)).toEqual(tree);
+    expect(tree.branches[0].depth).toBe(0);
+    const young = tree.branches.filter((branch) => branchGrowth(branch, 0.2, tree.maxDepth) > 0);
+    const old = tree.branches.filter((branch) => branchGrowth(branch, 1, tree.maxDepth) > 0);
+    expect(young.length).toBeLessThan(old.length);
+    expect(old.length).toBe(tree.branches.length);
+    // Every anchor has a distinct place in the order leaves arrive.
+    expect(new Set(tree.anchors.map((anchor) => anchor.order)).size).toBe(tree.anchors.length);
+  });
+});
