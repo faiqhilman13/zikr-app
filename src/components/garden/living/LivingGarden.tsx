@@ -1,4 +1,4 @@
-import { useId, useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { blossomShare, flowerCount, FLOWER_SLOTS, fruitShare, isUnlocked, leafShare, maturity, timeOfDay, type UnlockId } from './growth';
 import { mix, PALETTES, tinter, type Tint } from './palette';
 import { clamp01, lerp, seeded } from './random';
@@ -459,6 +459,23 @@ function Butterfly({ motion, color, path, dur }: { motion: boolean; color: strin
   return <g>{body}<animateMotion dur={`${dur}s`} repeatCount="indefinite" path={path} rotate="0" /></g>;
 }
 
+/**
+ * A bird flying in to its perch. SMIL timing counts from when the whole SVG began, which
+ * is long past by the time a day is completed, so a plain `begin` would have the bird
+ * appear already perched. The flight is started from the moment this bird is added.
+ */
+function FlyingBird({ bird, flip, delay, duration, path }: { bird: string; flip: boolean; delay: number; duration: number; path: string }) {
+  const motion = useRef<SVGAnimateMotionElement>(null);
+  useEffect(() => {
+    const element = motion.current;
+    if (element && typeof element.beginElementAt === 'function') element.beginElementAt(delay);
+  }, [delay]);
+  return <g>
+    <g transform={`scale(${flip ? -1.1 : 1.1} 1.1)`}><use href={`#${bird}`} /></g>
+    <animateMotion ref={motion} dur={`${duration}s`} fill="freeze" begin="indefinite" path={path} />
+  </g>;
+}
+
 function Birds({ bird, resident, visitors, arriving, growth }: { bird: string; resident: boolean; visitors: boolean; arriving: boolean; growth: number }) {
   const scale = 0.62 + 0.4 * growth;
   const limbs = OLIVE.branches.filter((branch) => branch.depth === 3 && branchGrowth(branch, growth, OLIVE.maxDepth) >= 1);
@@ -481,10 +498,8 @@ function Birds({ bird, resident, visitors, arriving, growth }: { bird: string; r
       if (!arriving) return <g key={`v${index}`} transform={transform}><use href={`#${bird}`} className="lg-bird-idle" style={{ animationDelay: `${i * 1.1}s` }} /></g>;
       // Fly in from beyond the arch, then settle on the branch.
       const from = { x: i % 2 ? 430 : -30, y: 40 + i * 20 };
-      return <g key={`v${index}`}>
-        <g transform={`scale(${i % 2 === 1 ? -1.1 : 1.1} 1.1)`}><use href={`#${bird}`} /></g>
-        <animateMotion dur={`${1.8 + i * 0.35}s`} fill="freeze" begin={`${i * 0.25}s`} path={`M${from.x} ${from.y} Q${(from.x + at.x) / 2} ${Math.min(from.y, at.y) - 40} ${at.x.toFixed(1)} ${at.y.toFixed(1)}`} />
-      </g>;
+      return <FlyingBird key={`v${index}`} bird={bird} flip={i % 2 === 1} delay={i * 0.25} duration={1.8 + i * 0.35}
+        path={`M${from.x} ${from.y} Q${(from.x + at.x) / 2} ${Math.min(from.y, at.y) - 40} ${at.x.toFixed(1)} ${at.y.toFixed(1)}`} />;
     })}
   </g>;
 }
