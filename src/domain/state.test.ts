@@ -254,3 +254,17 @@ describe('palette choice', () => {
       expect(restored.settings.palette).toBe('royal');
     });
 });
+
+describe('notes on a day', () => {
+  it('keeps one clean line, clears an empty one, and survives a backup round trip', async () => {
+    const { withNote, sanitizeState, initialState, NOTE_LIMIT } = await import('./state');
+    const base = initialState();
+    const date = base.logs[0].date;
+    const noted = withNote(base, date, '  After Fajr,\nquiet\tand clear.  ');
+    expect(noted.logs[0].note).toBe('After Fajr, quiet and clear.');
+    expect(withNote(noted, date, '   ').logs[0]).not.toHaveProperty('note');
+    expect(withNote(base, date, 'x'.repeat(500)).logs[0].note).toHaveLength(NOTE_LIMIT);
+    expect(sanitizeState(JSON.parse(JSON.stringify(noted))).logs[0].note).toBe('After Fajr, quiet and clear.');
+    expect(withNote(base, '1999-01-01', 'nothing to attach to')).toEqual(base);
+  });
+});

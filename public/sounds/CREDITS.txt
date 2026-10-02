@@ -1,0 +1,3 @@
+garden.mp3 is mixed from the "River" and "Birds" field recordings in the open-source
+Moodist project (https://github.com/remvze/moodist), whose third-party sounds are
+released under CC0 or the Pixabay Content License.

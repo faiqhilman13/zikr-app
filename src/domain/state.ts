@@ -77,6 +77,22 @@ const sanitizeCounts = (value: unknown): Record<string, number> => {
  * ZikrState, or throws. Unknown settings fields are dropped; missing ones get defaults, so
  * older backups keep restoring after the settings shape grows.
  */
+export const NOTE_LIMIT = 280;
+/** One plain line: control characters out, whitespace folded, kept to a short length. */
+// eslint-disable-next-line no-control-regex
+export const cleanNote = (value: string) => value.replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, NOTE_LIMIT);
+
+/** Writes or clears the note on one day's log; a day with no log yet is left alone. */
+export const withNote = (state: ZikrState, date: string, note: string): ZikrState => {
+  const clean = cleanNote(note);
+  return { ...state, logs: state.logs.map((log) => {
+    if (log.date !== date) return log;
+    const { note: _previous, ...rest } = log;
+    void _previous;
+    return clean ? { ...rest, note: clean } : rest;
+  }) };
+};
+
 export const sanitizeState = (value: unknown): ZikrState => {
   if (!isRecord(value) || value.version !== 1) throw new Error('Unsupported Zikr data.');
   const defaults = initialState();
@@ -106,7 +122,8 @@ export const sanitizeState = (value: unknown): ZikrState => {
     if (!isRecord(raw) || typeof raw.date !== 'string' || !validDateKey(raw.date) || dates.has(raw.date)) throw new Error('Invalid or duplicate history date.');
     if (!isRecord(raw.counts) || !isRecord(raw.timedSeconds)) throw new Error('Invalid history counts.');
     dates.add(raw.date);
-    return { date: raw.date, counts: sanitizeCounts(raw.counts), timedSeconds: sanitizeCounts(raw.timedSeconds), completed: raw.completed === true };
+    const note = typeof raw.note === 'string' ? cleanNote(raw.note) : '';
+    return { date: raw.date, counts: sanitizeCounts(raw.counts), timedSeconds: sanitizeCounts(raw.timedSeconds), completed: raw.completed === true, ...(note ? { note } : {}) };
   });
   const ids = new Set<string>();
   for (const preset of presets) {

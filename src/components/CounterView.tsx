@@ -6,12 +6,14 @@ import type { ZikrState } from '../domain/types';
 import { gardenDays, UNLOCKS } from './garden/living/growth';
 import { LivingGardenCard, MiniGarden } from './garden/living/LivingGardenCard';
 import { formatDays, formatTimeLeft } from './streak/format';
+import { resumeGardenSound } from '../services/gardenSound';
 import { StreakNotices } from './streak/StreakNotices';
 import { useStreak } from './streak/useStreak';
 
-export function CounterView({ state, onIncrement, onUndo, onSelect, onStartTimer, onStopTimer, onTimerRollover }: {
+export function CounterView({ state, onIncrement, onUndo, onSelect, onStartTimer, onStopTimer, onTimerRollover, onSaveNote = async () => true }: {
   state: ZikrState; onIncrement: () => void; onUndo: () => void; onSelect: (id: string) => void;
   onStartTimer: () => void; onStopTimer: () => void; onTimerRollover: () => void;
+  onSaveNote?: (date: string, note: string) => Promise<boolean>;
 }) {
   const { t, i18n } = useTranslation();
   const language = i18n.language;
@@ -77,8 +79,30 @@ export function CounterView({ state, onIncrement, onUndo, onSelect, onStartTimer
   const tendedDays = gardenDays(state.logs, state.presets).tended;
   const arrival = UNLOCKS.find((unlock) => unlock.day === tendedDays && gardenDays(state.logs.filter((log) => log.date !== todayKey), state.presets).tended < unlock.day)?.id;
 
+  // Each tap sends a spark of light from the orb into the garden beside it.
+  const orbWrap = useRef<HTMLDivElement>(null);
+  const [sparks, setSparks] = useState<{ id: number; style: React.CSSProperties }[]>([]);
+  const sparkId = useRef(0);
+  const spark = () => {
+    const wrap = orbWrap.current;
+    const bubble = wrap?.querySelector('.mini-garden');
+    if (!wrap || !bubble || state.settings.reducedMotion) return;
+    const from = wrap.getBoundingClientRect();
+    const to = bubble.getBoundingClientRect();
+    const id = ++sparkId.current;
+    const angle = Math.random() * Math.PI * 2;
+    const style = {
+      '--sx': `${Math.cos(angle) * 40}px`, '--sy': `${Math.sin(angle) * 40}px`,
+      '--dx': `${to.left + to.width / 2 - (from.left + from.width / 2)}px`, '--dy': `${to.top + to.height / 2 - (from.top + from.height / 2)}px`
+    } as React.CSSProperties;
+    setSparks((current) => [...current.slice(-6), { id, style }]);
+    window.setTimeout(() => setSparks((current) => current.filter((item) => item.id !== id)), 700);
+  };
+
   const handleTap = () => {
     onIncrement();
+    spark();
+    resumeGardenSound();
     setAnnounce(`${preset.title}: ${hasTarget ? t('countOf', { count: count + 1, target }) : count + 1}`);
     if (!state.settings.haptics || !('vibrate' in navigator)) return;
     const reachesTarget = hasTarget && count + 1 === target;
@@ -117,11 +141,12 @@ export function CounterView({ state, onIncrement, onUndo, onSelect, onStartTimer
       </p>}
 
     <section className="count-stage">
-      <div className="orb-wrap">
+      <div className="orb-wrap" ref={orbWrap}>
         <button className={`count-orb${phraseDone ? ' complete' : ''}`} onClick={handleTap} aria-label={`${t('tap')}: ${preset.title}. ${countLabel}`} style={{ '--progress': `${ratio * 360}deg` } as React.CSSProperties}>
           <span className="orb-inner"><span className="arabic" lang="ar" dir="rtl">{preset.arabic}</span><span>{preset.transliteration}</span><strong>{count}</strong><small>{t('tap')}</small></span>
         </button>
         <MiniGarden state={state} />
+        <div className="orb-sparks" aria-hidden="true">{sparks.map((item) => <span key={item.id} className="orb-spark" style={item.style} />)}</div>
       </div>
       <div className="counter-tools">
         <button className="quiet-button" disabled={count === 0} onClick={onUndo}><RotateCcw />{t('undo')}</button>
@@ -140,7 +165,7 @@ export function CounterView({ state, onIncrement, onUndo, onSelect, onStartTimer
       </div>
     </section>
 
-    <LivingGardenCard state={state} />
+    <LivingGardenCard state={state} onSaveNote={onSaveNote} />
 
     <section className="switcher" aria-labelledby="switch-title"><div className="section-heading"><p className="eyebrow" id="switch-title">{t('switchDhikr')}</p></div><div className="preset-scroll">
       {state.presets.map((item) => <button className={item.id === preset.id ? 'selected' : ''} key={item.id} onClick={() => onSelect(item.id)} aria-pressed={item.id === preset.id}><span lang="ar" dir="rtl">{item.arabic}</span><b>{item.title}</b><small>{item.target > 0 ? `${counts[item.id] ?? 0} / ${item.target}` : counts[item.id] ?? 0}</small></button>)}

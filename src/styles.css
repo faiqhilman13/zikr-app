@@ -730,7 +730,7 @@ input, select { max-width: 100%; min-width: 0; font: inherit; }
 
 /* Living garden, second pass: the window beside the counter, the reveal and the camera. */
 .orb-wrap { position: relative; display: grid; place-items: center; }
-.mini-garden { position: absolute; right: max(-6px, calc(50% - min(38vw, 165px) - 14px)); bottom: 2px; width: 82px; height: 82px; padding: 0; border: 3px solid var(--surface); border-radius: 50%; overflow: hidden; cursor: pointer; background: var(--surface-2); box-shadow: 0 10px 24px rgba(8, 18, 44, .22), 0 0 0 1.5px var(--gold); }
+.mini-garden { position: absolute; z-index: 1; right: max(-6px, calc(50% - min(38vw, 165px) - 14px)); bottom: 2px; width: 82px; height: 82px; padding: 0; border: 3px solid var(--surface); border-radius: 50%; overflow: hidden; cursor: pointer; background: var(--surface-2); box-shadow: 0 10px 24px rgba(8, 18, 44, .22), 0 0 0 1.5px var(--gold); }
 .mini-garden .living-garden { width: 100%; height: 100%; filter: none; }
 .mini-garden:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
 [dir='rtl'] .mini-garden { right: auto; left: max(-6px, calc(50% - min(38vw, 165px) - 14px)); }
@@ -744,3 +744,56 @@ input, select { max-width: 100%; min-width: 0; font: inherit; }
 .journal-grid li button:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 @keyframes lg-shoot { 0%, 88% { opacity: 0; transform: translate(0, 0); } 90% { opacity: 1; } 96% { opacity: 0; transform: translate(70px, 28px); } 100% { opacity: 0; } }
 @keyframes lg-reveal { 0% { transform: translateY(28px) scale(.96); filter: brightness(1.25); } 60% { filter: brightness(1.12); } 100% { transform: none; filter: none; } }
+
+/* Living garden, third pass: orchard, weather, memories, sparks, sharing. */
+.living-garden .lg-flower.slow { animation-duration: 9s; }
+.living-garden .lg-tappable { cursor: pointer; }
+.living-garden .lg-tappable:hover use { filter: brightness(1.15); }
+.living-garden .lg-rain-veil { opacity: 0; animation: lg-veil 8s ease-in-out both; }
+.living-garden .lg-drop { animation: lg-drop .7s linear infinite; }
+.living-garden .lg-rain { animation: lg-rain-out 7.5s ease-in both; }
+.living-garden .lg-rainbow { animation: lg-rainbow 14s ease-in-out both; }
+.living-garden.still .lg-rainbow { animation: none; opacity: .55; }
+@keyframes lg-veil { 0% { opacity: 0; } 15%, 70% { opacity: .28; } 100% { opacity: 0; } }
+@keyframes lg-drop { from { transform: translateY(0); } to { transform: translateY(320px); } }
+@keyframes lg-rain-out { 0%, 75% { opacity: .9; } 100% { opacity: 0; } }
+@keyframes lg-rainbow { 0%, 45% { opacity: 0; } 62%, 88% { opacity: .55; } 100% { opacity: 0; } }
+
+.orb-sparks { position: absolute; inset: 0; pointer-events: none; overflow: visible; }
+.orb-spark { position: absolute; z-index: 2; left: 50%; top: 50%; width: 15px; height: 15px; margin: -7.5px 0 0 -7.5px; border-radius: 50%; background: radial-gradient(circle, #ffffff 0%, #fff4c9 35%, rgba(255, 214, 120, 0) 72%); box-shadow: 0 0 14px 5px rgba(255, 255, 255, .7), 0 0 26px 10px rgba(255, 200, 90, .45); animation: orb-spark .62s cubic-bezier(.35, 0, .3, 1) forwards; }
+@keyframes orb-spark { 0% { transform: translate(var(--sx), var(--sy)) scale(.6); opacity: 0; } 15% { opacity: 1; } 85% { opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) scale(.35); opacity: 0; } }
+.reduce-motion .orb-spark { display: none; }
+@media (prefers-reduced-motion: reduce) { .orb-spark { display: none; } }
+
+.lg-actions { display: flex; gap: 6px; flex: none; }
+.lg-icon-button { width: 40px; min-height: 40px; padding: 0; justify-content: center; }
+.lg-icon-button.on { border-color: var(--gold); color: var(--gold-text); background: color-mix(in srgb, var(--gold-soft) 22%, var(--surface)); }
+.lg-icon-button svg { width: 17px; }
+
+.flower-memory h2 { font-size: 1.7rem; margin: 2px 0 6px; }
+.flower-memory .memory-phrases { list-style: none; margin: 14px 0; padding: 0; display: grid; gap: 6px; }
+.flower-memory .memory-phrases li { display: flex; justify-content: space-between; gap: 10px; padding: 9px 12px; border-radius: 12px; background: var(--surface-2); font-size: .86rem; }
+.flower-memory label { display: grid; gap: 6px; color: var(--muted); font-size: .8rem; margin-top: 10px; }
+.flower-memory textarea { min-height: 84px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--bg); color: var(--ink); font: inherit; resize: vertical; }
+.flower-memory .memory-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; }
+.flower-memory .memory-foot small { color: var(--muted); }
+
+.journal-section { margin: 20px 0 6px; }
+.journal-section h3 { font-size: 1.15rem; margin: 0 0 10px; }
+.orchard-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.orchard-list li { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; padding: 10px 12px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface); }
+.orchard-list strong { font-size: .88rem; }
+.orchard-list span { color: var(--gold-text); font-weight: 700; font-size: .84rem; text-align: end; }
+.orchard-list small { grid-column: 1 / -1; color: var(--muted); font-size: .72rem; }
+.recent-flowers { display: flex; flex-wrap: wrap; gap: 6px; }
+.recent-flowers button { min-height: 36px; font-size: .78rem; }
+.why-garden { margin-top: 10px; padding: 16px; border-radius: 16px; background: var(--surface-2); }
+.why-garden blockquote { margin: 0 0 14px; }
+.why-garden blockquote p { margin: 0 0 6px; font-size: .9rem; }
+.why-garden blockquote p[lang='ar'] { font-family: 'Noto Sans Arabic Variable', sans-serif; font-size: 1.05rem; line-height: 1.9; }
+.why-garden cite { color: var(--muted); font-size: .74rem; font-style: normal; }
+/* Only flowers answer a tap; weather, birds and decoration let it through. */
+.living-garden * { pointer-events: none; }
+.living-garden .lg-tappable, .living-garden .lg-tappable * { pointer-events: auto; }
+.lg-info { flex-wrap: wrap; align-items: center; }
+.lg-info > div:first-child { flex: 1 1 210px; min-width: 0; }

@@ -70,3 +70,29 @@ describe('the olive tree', () => {
     expect(new Set(tree.anchors.map((anchor) => anchor.order)).size).toBe(tree.anchors.length);
   });
 });
+
+describe('the orchard and the days behind the flowers', () => {
+  const log = (date: string, counts: Record<string, number>, completed = false) => ({ date, counts, timedSeconds: {}, completed });
+
+  it('grows a first tree of each kind early, then one for every few hundred, up to a grove', async () => {
+    const { plantsFor, repsToNext, orchardOf, PLANTS_MAX } = await import('./growth');
+    expect([0, 99, 100, 399, 400, 1300, 99999].map(plantsFor)).toEqual([0, 0, 1, 1, 2, 5, PLANTS_MAX]);
+    expect(repsToNext(40)).toBe(60);
+    expect(repsToNext(100)).toBe(300);
+    expect(repsToNext(1300)).toBeNull();
+    const orchard = orchardOf([log('2026-09-01', { tasbih: 80, salawat: 400 }), log('2026-09-02', { tasbih: 30 })]);
+    expect(orchard.palm).toMatchObject({ phrase: 'tasbih', reps: 110, plants: 1 });
+    expect(orchard.rose).toMatchObject({ plants: 2 });
+    expect(orchard.fig.plants).toBe(0);
+  });
+
+  it('traces flowers to the days that planted them, and measures a return', async () => {
+    const { tendedDates, daysAway } = await import('./growth');
+    const presets = [{ id: 'tasbih', title: 'Tasbih', arabic: '', transliteration: '', target: 10 }];
+    const logs = [log('2026-09-05', { tasbih: 10 }, true), log('2026-09-01', { tasbih: 6 }), log('2026-09-03', { tasbih: 2 })];
+    expect(tendedDates(logs, presets)).toEqual(['2026-09-01', '2026-09-05']);
+    expect(daysAway(logs, presets, '2026-09-09')).toBe(4);
+    expect(daysAway(logs, presets, '2026-09-05')).toBe(4);
+    expect(daysAway([], presets, '2026-09-05')).toBeNull();
+  });
+});

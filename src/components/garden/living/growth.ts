@@ -90,3 +90,54 @@ export function timeOfDay(date: Date): TimeOfDay {
   if (hour >= 16.5 && hour < 19.5) return 'golden';
   return 'night';
 }
+
+/**
+ * The orchard beyond the wall: each of the starter phrases grows its own kind of tree,
+ * from the repetitions of it ever recited. A first one appears early, then one more for
+ * every few hundred, up to a small grove of each.
+ *
+ * Tasbih grows date palms, after the narration that a palm is planted for "SubhanAllahil
+ * 'Azim wa bihamdihi"; tahmid grows figs and tahlil olives, the two trees sworn by in
+ * Surah at-Tin; takbir grows cypresses, upright as the phrase; salawat grows the roses
+ * that climb the courtyard wall. The pairing is the garden's, not a teaching.
+ */
+export const ORCHARD = [
+  { id: 'palm', phrase: 'tasbih' },
+  { id: 'fig', phrase: 'tahmid' },
+  { id: 'cypress', phrase: 'takbir' },
+  { id: 'olive', phrase: 'tahlil' },
+  { id: 'rose', phrase: 'salawat' }
+] as const;
+export type OrchardId = (typeof ORCHARD)[number]['id'];
+
+export const FIRST_PLANT = 100;
+export const PLANT_EVERY = 300;
+export const PLANTS_MAX = 5;
+
+export const plantsFor = (reps: number) => (reps < FIRST_PLANT ? 0 : Math.min(PLANTS_MAX, 1 + Math.floor((reps - FIRST_PLANT) / PLANT_EVERY)));
+/** Repetitions still to go for the next tree of a kind, or null once the grove is full. */
+export const repsToNext = (reps: number) => {
+  const plants = plantsFor(reps);
+  if (plants >= PLANTS_MAX) return null;
+  return (plants === 0 ? FIRST_PLANT : FIRST_PLANT + plants * PLANT_EVERY) - reps;
+};
+
+export function orchardOf(logs: DailyLog[]) {
+  return Object.fromEntries(ORCHARD.map(({ id, phrase }) => {
+    const reps = logs.reduce((sum, log) => sum + (log.counts[phrase] ?? 0), 0);
+    return [id, { phrase, reps, plants: plantsFor(reps), next: repsToNext(reps) }];
+  })) as Record<OrchardId, { phrase: string; reps: number; plants: number; next: number | null }>;
+}
+
+/** The dates that planted the flowers, oldest first, so a flower can be traced to its day. */
+export function tendedDates(logs: DailyLog[], presets: DhikrPreset[]) {
+  return [...new Set(logs.filter((log) => dayRatio(log, presets) >= TENDED).map((log) => log.date))].sort();
+}
+
+/** Whole days between the last tended day before today and today, or null if there is none. */
+export function daysAway(logs: DailyLog[], presets: DhikrPreset[], today: string) {
+  const before = tendedDates(logs, presets).filter((date) => date < today);
+  if (!before.length) return null;
+  const last = before[before.length - 1];
+  return Math.round((new Date(`${today}T12:00:00`).getTime() - new Date(`${last}T12:00:00`).getTime()) / 86_400_000);
+}

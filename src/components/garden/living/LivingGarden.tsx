@@ -1,5 +1,5 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
-import { blossomShare, flowerCount, FLOWER_SLOTS, fruitShare, isUnlocked, leafShare, maturity, timeOfDay, type UnlockId } from './growth';
+import { blossomShare, flowerCount, FLOWER_SLOTS, fruitShare, isUnlocked, leafShare, maturity, ORCHARD, timeOfDay, type OrchardId, type UnlockId } from './growth';
 import { mix, PALETTES, tinter, type Tint } from './palette';
 import { clamp01, lerp, seeded } from './random';
 import { branchGrowth, branchOutline, growOlive, pointOn, type Tree } from './tree';
@@ -22,6 +22,14 @@ export interface LivingGardenProps {
   focus?: UnlockId | null;
   /** A small round view of just the tree, for beside the counter. */
   mini?: boolean;
+  /** Trees of each kind grown by each phrase, for the orchard beyond the wall. */
+  orchard?: Partial<Record<OrchardId, number>>;
+  /** Kinds that gained a tree since the garden was last seen. */
+  freshOrchard?: readonly OrchardId[];
+  /** A returning visitor: rain falls, then a rainbow. */
+  rain?: boolean;
+  /** A planted flower was chosen, by its planting order. */
+  onFlower?: (planted: number) => void;
   now: Date;
   /** The intention was completed during this visit: play the arrival of the birds. */
   celebrate: boolean;
@@ -109,7 +117,7 @@ function sunAt(now: Date) {
   return { x: lerp(40, 360, t), y: 150 - Math.sin(t * Math.PI) * 112 };
 }
 
-export function LivingGarden({ ratio, tended, full, now, celebrate, motion, fresh, freshFlower, label, focus = null, mini = false }: LivingGardenProps) {
+export function LivingGarden({ ratio, tended, full, now, celebrate, motion, fresh, freshFlower, label, focus = null, mini = false, orchard = {}, freshOrchard = [], rain = false, onFlower }: LivingGardenProps) {
   const id = useId().replace(/[^a-zA-Z0-9]/g, '');
   const ref = (name: string) => `${id}-${name}`;
   const url = (name: string) => `url(#${ref(name)})`;
@@ -182,6 +190,7 @@ export function LivingGarden({ ratio, tended, full, now, celebrate, motion, fres
       <path d="M0 176 C40 150 90 158 130 168 C180 150 230 146 280 162 C320 150 360 152 400 164 L400 210 L0 210 Z" fill={palette.hillFar} />
       <Skyline fill={palette.skyline} />
       <path d="M0 192 C50 176 110 184 160 190 C220 180 280 178 330 188 C360 182 385 184 400 186 L400 212 L0 212 Z" fill={palette.hillNear} />
+      {!mini && <Orchard orchard={orchard} fresh={freshOrchard} tint={tint} />}
       {unlocked('cypresses') && <g className={arrive('cypresses')}><Cypress x={74} tint={tint} /><Cypress x={318} tint={tint} tall /></g>}
       {unlocked('palm') && <Palm tint={tint} className={`lg-palm${arrive('palm')}`} />}
 
@@ -190,6 +199,7 @@ export function LivingGarden({ ratio, tended, full, now, celebrate, motion, fres
       <rect y="194" width={W} height="2.4" fill={tint(palette.wallShade)} />
       <rect y="199" width={W} height="8" fill={url('tiles')} />
       <rect y="214" width={W} height="3" fill={tint(palette.wallShade)} opacity=".7" />
+      {!mini && (orchard.rose ?? 0) > 0 && <ClimbingRoses count={orchard.rose ?? 0} fresh={freshOrchard.includes('rose')} tint={tint} />}
       {unlocked('lanternString') && <LanternString tint={tint} glow={url('lamp')} lit={palette.night ? 1 : time === 'golden' ? 0.6 : 0} className={arrive('lanternString')} />}
       <rect y="216" width={W} height={H - 216} fill={url('ground')} />
       <GroundTexture tint={tint} />
@@ -226,7 +236,8 @@ export function LivingGarden({ ratio, tended, full, now, celebrate, motion, fres
           if (slot.planted >= flowerCount(days)) return null;
           const newest = freshFlower && slot.planted === flowerCount(days) - 1;
           const scale = lerp(0.85, 1.3, (slot.y - 258) / 39);
-          return <g key={i} transform={`translate(${slot.x.toFixed(1)} ${slot.y.toFixed(1)}) scale(${scale.toFixed(2)})`}>
+          return <g key={i} transform={`translate(${slot.x.toFixed(1)} ${slot.y.toFixed(1)}) scale(${scale.toFixed(2)})`} className={onFlower ? 'lg-tappable' : undefined} onClick={onFlower ? () => onFlower(slot.planted) : undefined}>
+            {onFlower && <circle cy={-slot.height / 2} r={Math.max(7, slot.height / 2 + 3)} fill="transparent" />}
             <g className={`lg-flower${newest ? ' lg-arrive' : ''}`} style={{ animationDelay: `${(-slot.sway * 6).toFixed(2)}s` }}>
               <path d={`M0 0 Q${(slot.sway - 0.5) * 3} ${-slot.height / 2} 0 ${-slot.height}`} stroke={tint('#4f6e3c')} strokeWidth=".9" fill="none" />
               <path d={`M0 ${-slot.height * 0.35} q3 -1.5 4.5 -4 q-3 .4 -4.5 4`} fill={tint('#5f8046')} />
@@ -249,6 +260,7 @@ export function LivingGarden({ ratio, tended, full, now, celebrate, motion, fres
         {FIREFLIES.map((fly, i) => <g key={i} transform={`translate(${fly.x.toFixed(1)} ${fly.y.toFixed(1)})`}><circle className={`lg-firefly f${i % 3}`} style={{ animationDelay: `${fly.delay.toFixed(2)}s` }} r="4.5" fill={url('firefly')} /></g>)}
       </g>}
 
+      {rain && !mini && <Rain motion={motion} />}
       {unlocked('shootingStars') && palette.night && motion && !mini && <g className="lg-shooting">{[0, 1].map((i) => <line key={i} className="lg-shooting-star" style={{ animationDelay: `${i * 7 + 2}s` }} x1={120 + i * 110} y1={30 + i * 18} x2={140 + i * 110} y2={38 + i * 18} stroke="#fff" strokeWidth="1" strokeLinecap="round" />)}</g>}
       {complete && celebrate && motion && !mini && <g className="lg-sparkles">{[[150, 110], [250, 120], [200, 80], [170, 150], [236, 160], [130, 150], [270, 90]].map(([x, y], i) => <g key={i} transform={`translate(${x} ${y})`}><path className="lg-sparkle" style={{ animationDelay: `${i * 0.18}s` }} d="M0 -5 L1.2 -1.2 L5 0 L1.2 1.2 L0 5 L-1.2 1.2 L-5 0 L-1.2 -1.2 Z" fill="#fff6d0" /></g>)}</g>}
       </g>
@@ -645,4 +657,67 @@ function crownView(growth: number) {
   const cx = TREE_BASE.x + ((left + right) / 2) * scale;
   const cy = TREE_BASE.y + 6 - height / 2;
   return `${(cx - size / 2).toFixed(1)} ${(cy - size / 2).toFixed(1)} ${size.toFixed(1)} ${size.toFixed(1)}`;
+}
+
+/* The orchard beyond the wall. Each kind has its own five places along the hillside,
+   interleaved so a mixed practice grows a mixed orchard. */
+const ORCHARD_SLOTS: Record<Exclude<OrchardId, 'rose'>, number[]> = (() => {
+  const kinds = ['palm', 'fig', 'cypress', 'olive'] as const;
+  const random = seeded(77);
+  const xs = Array.from({ length: 20 }, (_, i) => 14 + i * 19.4 + (random() - 0.5) * 6);
+  return Object.fromEntries(kinds.map((kind, k) => [kind, [0, 1, 2, 3, 4].map((n) => xs[(n * 4 + k * 3 + n) % 20])])) as Record<Exclude<OrchardId, 'rose'>, number[]>;
+})();
+
+function Orchard({ orchard, fresh, tint }: { orchard: Partial<Record<OrchardId, number>>; fresh: readonly OrchardId[]; tint: Tint }) {
+  const trees: { kind: Exclude<OrchardId, 'rose'>; x: number; newest: boolean }[] = [];
+  for (const { id } of ORCHARD) {
+    if (id === 'rose') continue;
+    const count = orchard[id] ?? 0;
+    ORCHARD_SLOTS[id].slice(0, count).forEach((x, n) => trees.push({ kind: id, x, newest: fresh.includes(id) && n === count - 1 }));
+  }
+  return <g className="lg-orchard">{trees.sort((a, b) => a.x - b.x).map(({ kind, x, newest }) => <g key={`${kind}${x}`} transform={`translate(${x.toFixed(1)} 197)`}>
+    <g className={`lg-flower slow${newest ? ' lg-arrive' : ''}`}>
+      {kind === 'palm' && <g>
+        <path d="M0 0 C-1 -10 1 -20 4 -28 L5.5 -27.6 C3 -20 1.6 -10 1.8 0 Z" fill={tint('#8a6d4a')} />
+        <g transform="translate(4.8 -28)">{[-160, -125, -90, -55, -20, 10].map((angle, i) => <path key={i} transform={`rotate(${angle})`} d="M0 0 C4 -1.4 9 -1 13 1.6 C9 .5 4 1 0 0 Z" fill={tint(i % 2 ? '#4f7a3f' : '#5f8c48')} />)}
+          <circle cx="-.6" cy="2" r="1.2" fill={tint('#c9782c')} /><circle cx="1" cy="2.4" r="1.1" fill={tint('#b8651f')} /></g>
+      </g>}
+      {kind === 'fig' && <g>
+        <path d="M-1.2 0 C-1.4 -5 -1 -8 0 -10 C1 -8 1.4 -5 1.2 0 Z" fill={tint('#7d6a55')} />
+        <circle cy="-15" r="8.5" fill={tint('#4b6f35')} /><circle cx="-5" cy="-12" r="5.5" fill={tint('#58803e')} /><circle cx="5" cy="-13" r="5.8" fill={tint('#41632f')} />
+        {[[-3, -15], [3, -11], [4, -17], [-5, -10]].map(([fx, fy], i) => <ellipse key={i} cx={fx} cy={fy} rx="1.2" ry="1.4" fill={tint('#6b3f6b')} />)}
+      </g>}
+      {kind === 'cypress' && <path d="M0 0 C-5 -10 -4.5 -26 0 -38 C4.5 -26 5 -10 0 0 Z" fill={tint('#2f5a3c')} />}
+      {kind === 'olive' && <g>
+        <path d="M-1.4 0 C-1 -4 -2 -7 -.6 -10 L1 -10 C.4 -7 1.6 -4 1.4 0 Z" fill={tint('#76624d')} />
+        <ellipse cy="-14" rx="10" ry="6.5" fill={tint('#7f9866')} /><ellipse cx="-4" cy="-16" rx="5" ry="3.6" fill={tint('#9cb07f')} opacity=".8" />
+      </g>}
+    </g>
+  </g>)}</g>;
+}
+
+/** Salawat grows climbing roses up the courtyard wall, one cluster for each tree's worth. */
+function ClimbingRoses({ count, fresh, tint }: { count: number; fresh: boolean; tint: Tint }) {
+  const spots = [32, 362, 128, 272, 200].slice(0, count);
+  return <g className="lg-roses-wall">{spots.map((x, i) => <g key={x} transform={`translate(${x} 214)`}><g className={fresh && i === count - 1 ? 'lg-arrive' : undefined}>
+    <path d="M0 0 C-3 -6 3 -10 -1 -16 C-4 -20 2 -22 0 -24" stroke={tint('#4f6e3c')} strokeWidth=".9" fill="none" />
+    {[[-3, -4], [3, -8], [-3, -12], [3, -16], [-2, -21], [1.5, -24]].map(([lx, ly], k) => <ellipse key={`l${k}`} cx={lx} cy={ly} rx="2" ry="1.2" transform={`rotate(${k % 2 ? 30 : -30} ${lx} ${ly})`} fill={tint('#5f8046')} />)}
+    {[[-1.5, -7], [2, -13], [-1, -19], [1, -23.5]].map(([rx, ry], k) => <g key={`r${k}`} transform={`translate(${rx} ${ry})`}><circle r="1.9" fill={tint(k % 2 ? '#d64566' : '#e8708a')} /><circle r=".8" fill={tint('#a82a4a')} /></g>)}
+  </g></g>)}</g>;
+}
+
+const DROPS = (() => {
+  const random = seeded(91);
+  return Array.from({ length: 70 }, () => ({ x: random() * 420 - 10, delay: random() * 0.9, length: lerp(5, 9, random()), speed: lerp(0.55, 0.8, random()) }));
+})();
+
+/** A soft shower that waters the garden on a return, then a rainbow as it clears. */
+function Rain({ motion }: { motion: boolean }) {
+  return <g className="lg-weather">
+    <rect className="lg-rain-veil" width={W} height={H} fill="#8a9ab8" />
+    {motion && <g className="lg-rain">{DROPS.map((drop, i) => <line key={i} className="lg-drop" style={{ animationDelay: `${drop.delay.toFixed(2)}s`, animationDuration: `${drop.speed.toFixed(2)}s` }} x1={drop.x} y1={-10} x2={drop.x - 2} y2={-10 + drop.length} stroke="#dbe8f7" strokeWidth=".8" strokeLinecap="round" />)}</g>}
+    <g className="lg-rainbow" fill="none" strokeWidth="5" opacity=".0">
+      {['#e8534f', '#f39c45', '#f4d35e', '#7cc47f', '#5aa2d6', '#7a6cc9'].map((color, i) => <path key={color} d={`M${30 + i * 5} 210 A${170 - i * 5} ${150 - i * 5} 0 0 1 ${370 - i * 5} 210`} stroke={color} />)}
+    </g>
+  </g>;
 }

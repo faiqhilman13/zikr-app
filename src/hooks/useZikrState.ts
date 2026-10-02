@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { liveQuery } from 'dexie';
 import { loadState, mutateState, replaceState, StateConflictError, type Snapshot } from '../data/db';
-import { archivePreset, clampTarget, creditTimerReps, initialState, startTimer, stopTimer, withDecrement, withIncrement } from '../domain/state';
+import { archivePreset, clampTarget, creditTimerReps, initialState, startTimer, stopTimer, withDecrement, withIncrement, withNote } from '../domain/state';
 import type { DhikrPreset, Language, ThemePreference, ZikrState } from '../domain/types';
 
 const CREDIT_INTERVAL_MS = 5_000;
@@ -111,6 +111,7 @@ export function useZikrState() {
     // A pace starts a counting session; omitting it records time only.
     startTimer: (secondsPerRep?: number | null) => commit((s) => startTimer(s, secondsPerRep)),
     stopTimer: () => commit((s) => stopTimer(s)),
-    creditTimer: () => commit((s) => creditTimerReps(s))
+    creditTimer: () => commit((s) => creditTimerReps(s)),
+    saveNote: (date: string, note: string) => commit((s) => withNote(s, date, note))
   };
 }

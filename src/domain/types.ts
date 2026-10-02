@@ -18,6 +18,8 @@ export interface DailyLog {
   counts: Record<string, number>;
   timedSeconds: Record<string, number>;
   completed: boolean;
+  /** A line the person wrote to remember the day by, read back from its flower in the garden. */
+  note?: string;
 }
 
 export interface ReminderSettings {
