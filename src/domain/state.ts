@@ -1,4 +1,4 @@
-import type { ActiveTimer, DailyLog, DhikrPreset, ZikrState } from './types';
+import type { ActiveTimer, BiomeId, DailyLog, DhikrPreset, GardenChapter, ZikrState } from './types';
 import type { Language, ThemePreference } from './types';
 import { DEFAULT_PRESET, presetIds } from '../theme';
 
@@ -175,8 +175,29 @@ export const sanitizeState = (value: unknown): ZikrState => {
       }
     },
     activeTimer,
-    lastUpdatedAt: finiteCount(value.lastUpdatedAt) ?? Date.now()
+    lastUpdatedAt: finiteCount(value.lastUpdatedAt) ?? Date.now(),
+    ...sanitizeGardens(value.gardens)
   });
+};
+
+export const BIOMES: BiomeId[] = ['andalusia', 'kampung'];
+
+/** Later gardens, in the order begun: known kinds only, real dates, each after the last. */
+function sanitizeGardens(raw: unknown): { gardens?: GardenChapter[] } {
+  if (!Array.isArray(raw)) return {};
+  const gardens: GardenChapter[] = [];
+  for (const entry of raw) {
+    if (!isRecord(entry) || !BIOMES.includes(entry.biome as BiomeId) || typeof entry.startedOn !== 'string' || !validDateKey(entry.startedOn)) continue;
+    if (gardens.length && entry.startedOn <= gardens[gardens.length - 1].startedOn) continue;
+    gardens.push({ biome: entry.biome as BiomeId, startedOn: entry.startedOn });
+  }
+  return gardens.length ? { gardens: gardens.slice(-200) } : {};
+}
+
+/** Begins a new garden from today. Starting twice on one day replaces that day's choice. */
+export const withNewGarden = (state: ZikrState, biome: BiomeId, today = dayKey()): ZikrState => {
+  const earlier = (state.gardens ?? []).filter((garden) => garden.startedOn < today);
+  return { ...state, gardens: [...earlier, { biome, startedOn: today }] };
 };
 
 const withLog = (logs: DailyLog[], date: string) => logs.some((log) => log.date === date) ? logs : [...logs, emptyLog(date)];

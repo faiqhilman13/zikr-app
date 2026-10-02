@@ -61,6 +61,9 @@ export interface ZikrState {
   settings: UserSettings;
   activeTimer: ActiveTimer | null;
   lastUpdatedAt: number;
+  /** Gardens begun after the first, each from the day it was chosen. Absent means the
+   * first garden is still the only one. */
+  gardens?: GardenChapter[];
 }
 
 export interface AnalyticsEvent {
@@ -68,4 +71,12 @@ export interface AnalyticsEvent {
   name: string;
   at: number;
   metadata?: Record<string, string | number | boolean>;
+}
+
+export type BiomeId = 'andalusia' | 'kampung';
+
+export interface GardenChapter {
+  biome: BiomeId;
+  /** The first day that belongs to this garden. */
+  startedOn: string;
 }

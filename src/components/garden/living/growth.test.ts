@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { blossomShare, dayRatio, gardenDays, flowerCount, FLOWER_SLOTS, fruitShare, leafShare, maturity, nextUnlock, timeOfDay, todayStage, treeStage, unlockedIds, UNLOCKS } from './growth';
+import { ageMarks, blossomShare, chaptersOf, currentChapter, dayRatio, gardenDays, flowerCount, FLOWER_SLOTS, fruitShare, KAMPUNG_UNLOCKS, leafShare, maturity, nextMilestone, nextUnlock, orchardTier, timeOfDay, todayStage, treeStage, unlockedIds, UNLOCKS } from './growth';
 import { branchGrowth, growOlive } from './tree';
 
 describe('the living garden over time', () => {
@@ -94,5 +94,44 @@ describe('the orchard and the days behind the flowers', () => {
     expect(daysAway(logs, presets, '2026-09-09')).toBe(4);
     expect(daysAway(logs, presets, '2026-09-05')).toBe(4);
     expect(daysAway([], presets, '2026-09-05')).toBeNull();
+  });
+});
+
+describe('gardens kept over hundreds of days', () => {
+  const presets = [{ id: 'tasbih', title: 'T', arabic: '', transliteration: '', target: 10 }];
+  const log = (date: string, n = 10) => ({ date, counts: { tasbih: n }, timedSeconds: {}, completed: n >= 10 });
+  const days = (from: string, count: number) => Array.from({ length: count }, (_, i) => {
+    const d = new Date(`${from}T12:00:00`);
+    d.setDate(d.getDate() + i);
+    return log(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`);
+  });
+
+  it('keeps everything in the first garden until another is begun', () => {
+    const chapters = chaptersOf({ logs: days('2026-01-01', 120), presets });
+    expect(chapters).toHaveLength(1);
+    expect(chapters[0]).toMatchObject({ index: 0, biome: 'andalusia', startedOn: null, endedBefore: null, tended: 120, full: 120 });
+  });
+
+  it('splits the days between gardens at the day each began', () => {
+    const logs = days('2026-01-01', 130);
+    const chapters = chaptersOf({ logs, presets, gardens: [{ biome: 'kampung', startedOn: '2026-04-11' }] });
+    expect(chapters.map((c) => [c.biome, c.tended, c.endedBefore])).toEqual([['andalusia', 100, '2026-04-11'], ['kampung', 30, null]]);
+    expect(currentChapter({ logs, presets, gardens: [{ biome: 'kampung', startedOn: '2026-04-11' }] }).biome).toBe('kampung');
+    expect(chapters.reduce((sum, c) => sum + c.logs.length, 0)).toBe(logs.length);
+  });
+
+  it('gives the kampung garden something new as often as the first', () => {
+    expect(nextUnlock(0, 'kampung')?.id).toBe('firstBloom');
+    const kampung = KAMPUNG_UNLOCKS.map((unlock) => unlock.day);
+    expect(kampung).toEqual(UNLOCKS.map((unlock) => unlock.day));
+    expect(nextUnlock(99, 'kampung')?.id).toBe('goldFrame');
+    expect(unlockedIds(100, 'kampung')).toHaveLength(KAMPUNG_UNLOCKS.length);
+  });
+
+  it('marks lifetime milestones for each phrase and age on an old tree', () => {
+    expect([0, 999, 1000, 5000, 33000, 100000].map(orchardTier)).toEqual([0, 0, 1, 2, 4, 5]);
+    expect(nextMilestone(1200)).toBe(5000);
+    expect(nextMilestone(100000)).toBeNull();
+    expect([100, 150, 199, 200, 365, 900].map(ageMarks)).toEqual([0, 1, 1, 2, 3, 3]);
   });
 });

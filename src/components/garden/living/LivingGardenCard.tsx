@@ -6,9 +6,11 @@ import type { ZikrState } from '../../../domain/types';
 import { formatDays } from '../../streak/format';
 import { gardenSoundPlaying, onGardenSound, setGardenSound } from '../../../services/gardenSound';
 import { FlowerMemory } from './FlowerMemory';
+import { GardenChooser, GardenGallery } from './GardenChapters';
 import { GardenJournal } from './GardenJournal';
 import { gardenCard, shareFile } from './shareGarden';
-import { daysAway, flowerCount, nextUnlock, ORCHARD, orchardOf, tendedDates, todayStage, UNLOCKS, type OrchardId, type UnlockId } from './growth';
+import type { BiomeId } from '../../../domain/types';
+import { CHAPTER_DAYS, chaptersOf, daysAway, flowerCount, nextUnlock, ORCHARD, orchardOf, orchardTier, tendedDates, todayStage, unlocksFor, type OrchardId, type UnlockId } from './growth';
 import { LivingGarden } from './LivingGarden';
 import { GARDEN_ANCHOR, scrollToGarden, useGarden } from './useGarden';
 
@@ -37,18 +39,20 @@ export function MiniGarden({ state }: { state: ZikrState }) {
   const { t } = useTranslation();
   const garden = useGarden(state);
   return <button type="button" className="mini-garden" onClick={() => scrollToGarden(garden.motion)} aria-label={t('gardenSeeGarden')}>
-    <LivingGarden mini ratio={garden.ratio} tended={garden.tended} full={garden.full} now={garden.now} celebrate={false} motion={garden.motion} fresh={[]} freshFlower={false} label="" />
+    <LivingGarden mini biome={garden.biome} ratio={garden.ratio} tended={garden.tended} full={garden.full} now={garden.now} celebrate={false} motion={garden.motion} fresh={[]} freshFlower={false} label="" />
   </button>;
 }
 
-export function LivingGardenCard({ state, onSaveNote }: { state: ZikrState; onSaveNote: (date: string, note: string) => Promise<boolean> }) {
+export function LivingGardenCard({ state, onSaveNote, onStartGarden }: { state: ZikrState; onSaveNote: (date: string, note: string) => Promise<boolean>; onStartGarden: (biome: BiomeId) => Promise<boolean> }) {
   const { t, i18n } = useTranslation();
-  const { now, motion, target, ratio, tended, full } = useGarden(state);
+  const { now, motion, target, ratio, tended, full, biome, chapter } = useGarden(state);
+  const [chooser, setChooser] = useState(false);
+  const [gallery, setGallery] = useState(false);
   const [journal, setJournal] = useState(false);
   const [focus, setFocus] = useState<UnlockId | null>(null);
   const [revealing, setRevealing] = useState(false);
   const stage = todayStage(ratio);
-  const next = nextUnlock(tended);
+  const next = nextUnlock(tended, biome);
   const card = useRef<HTMLElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const today = dayKey();
@@ -80,7 +84,14 @@ export function LivingGardenCard({ state, onSaveNote }: { state: ZikrState; onSa
   const firstSeed = neverCounted && ratio > 0;
 
   // Flowers are planted in the order their days were tended; the latest beds hold the latest days.
-  const dates = tendedDates(state.logs, state.presets);
+  const dates = tendedDates(chapter.logs, state.presets);
+  const keptDays = new Set(tendedDates(state.logs, state.presets));
+  const tiers = Object.fromEntries(ORCHARD.map(({ id }) => [id, orchardTier(orchard[id].reps)]));
+
+  // A complete garden offers a new one; the person may stay as long as they like.
+  const stayKey = `zikr-garden-stay-${chapter.index}`;
+  const [stayed, setStayed] = useState(() => readJSON<boolean>(stayKey, false));
+  const offer = chapter.tended >= CHAPTER_DAYS && !stayed;
   const planted = flowerCount(tended);
   const dateOfFlower = (rank: number) => dates[dates.length - planted + rank];
   const memoryLog = memory ? state.logs.find((log) => log.date === memory) : undefined;
@@ -93,7 +104,7 @@ export function LivingGardenCard({ state, onSaveNote }: { state: ZikrState; onSa
   // new to show: everything simply is.
   const [seen] = useState(readSeen);
   const since = seen ?? tended;
-  const fresh: UnlockId[] = UNLOCKS.filter((unlock) => unlock.day > since && unlock.day <= tended).map((unlock) => unlock.id);
+  const fresh: UnlockId[] = unlocksFor(biome).filter((unlock) => unlock.day > since && unlock.day <= tended).map((unlock) => unlock.id);
   const freshFlower = tended > since;
   const newest = fresh.at(-1);
   useEffect(() => {
@@ -152,9 +163,16 @@ export function LivingGardenCard({ state, onSaveNote }: { state: ZikrState; onSa
   return <section ref={card} id={GARDEN_ANCHOR} className={`living-garden-card${revealing ? ' lg-reveal' : ''}`} aria-labelledby="garden-title">
     <div className="lg-stage" ref={stageRef}>
       <LivingGarden ratio={ratio} tended={tended} full={full} now={now} celebrate={celebrate} motion={motion} fresh={fresh} freshFlower={freshFlower} focus={focus} label={label}
-        orchard={plants} freshOrchard={freshOrchard} rain={rain} onFlower={(rank) => { const date = dateOfFlower(rank); if (date) setMemory(date); }} />
+        biome={biome} orchardTiers={tiers} orchard={plants} freshOrchard={freshOrchard} rain={rain} onFlower={(rank) => { const date = dateOfFlower(rank); if (date) setMemory(date); }} />
       {pill && <p key={pill} className="lg-new-pill" role="status">{pill}</p>}
     </div>
+    {offer && <div className="lg-offer" role="status">
+      <p><strong>{t('offerTitle')}</strong> {t('offerBody')}</p>
+      <div className="button-stack">
+        <button type="button" className="button small" onClick={() => setChooser(true)}>{t('offerChoose')}</button>
+        <button type="button" className="quiet-button" onClick={() => { setStayed(true); write(stayKey, 'true'); }}>{t('offerStay')}</button>
+      </div>
+    </div>}
     <div className="lg-info">
       <div><p className="eyebrow">{t('garden')}</p><h2 id="garden-title">{t(`gardenToday${stage}`)}</h2></div>
       <div className="lg-actions">
@@ -169,7 +187,10 @@ export function LivingGardenCard({ state, onSaveNote }: { state: ZikrState; onSa
       : t('gardenAllGrown')}</span></p>
     <p className="garden-note">{t('gardenBody')}</p>
     {memoryLog && <FlowerMemory log={memoryLog} presets={[...state.presets, ...(state.archivedPresets ?? [])]} onSave={(note) => onSaveNote(memoryLog.date, note)} onClose={() => setMemory(null)} />}
-    {journal && <GardenJournal tended={tended} full={full} orchard={orchard} presets={state.presets} recent={[...dates].reverse().slice(0, 7)}
+    {chooser && <GardenChooser current={biome} onClose={() => setChooser(false)} onChoose={(chosen) => { setChooser(false); void onStartGarden(chosen); }} />}
+    {gallery && <GardenGallery chapters={chaptersOf(state)} onClose={() => setGallery(false)} />}
+    {journal && <GardenJournal tended={tended} full={full} biome={biome} orchard={orchard} presets={state.presets} keptDays={keptDays} gardens={chapter.index + 1}
+      onGallery={() => { setJournal(false); setGallery(true); }}
       onFlower={(date) => { setJournal(false); setMemory(date); }} onClose={() => setJournal(false)} onSelect={(id) => {
       setJournal(false);
       later(50, () => card.current?.scrollIntoView({ behavior: motion ? 'smooth' : 'auto', block: 'center' }));

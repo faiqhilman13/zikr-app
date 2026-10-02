@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { liveQuery } from 'dexie';
 import { loadState, mutateState, replaceState, StateConflictError, type Snapshot } from '../data/db';
-import { archivePreset, clampTarget, creditTimerReps, initialState, startTimer, stopTimer, withDecrement, withIncrement, withNote } from '../domain/state';
-import type { DhikrPreset, Language, ThemePreference, ZikrState } from '../domain/types';
+import { archivePreset, clampTarget, creditTimerReps, initialState, startTimer, stopTimer, withDecrement, withIncrement, withNewGarden, withNote } from '../domain/state';
+import type { BiomeId, DhikrPreset, Language, ThemePreference, ZikrState } from '../domain/types';
 
 const CREDIT_INTERVAL_MS = 5_000;
 
@@ -112,6 +112,7 @@ export function useZikrState() {
     startTimer: (secondsPerRep?: number | null) => commit((s) => startTimer(s, secondsPerRep)),
     stopTimer: () => commit((s) => stopTimer(s)),
     creditTimer: () => commit((s) => creditTimerReps(s)),
-    saveNote: (date: string, note: string) => commit((s) => withNote(s, date, note))
+    saveNote: (date: string, note: string) => commit((s) => withNote(s, date, note)),
+    startGarden: (biome: BiomeId) => commit((s) => withNewGarden(s, biome))
   };
 }

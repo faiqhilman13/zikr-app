@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { getToday, totalTarget } from '../../../domain/state';
 import type { ZikrState } from '../../../domain/types';
 import { useNow } from '../../../hooks/useNow';
-import { gardenDays } from './growth';
+import { currentChapter } from './growth';
 
 export const GARDEN_ANCHOR = 'todays-garden';
 
@@ -25,8 +25,8 @@ export function useGarden(state: ZikrState) {
   const target = Math.max(1, totalTarget(state));
   const intended = state.presets.reduce((sum, preset) => sum + Math.min(preset.target, getToday(state).counts[preset.id] ?? 0), 0);
   const ratio = Math.min(1, intended / target);
-  const { tended, full } = gardenDays(state.logs, state.presets);
-  return { now: new Date(now), motion: !reduced, target, ratio, tended, full };
+  const chapter = currentChapter(state);
+  return { now: new Date(now), motion: !reduced, target, ratio, tended: chapter.tended, full: chapter.full, biome: chapter.biome, chapter };
 }
 
 export const scrollToGarden = (smooth: boolean) => document.getElementById(GARDEN_ANCHOR)?.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'center' });

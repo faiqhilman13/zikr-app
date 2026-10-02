@@ -182,7 +182,7 @@ export function App() {
   return <>
     <a className="skip-link" href="#main-content">{t('skipToContent')}</a>
     <AppShell tab={tab} setTab={setTab} showListen={listenLibrary.length > 0} leading={<StreakChip state={controller.state} onOpen={() => setStreakOpen(true)} />}>
-      {tab === 'count' && <CounterView state={controller.state} onIncrement={controller.increment} onUndo={controller.decrement} onSelect={controller.selectPreset} onStartTimer={() => setTimerSetup(true)} onStopTimer={() => void controller.stopTimer()} onTimerRollover={controller.refresh} onSaveNote={controller.saveNote} />}
+      {tab === 'count' && <CounterView state={controller.state} onIncrement={controller.increment} onUndo={controller.decrement} onSelect={controller.selectPreset} onStartTimer={() => setTimerSetup(true)} onStopTimer={() => void controller.stopTimer()} onTimerRollover={controller.refresh} onSaveNote={controller.saveNote} onStartGarden={controller.startGarden} />}
       {tab === 'progress' && <ProgressView state={controller.state} />}
       {/* Kept mounted once something plays, so the player survives a switch to the counter. */}
       {(tab === 'listen' || playing) && <div className={tab === 'listen' ? undefined : 'listen-parked'} inert={tab !== 'listen'}>

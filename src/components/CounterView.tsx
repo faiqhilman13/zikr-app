@@ -2,18 +2,19 @@ import { ArrowRight, Check, Clock3, Flame, Hourglass, Pause, Play, RotateCcw, Sn
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { dayKey, getToday, selectedPreset, totalForLog, uncreditedReps } from '../domain/state';
-import type { ZikrState } from '../domain/types';
-import { gardenDays, UNLOCKS } from './garden/living/growth';
+import type { BiomeId, ZikrState } from '../domain/types';
+import { chaptersOf, gardenDays, unlocksFor } from './garden/living/growth';
 import { LivingGardenCard, MiniGarden } from './garden/living/LivingGardenCard';
 import { formatDays, formatTimeLeft } from './streak/format';
 import { resumeGardenSound } from '../services/gardenSound';
 import { StreakNotices } from './streak/StreakNotices';
 import { useStreak } from './streak/useStreak';
 
-export function CounterView({ state, onIncrement, onUndo, onSelect, onStartTimer, onStopTimer, onTimerRollover, onSaveNote = async () => true }: {
+export function CounterView({ state, onIncrement, onUndo, onSelect, onStartTimer, onStopTimer, onTimerRollover, onSaveNote = async () => true, onStartGarden = async () => true }: {
   state: ZikrState; onIncrement: () => void; onUndo: () => void; onSelect: (id: string) => void;
   onStartTimer: () => void; onStopTimer: () => void; onTimerRollover: () => void;
   onSaveNote?: (date: string, note: string) => Promise<boolean>;
+  onStartGarden?: (biome: BiomeId) => Promise<boolean>;
 }) {
   const { t, i18n } = useTranslation();
   const language = i18n.language;
@@ -76,8 +77,9 @@ export function CounterView({ state, onIncrement, onUndo, onSelect, onStartTimer
 
   // The garden is the one place progress is rewarded: when today's tending brought
   // something new, the celebration names it rather than a streak milestone.
-  const tendedDays = gardenDays(state.logs, state.presets).tended;
-  const arrival = UNLOCKS.find((unlock) => unlock.day === tendedDays && gardenDays(state.logs.filter((log) => log.date !== todayKey), state.presets).tended < unlock.day)?.id;
+  const chapter = chaptersOf(state).at(-1)!;
+  const tendedDays = chapter.tended;
+  const arrival = unlocksFor(chapter.biome).find((unlock) => unlock.day === tendedDays && gardenDays(chapter.logs.filter((log) => log.date !== todayKey), state.presets).tended < unlock.day)?.id;
 
   // Each tap sends a spark of light from the orb into the garden beside it.
   const orbWrap = useRef<HTMLDivElement>(null);
@@ -165,7 +167,7 @@ export function CounterView({ state, onIncrement, onUndo, onSelect, onStartTimer
       </div>
     </section>
 
-    <LivingGardenCard state={state} onSaveNote={onSaveNote} />
+    <LivingGardenCard state={state} onSaveNote={onSaveNote} onStartGarden={onStartGarden} />
 
     <section className="switcher" aria-labelledby="switch-title"><div className="section-heading"><p className="eyebrow" id="switch-title">{t('switchDhikr')}</p></div><div className="preset-scroll">
       {state.presets.map((item) => <button className={item.id === preset.id ? 'selected' : ''} key={item.id} onClick={() => onSelect(item.id)} aria-pressed={item.id === preset.id}><span lang="ar" dir="rtl">{item.arabic}</span><b>{item.title}</b><small>{item.target > 0 ? `${counts[item.id] ?? 0} / ${item.target}` : counts[item.id] ?? 0}</small></button>)}

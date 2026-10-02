@@ -1,4 +1,4 @@
-import type { DailyLog, DhikrPreset } from '../../../domain/types';
+import type { BiomeId, DailyLog, DhikrPreset, ZikrState } from '../../../domain/types';
 
 /**
  * How the living garden grows: today by the share of the day's intention that is done, and
@@ -30,7 +30,32 @@ export const UNLOCKS = [
   { id: 'goldArch', day: 100 }
 ] as const;
 
-export type UnlockId = (typeof UNLOCKS)[number]['id'];
+/** The kampung garden: the same rhythm of arrivals, in a Malay village garden. */
+export const KAMPUNG_UNLOCKS = [
+  { id: 'firstBloom', day: 1 },
+  { id: 'steppingStones', day: 3 },
+  { id: 'lemongrass', day: 5 },
+  { id: 'wakaf', day: 7 },
+  { id: 'butterflies', day: 9 },
+  { id: 'banana', day: 12 },
+  { id: 'doveCage', day: 14 },
+  { id: 'rambutan', day: 17 },
+  { id: 'lotusPond', day: 21 },
+  { id: 'pangkin', day: 24 },
+  { id: 'coconut', day: 28 },
+  { id: 'songbirds', day: 35 },
+  { id: 'pelitaRow', day: 42 },
+  { id: 'bamboo', day: 49 },
+  { id: 'bougainvillea', day: 56 },
+  { id: 'orchids', day: 63 },
+  { id: 'fireflies', day: 70 },
+  { id: 'shootingStars', day: 84 },
+  { id: 'goldFrame', day: 100 }
+] as const;
+
+export type UnlockId = (typeof UNLOCKS)[number]['id'] | (typeof KAMPUNG_UNLOCKS)[number]['id'];
+type Unlock = { id: UnlockId; day: number };
+export const unlocksFor = (biome: BiomeId = 'andalusia'): readonly Unlock[] => (biome === 'kampung' ? KAMPUNG_UNLOCKS : UNLOCKS);
 
 /** One flower is planted for every completed day, up to the beds' capacity. */
 export const FLOWER_SLOTS = 72;
@@ -68,9 +93,12 @@ export const maturity = (days: number) => Math.min(1, 0.1 + 0.9 * Math.log(1 + M
 export const TREE_STAGE_DAYS = [0, 1, 7, 30, 75] as const;
 export const treeStage = (days: number) => TREE_STAGE_DAYS.reduce<number>((stage, from, index) => (days >= from ? index : stage), 0);
 
-export const isUnlocked = (id: UnlockId, days: number) => days >= UNLOCKS.find((unlock) => unlock.id === id)!.day;
-export const unlockedIds = (days: number) => UNLOCKS.filter((unlock) => days >= unlock.day).map((unlock) => unlock.id);
-export const nextUnlock = (days: number) => UNLOCKS.find((unlock) => unlock.day > days) ?? null;
+export const isUnlocked = (id: UnlockId, days: number, biome: BiomeId = 'andalusia') => {
+  const unlock = unlocksFor(biome).find((item) => item.id === id);
+  return !!unlock && days >= unlock.day;
+};
+export const unlockedIds = (days: number, biome: BiomeId = 'andalusia') => unlocksFor(biome).filter((unlock) => days >= unlock.day).map((unlock) => unlock.id);
+export const nextUnlock = (days: number, biome: BiomeId = 'andalusia') => unlocksFor(biome).find((unlock) => unlock.day > days) ?? null;
 export const flowerCount = (days: number) => Math.min(Math.max(0, days), FLOWER_SLOTS);
 
 /** Five moments of the day's tree: resting, first leaves, filling, in blossom, in fruit. */
@@ -141,3 +169,42 @@ export function daysAway(logs: DailyLog[], presets: DhikrPreset[], today: string
   const last = before[before.length - 1];
   return Math.round((new Date(`${today}T12:00:00`).getTime() - new Date(`${last}T12:00:00`).getTime()) / 86_400_000);
 }
+
+/**
+ * Lifetime milestones for each phrase after its grove is full, so someone who recites
+ * thousands a day always has something ahead: the trees grow taller and older with each.
+ */
+export const ORCHARD_MILESTONES = [1000, 5000, 10000, 33000, 100000] as const;
+export const orchardTier = (reps: number) => ORCHARD_MILESTONES.filter((milestone) => reps >= milestone).length;
+export const nextMilestone = (reps: number) => ORCHARD_MILESTONES.find((milestone) => milestone > reps) ?? null;
+
+/** Markers of age on a tree kept long past full growth. */
+export const AGE_MARKS = [150, 200, 365] as const;
+export const ageMarks = (full: number) => AGE_MARKS.filter((day) => full >= day).length;
+
+/** A garden is complete, and a new one can be offered, at this many tended days. */
+export const CHAPTER_DAYS = 100;
+
+export interface Chapter {
+  index: number;
+  biome: BiomeId;
+  /** First day of the garden, or null for the first garden, which holds everything before. */
+  startedOn: string | null;
+  /** The day the next garden began, or null for the garden in progress. */
+  endedBefore: string | null;
+  logs: DailyLog[];
+  tended: number;
+  full: number;
+}
+
+/** Every garden kept so far, oldest first; the last is the one in progress. */
+export function chaptersOf(state: Pick<ZikrState, 'logs' | 'presets' | 'gardens'>): Chapter[] {
+  const starts: { biome: BiomeId; startedOn: string | null }[] = [{ biome: 'andalusia', startedOn: null }, ...(state.gardens ?? [])];
+  return starts.map((start, index) => {
+    const endedBefore = starts[index + 1]?.startedOn ?? null;
+    const logs = state.logs.filter((log) => (start.startedOn === null || log.date >= start.startedOn) && (endedBefore === null || log.date < endedBefore));
+    return { index, biome: start.biome, startedOn: start.startedOn, endedBefore, logs, ...gardenDays(logs, state.presets) };
+  });
+}
+
+export const currentChapter = (state: Pick<ZikrState, 'logs' | 'presets' | 'gardens'>) => chaptersOf(state).at(-1)!;

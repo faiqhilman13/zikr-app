@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { calculateStreak } from './streak';
-import { archivePreset, clampPace, clampTarget, creditTimerReps, startTimer, stopTimer, dayKey, initialState, normalizeState, sanitizeState, totalToday, withDecrement, withIncrement } from './state';
+import { archivePreset, clampPace, clampTarget, creditTimerReps, startTimer, stopTimer, dayKey, initialState, normalizeState, sanitizeState, totalToday, withDecrement, withIncrement, withNewGarden } from './state';
 
 describe('Zikr state', () => {
   it('keeps confirmed repetitions separate from timed practice', () => {
@@ -266,5 +266,25 @@ describe('notes on a day', () => {
     expect(withNote(base, date, 'x'.repeat(500)).logs[0].note).toHaveLength(NOTE_LIMIT);
     expect(sanitizeState(JSON.parse(JSON.stringify(noted))).logs[0].note).toBe('After Fajr, quiet and clear.');
     expect(withNote(base, '1999-01-01', 'nothing to attach to')).toEqual(base);
+  });
+});
+
+describe('gardens begun', () => {
+  it('keeps only known gardens on real dates, each after the last', () => {
+    const state = sanitizeState({ ...initialState(), gardens: [
+      { biome: 'kampung', startedOn: '2026-04-11' },
+      { biome: 'mars', startedOn: '2026-05-01' },
+      { biome: 'andalusia', startedOn: '2026-04-01' },
+      { biome: 'andalusia', startedOn: 'tomorrow' },
+      { biome: 'andalusia', startedOn: '2026-08-01' }
+    ] });
+    expect(state.gardens).toEqual([{ biome: 'kampung', startedOn: '2026-04-11' }, { biome: 'andalusia', startedOn: '2026-08-01' }]);
+    expect(sanitizeState({ ...initialState(), gardens: 'x' }).gardens).toBeUndefined();
+  });
+
+  it('begins a garden today, replacing a choice made earlier the same day', () => {
+    const first = withNewGarden(initialState(), 'kampung', '2026-04-11');
+    expect(withNewGarden(first, 'andalusia', '2026-04-11').gardens).toEqual([{ biome: 'andalusia', startedOn: '2026-04-11' }]);
+    expect(withNewGarden(first, 'andalusia', '2026-08-01').gardens).toHaveLength(2);
   });
 });

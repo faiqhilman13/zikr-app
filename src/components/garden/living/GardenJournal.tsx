@@ -1,34 +1,38 @@
-import { Armchair, Bird, Citrus, Droplets, Flower, Flower2, Footprints, Grape, Lamp, LampWallDown, Lock, Moon, Sparkle, Sparkles, Sprout, TreeDeciduous, TreePalm, TreePine, Waves, X, type LucideIcon } from 'lucide-react';
+import { Bean, Bird as BirdIcon, Fence as FenceIcon, Fish, Flame, Frame, House, Images, Leaf, Armchair, Bird, Citrus, Droplets, Flower, Flower2, Footprints, Grape, Lamp, LampWallDown, Lock, Moon, Sparkle, Sparkles, Sprout, TreeDeciduous, TreePalm, TreePine, Waves, X, type LucideIcon } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { DhikrPreset } from '../../../domain/types';
+import type { BiomeId, DhikrPreset } from '../../../domain/types';
+import { DayCalendar } from './GardenChapters';
 import { useFocusTrap } from '../../../hooks/useFocusTrap';
 import { formatDays } from '../../streak/format';
-import { flowerCount, nextUnlock, ORCHARD, PLANTS_MAX, treeStage, UNLOCKS, type OrchardId, type UnlockId } from './growth';
+import { flowerCount, nextMilestone, nextUnlock, ORCHARD, PLANTS_MAX, treeStage, unlocksFor, type OrchardId, type UnlockId } from './growth';
 
 const ICONS: Record<UnlockId, LucideIcon> = {
   firstBloom: Flower2, path: Footprints, lavender: Sprout, fountain: Droplets, butterflies: Sparkle, pomegranate: TreeDeciduous,
   lantern: Lamp, lemons: Citrus, pool: Waves, bench: Armchair, palm: TreePalm, songbirds: Bird, lanternString: LampWallDown,
-  cypresses: TreePine, roses: Flower, vine: Grape, fireflies: Sparkles, shootingStars: Moon, goldArch: Sparkles
+  cypresses: TreePine, roses: Flower, vine: Grape, fireflies: Sparkles, shootingStars: Moon, goldArch: Sparkles,
+  steppingStones: Footprints, lemongrass: Leaf, wakaf: House, banana: Bean, doveCage: BirdIcon, rambutan: TreeDeciduous, lotusPond: Fish,
+  pangkin: Armchair, coconut: TreePalm, pelitaRow: Flame, bamboo: FenceIcon, bougainvillea: Flower, orchids: Flower2, goldFrame: Frame
 };
 
 /** Everything the garden holds and everything still to come: the collection that brings people back. */
-export function GardenJournal({ tended, full, orchard, presets, recent, onClose, onSelect, onFlower }: {
-  tended: number; full: number;
+export function GardenJournal({ tended, full, biome, orchard, presets, keptDays, gardens, onClose, onSelect, onFlower, onGallery }: {
+  tended: number; full: number; biome: BiomeId;
   orchard: Record<OrchardId, { phrase: string; reps: number; plants: number; next: number | null }>;
   presets: DhikrPreset[];
-  /** Recent tended days, newest first, each opening its flower. */
-  recent: string[];
-  onClose: () => void; onSelect: (id: UnlockId) => void; onFlower: (date: string) => void;
+  /** Every tended day, ever, each opening its memory. */
+  keptDays: Set<string>;
+  /** Gardens kept so far, the current one included. */
+  gardens: number;
+  onClose: () => void; onSelect: (id: UnlockId) => void; onFlower: (date: string) => void; onGallery: () => void;
 }) {
   const [why, setWhy] = useState(false);
   const phraseName = (id: string) => presets.find((preset) => preset.id === id)?.title ?? id;
   const days = tended;
   const { t, i18n } = useTranslation();
   const trapRef = useFocusTrap<HTMLElement>(onClose);
-  const short = new Intl.DateTimeFormat(i18n.language, { weekday: 'short', day: 'numeric', month: 'short' });
-  const next = nextUnlock(days);
-  const previous = [...UNLOCKS].reverse().find((unlock) => unlock.day <= days)?.day ?? 0;
+  const next = nextUnlock(days, biome);
+  const previous = [...unlocksFor(biome)].reverse().find((unlock) => unlock.day <= days)?.day ?? 0;
   const toNext = next ? (days - previous) / (next.day - previous) : 1;
   return <div className="modal-backdrop">
     <button className="backdrop-dismiss" aria-label={t('cancel')} onClick={onClose} />
@@ -46,7 +50,7 @@ export function GardenJournal({ tended, full, orchard, presets, recent, onClose,
         <div className="fine-progress"><i style={{ '--fill': toNext } as React.CSSProperties} /></div>
       </div>}
       <ul className="journal-grid">
-        {UNLOCKS.map((unlock) => {
+        {unlocksFor(biome).map((unlock) => {
           const open = days >= unlock.day;
           const Icon = open ? ICONS[unlock.id] : Lock;
           const body = <>
@@ -67,14 +71,21 @@ export function GardenJournal({ tended, full, orchard, presets, recent, onClose,
           return <li key={id}>
             <strong>{t(`orchard_${id}`)}</strong>
             <span>{grove.plants} / {PLANTS_MAX}</span>
-            <small>{grove.next === null ? t('orchardFull', { phrase: phraseName(grove.phrase) }) : t('orchardNext', { phrase: phraseName(grove.phrase), count: grove.next.toLocaleString(i18n.language) })}</small>
+            <small>{grove.next !== null
+              ? t('orchardNext', { phrase: phraseName(grove.phrase), count: grove.next.toLocaleString(i18n.language) })
+              : nextMilestone(grove.reps) !== null
+                ? t('orchardMilestone', { phrase: phraseName(grove.phrase), count: nextMilestone(grove.reps)!.toLocaleString(i18n.language), item: t(`orchard_${id}`) })
+                : t('orchardFull', { phrase: phraseName(grove.phrase) })}</small>
           </li>;
         })}</ul>
       </section>
-      {recent.length > 0 && <section className="journal-section" aria-labelledby="recent-flowers-title">
-        <h3 id="recent-flowers-title">{t('recentFlowers')}</h3>
-        <div className="recent-flowers">{recent.map((date) => <button key={date} type="button" className="quiet-button" onClick={() => onFlower(date)}>{short.format(new Date(`${date}T12:00:00`))}</button>)}</div>
+      {keptDays.size > 0 && <section className="journal-section" aria-labelledby="recent-flowers-title">
+        <h3 id="recent-flowers-title">{t('yourDays')}</h3>
+        <DayCalendar tended={keptDays} onDay={onFlower} />
       </section>}
+      <section className="journal-section">
+        <button type="button" className="quiet-button" onClick={onGallery}><Images aria-hidden="true" />{t('galleryOpen', { count: gardens })}</button>
+      </section>
       <section className="journal-section">
         <button type="button" className="text-link" aria-expanded={why} onClick={() => setWhy(!why)}>{t('whyGarden')}</button>
         {why && <div className="why-garden">

@@ -1,7 +1,7 @@
 import { Bell, Flame, Snowflake, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { FREEZE_EVERY, MAX_FREEZES, recentDays, recentLoss, type DayMark } from '../../domain/streak';
-import { gardenDays, nextUnlock, UNLOCKS } from '../garden/living/growth';
+import { currentChapter, nextUnlock, unlocksFor } from '../garden/living/growth';
 import type { ZikrState } from '../../domain/types';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { formatDays, formatTimeLeft } from './format';
@@ -16,9 +16,9 @@ export function StreakSheet({ state, onClose, onReminders }: { state: ZikrState;
   const { streak, today, status, msLeft } = useStreak(state);
   const week = recentDays({ logs: state.logs }, streak.frozenDays, today);
   // What comes next is told by the garden, the app's one story of progress.
-  const { tended } = gardenDays(state.logs, state.presets);
-  const next = nextUnlock(tended);
-  const previous = [...UNLOCKS].reverse().find((unlock) => unlock.day <= tended)?.day ?? 0;
+  const { tended, biome } = currentChapter(state);
+  const next = nextUnlock(tended, biome);
+  const previous = [...unlocksFor(biome)].reverse().find((unlock) => unlock.day <= tended)?.day ?? 0;
   const narrow = new Intl.DateTimeFormat(language, { weekday: 'narrow' });
   const full = new Intl.DateTimeFormat(language, { weekday: 'long', day: 'numeric', month: 'long' });
   const time = formatTimeLeft(msLeft, language);

@@ -797,3 +797,37 @@ input, select { max-width: 100%; min-width: 0; font: inherit; }
 .living-garden .lg-tappable, .living-garden .lg-tappable * { pointer-events: auto; }
 .lg-info { flex-wrap: wrap; align-items: center; }
 .lg-info > div:first-child { flex: 1 1 210px; min-width: 0; }
+
+/* Gardens as chapters: the offer, the chooser, the gallery, the calendar of days. */
+.lg-offer { margin: 12px 0 4px; padding: 14px 16px; border-radius: 18px; border: 1px solid color-mix(in srgb, var(--gold) 55%, transparent); background: color-mix(in srgb, var(--gold-soft) 26%, var(--surface)); }
+.lg-offer p { margin: 0 0 10px; font-size: .88rem; }
+.lg-offer strong { color: var(--gold-text); }
+.garden-chooser h2, .garden-gallery h2 { font-size: 1.9rem; margin: 2px 0 8px; }
+.biome-list, .gallery-list { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 12px; }
+.biome-option { width: 100%; display: grid; gap: 4px; text-align: start; padding: 10px; border: 1px solid var(--line); border-radius: 18px; background: var(--surface); color: var(--ink); font: inherit; cursor: pointer; }
+button.biome-option:hover { border-color: var(--gold); }
+button.biome-option:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.biome-option strong { font-size: 1rem; }
+.biome-option strong small { color: var(--muted); font-weight: 500; }
+.biome-option > span:last-child { color: var(--muted); font-size: .8rem; }
+.biome-preview { display: block; border-radius: 12px; overflow: hidden; }
+.biome-preview .living-garden { filter: none; }
+.biome-preview.locked { aspect-ratio: 4 / 3; max-height: 90px; display: grid; place-items: center; background: var(--surface-2); color: var(--muted); }
+.biome-preview.locked svg { width: 22px; }
+.biome-coming .biome-option { cursor: default; opacity: .7; }
+.gallery-list li { display: grid; grid-template-columns: 120px 1fr; gap: 12px; align-items: center; padding: 10px; border-radius: 16px; border: 1px solid var(--line); }
+.gallery-list li.current { border-color: var(--gold); }
+.gallery-list li div { display: grid; gap: 3px; }
+.gallery-list small { color: var(--muted); font-size: .74rem; }
+.gallery-painting { display: block; }
+.gallery-painting .living-garden { filter: none; }
+.day-calendar { border: 1px solid var(--line); border-radius: 16px; padding: 8px 10px 12px; }
+.calendar-head { display: flex; align-items: center; justify-content: space-between; }
+.calendar-head strong { font-size: .9rem; }
+.calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
+.calendar-weekday { color: var(--muted); font-size: .66rem; font-weight: 700; }
+.calendar-day { min-height: 34px; display: grid; place-items: center; border-radius: 10px; font-size: .78rem; color: var(--muted); }
+button.calendar-day { border: 0; font: inherit; cursor: pointer; background: color-mix(in srgb, var(--gold-soft) 40%, var(--surface)); color: var(--ink); font-weight: 700; }
+button.calendar-day:focus-visible { outline: 3px solid var(--focus); outline-offset: 1px; }
+.living-garden .lg-koi { animation: lg-koi 16s linear infinite; }
+@keyframes lg-koi { 0% { transform: translate(-26px, 1px) scaleX(1); } 48% { transform: translate(24px, -1px) scaleX(1); } 50% { transform: translate(26px, -1px) scaleX(-1); } 98% { transform: translate(-24px, 1px) scaleX(-1); } 100% { transform: translate(-26px, 1px) scaleX(1); } }

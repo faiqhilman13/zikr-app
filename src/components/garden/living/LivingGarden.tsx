@@ -1,5 +1,8 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
-import { blossomShare, flowerCount, FLOWER_SLOTS, fruitShare, isUnlocked, leafShare, maturity, ORCHARD, timeOfDay, type OrchardId, type UnlockId } from './growth';
+import type { BiomeId } from '../../../domain/types';
+import { ageMarks, blossomShare, flowerCount, FLOWER_SLOTS, fruitShare, isUnlocked, leafShare, maturity, ORCHARD, timeOfDay, type OrchardId, type UnlockId } from './growth';
+import { Bamboo, Banana, Bougainvillea, Coconut, DoveCage, Fence, KampungBackdrop, KampungFlowerHeads, KampungFrame, Lemongrass, LotusPond, Orchids, Pangkin, PelitaRow, Rambutan, SteppingStones, Wakaf } from './kampung';
+import { KAMPUNG_FRAME, kampungFocus, MANGO } from './kampungScene';
 import { mix, PALETTES, tinter, type Tint } from './palette';
 import { clamp01, lerp, seeded } from './random';
 import { branchGrowth, branchOutline, growOlive, pointOn, type Tree } from './tree';
@@ -30,6 +33,10 @@ export interface LivingGardenProps {
   rain?: boolean;
   /** A planted flower was chosen, by its planting order. */
   onFlower?: (planted: number) => void;
+  /** Which garden: the Andalusian courtyard or the kampung garden. */
+  biome?: BiomeId;
+  /** Lifetime milestones reached by each phrase, for older, taller orchard trees. */
+  orchardTiers?: Partial<Record<OrchardId, number>>;
   now: Date;
   /** The intention was completed during this visit: play the arrival of the birds. */
   celebrate: boolean;
@@ -117,7 +124,7 @@ function sunAt(now: Date) {
   return { x: lerp(40, 360, t), y: 150 - Math.sin(t * Math.PI) * 112 };
 }
 
-export function LivingGarden({ ratio, tended, full, now, celebrate, motion, fresh, freshFlower, label, focus = null, mini = false, orchard = {}, freshOrchard = [], rain = false, onFlower }: LivingGardenProps) {
+export function LivingGarden({ ratio, tended, full, now, celebrate, motion, fresh, freshFlower, label, focus = null, mini = false, orchard = {}, freshOrchard = [], rain = false, onFlower, biome = 'andalusia', orchardTiers = {} }: LivingGardenProps) {
   const id = useId().replace(/[^a-zA-Z0-9]/g, '');
   const ref = (name: string) => `${id}-${name}`;
   const url = (name: string) => `url(#${ref(name)})`;
@@ -126,21 +133,24 @@ export function LivingGarden({ ratio, tended, full, now, celebrate, motion, fres
   const tint = tinter(palette);
   const growth = maturity(full);
   const days = tended;
-  const unlocked = (unlock: UnlockId) => isUnlocked(unlock, days);
+  const kampung = biome === 'kampung';
+  const TREE = kampung ? MANGO : OLIVE;
+  const unlocked = (unlock: UnlockId) => isUnlocked(unlock, days, biome);
   const arrive = (unlock: UnlockId) => (fresh.includes(unlock) ? ' lg-arrive' : '');
   const sun = sunAt(now);
   const complete = ratio >= 1;
 
   // Leaves already out when the garden first appears fill in with a quick stagger; any
   // that arrive later, with a tap, pop in at once.
-  const [firstLeaves] = useState(() => Math.round(OLIVE.anchors.length * leafShare(ratio)));
+  const [firstLeaves] = useState(() => Math.round(TREE.anchors.length * leafShare(ratio)));
 
-  const zoom = focus ? zoomTo(focusBox(focus, growth)) : null;
-  const viewBox = mini ? crownView(growth) : `0 0 ${W} ${H}`;
+  const zoom = focus ? zoomTo((kampung && kampungFocus(focus, TREE_BASE, 0.62 + 0.4 * growth)) || focusBox(focus, growth)) : null;
+  const viewBox = mini ? crownView(growth, TREE) : `0 0 ${W} ${H}`;
 
   return <svg className={`living-garden${motion ? '' : ' still'}${mini ? ' mini' : ''}${complete ? ' complete' : ''} time-${time}`} viewBox={viewBox} role="img" aria-label={label} preserveAspectRatio="xMidYMid slice">
     <defs>
-      <clipPath id={ref('arch')}><path d={ARCH} /></clipPath>
+      <clipPath id={ref('arch')}><path d={kampung ? KAMPUNG_FRAME : ARCH} /></clipPath>
+      <linearGradient id={ref('grass')} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor={tint(mix(palette.groundTop, '#86ad55', 0.62))} /><stop offset="1" stopColor={tint(mix(palette.groundBottom, '#5f8a3e', 0.6))} /></linearGradient>
       <linearGradient id={ref('sky')} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor={palette.skyTop} /><stop offset="1" stopColor={palette.skyBottom} /></linearGradient>
       <linearGradient id={ref('soil')} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor={tint('#6f5238')} /><stop offset="1" stopColor={tint('#8c6a47')} /></linearGradient>
       <linearGradient id={ref('ground')} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor={palette.groundTop} /><stop offset="1" stopColor={palette.groundBottom} /></linearGradient>
@@ -159,8 +169,11 @@ export function LivingGarden({ ratio, tended, full, now, celebrate, motion, fres
       {SPRAYS.map((angles, variant) => <g key={variant} id={ref(`spray${variant}`)}>
         {angles.map((angle, i) => <path key={i} d={LEAF} transform={`rotate(${angle}) translate(0 -${1.2 + (i % 2)})`} fill={i % 3 === 1 ? tint('#c9d2b9') : 'currentColor'} opacity={i % 3 === 1 ? 0.85 : 1} />)}
       </g>)}
+      {SPRAYS.map((angles, variant) => <g key={`m${variant}`} id={ref(`mspray${variant}`)}>
+        {angles.slice(0, 5).map((angle, i) => <path key={i} d={MANGO_LEAF} transform={`rotate(${angle * 0.8}) translate(0 -${1 + (i % 2)})`} fill={i % 4 === 2 ? tint('#9cbf6a') : 'currentColor'} />)}
+      </g>)}
       <g id={ref('blossom')}>{[0, 72, 144, 216, 288].map((a) => <ellipse key={a} rx="1.05" ry="1.7" cy="-1.5" transform={`rotate(${a})`} fill={tint('#fbf6e4')} />)}<circle r=".8" fill={tint('#e9c44f')} /></g>
-      <FlowerHeads tint={tint} prefix={ref('flower')} />
+      {kampung ? <KampungFlowerHeads tint={tint} prefix={ref('flower')} /> : <FlowerHeads tint={tint} prefix={ref('flower')} />}
       <g id={ref('bird')}>
         <path d="M-5 0 C-3 -3.2 2 -3.4 4.2 -1.2 L6.4 -1.6 L4.8 0.2 C3 2.2 -2.8 2.4 -5 0 Z" fill={tint('#5b4a3f')} />
         <path d="M-1.5 -1 C0 -4.5 2.5 -4.2 3.5 -2" fill="none" stroke={tint('#3e322b')} strokeWidth=".9" strokeLinecap="round" />
@@ -187,21 +200,28 @@ export function LivingGarden({ ratio, tended, full, now, celebrate, motion, fres
       </g>
 
       {/* The land beyond the wall */}
-      <path d="M0 176 C40 150 90 158 130 168 C180 150 230 146 280 162 C320 150 360 152 400 164 L400 210 L0 210 Z" fill={palette.hillFar} />
-      <Skyline fill={palette.skyline} />
-      <path d="M0 192 C50 176 110 184 160 190 C220 180 280 178 330 188 C360 182 385 184 400 186 L400 212 L0 212 Z" fill={palette.hillNear} />
-      {!mini && <Orchard orchard={orchard} fresh={freshOrchard} tint={tint} />}
+      {kampung ? <KampungBackdrop palette={palette} /> : <>
+        <path d="M0 176 C40 150 90 158 130 168 C180 150 230 146 280 162 C320 150 360 152 400 164 L400 210 L0 210 Z" fill={palette.hillFar} />
+        <Skyline fill={palette.skyline} />
+        <path d="M0 192 C50 176 110 184 160 190 C220 180 280 178 330 188 C360 182 385 184 400 186 L400 212 L0 212 Z" fill={palette.hillNear} />
+      </>}
+      {!mini && <Orchard orchard={orchard} tiers={orchardTiers} fresh={freshOrchard} tint={tint} />}
+      {unlocked('bamboo') && <Bamboo tint={tint} className={arrive('bamboo')} />}
       {unlocked('cypresses') && <g className={arrive('cypresses')}><Cypress x={74} tint={tint} /><Cypress x={318} tint={tint} tall /></g>}
       {unlocked('palm') && <Palm tint={tint} className={`lg-palm${arrive('palm')}`} />}
 
       {/* The courtyard */}
-      <rect y="194" width={W} height="22" fill={tint(palette.wall)} />
-      <rect y="194" width={W} height="2.4" fill={tint(palette.wallShade)} />
-      <rect y="199" width={W} height="8" fill={url('tiles')} />
-      <rect y="214" width={W} height="3" fill={tint(palette.wallShade)} opacity=".7" />
+      {kampung ? <Fence tint={tint} /> : <>
+        <rect y="194" width={W} height="22" fill={tint(palette.wall)} />
+        <rect y="194" width={W} height="2.4" fill={tint(palette.wallShade)} />
+        <rect y="199" width={W} height="8" fill={url('tiles')} />
+        <rect y="214" width={W} height="3" fill={tint(palette.wallShade)} opacity=".7" />
+      </>}
+      {unlocked('bougainvillea') && <Bougainvillea tint={tint} className={arrive('bougainvillea')} />}
       {!mini && (orchard.rose ?? 0) > 0 && <ClimbingRoses count={orchard.rose ?? 0} fresh={freshOrchard.includes('rose')} tint={tint} />}
       {unlocked('lanternString') && <LanternString tint={tint} glow={url('lamp')} lit={palette.night ? 1 : time === 'golden' ? 0.6 : 0} className={arrive('lanternString')} />}
-      <rect y="216" width={W} height={H - 216} fill={url('ground')} />
+      <rect y="216" width={W} height={H - 216} fill={url(kampung ? 'grass' : 'ground')} />
+      {unlocked('pelitaRow') && <PelitaRow tint={tint} glow={url('lamp')} lit={palette.night ? 1 : time === 'golden' ? 0.6 : 0} className={arrive('pelitaRow')} />}
       <GroundTexture tint={tint} />
       <Beds tint={tint} url={url('soil')} />
 
@@ -221,8 +241,18 @@ export function LivingGarden({ ratio, tended, full, now, celebrate, motion, fres
       {unlocked('roses') && <g className={arrive('roses')}><Roses x={26} tint={tint} /><Roses x={374} tint={tint} /></g>}
       {unlocked('lavender') && <g className={`lg-lavender${arrive('lavender')}`}><Lavender x={164} y={262} tint={tint} /><Lavender x={236} y={262} tint={tint} flip /></g>}
 
+      {unlocked('banana') && <g className={arrive('banana')}><Banana x={22} tint={tint} /></g>}
+      {unlocked('coconut') && <Coconut tint={tint} className={arrive('coconut')} />}
+      {unlocked('lotusPond') && <LotusPond tint={tint} motion={motion} water={url('water')} className={arrive('lotusPond')} />}
+      {unlocked('wakaf') && <Wakaf tint={tint} className={arrive('wakaf')} />}
+      {unlocked('steppingStones') && <SteppingStones tint={tint} className={arrive('steppingStones')} />}
+      {unlocked('pangkin') && <Pangkin tint={tint} className={arrive('pangkin')} />}
+      {unlocked('rambutan') && <Rambutan tint={tint} days={days} spray={ref('mspray1')} className={arrive('rambutan')} />}
+      {unlocked('lemongrass') && <g className={arrive('lemongrass')}><Lemongrass x={166} y={262} tint={tint} /><Lemongrass x={234} y={262} tint={tint} /></g>}
+      {unlocked('doveCage') && <DoveCage tint={tint} className={arrive('doveCage')} />}
       {complete && <circle className="lg-bloom" cx={TREE_BASE.x} cy={TREE_BASE.y - 120 * (0.25 + 0.75 * growth)} r={40 + 90 * growth} fill={url('bloom')} />}
-      <Olive tree={OLIVE} tint={tint} growth={growth} ratio={ratio} sprayRef={ref('spray')} blossom={ref('blossom')} firstLeaves={firstLeaves} />
+      <Olive tree={TREE} tint={tint} growth={growth} ratio={ratio} sprayRef={ref(kampung ? 'mspray' : 'spray')} blossom={ref('blossom')} firstLeaves={firstLeaves} kind={kampung ? 'mango' : 'olive'} age={ageMarks(full)} />
+      {unlocked('orchids') && <Orchids tint={tint} at={{ x: TREE_BASE.x + pointOn(MANGO.branches[0], 0.75).x * (0.62 + 0.4 * growth), y: TREE_BASE.y + pointOn(MANGO.branches[0], 0.75).y * (0.62 + 0.4 * growth) }} className={arrive('orchids')} />}
       {unlocked('lantern') && <Lantern tint={tint} glow={url('lamp')} lit={palette.night ? 1 : time === 'golden' ? 0.55 : time === 'dawn' ? 0.3 : 0} className={arrive('lantern')} growth={growth} />}
 
       {!mini && <g className="lg-flowers">
@@ -252,7 +282,7 @@ export function LivingGarden({ ratio, tended, full, now, celebrate, motion, fres
         <Butterfly motion={motion} color={tint('#6f8fe6')} path="M300 256 C330 226 370 244 352 270 C334 292 290 282 300 256 Z" dur={17} />
       </g>}
 
-      <Birds bird={ref('bird')} resident={unlocked('songbirds')} visitors={complete} arriving={celebrate && motion} growth={growth} />
+      <Birds tree={TREE} bird={ref('bird')} resident={unlocked('songbirds')} visitors={complete} arriving={celebrate && motion} growth={growth} />
 
       {unlocked('vine') && <Vine tint={tint} className={arrive('vine')} />}
 
@@ -266,7 +296,9 @@ export function LivingGarden({ ratio, tended, full, now, celebrate, motion, fres
       </g>
     </g>
 
-    {!mini && <ArchFrame gold={url('gold')} golden={unlocked('goldArch')} className={arrive('goldArch')} />}
+    {!mini && (kampung
+      ? <KampungFrame gold={url('gold')} golden={unlocked('goldFrame')} className={arrive('goldFrame')} />
+      : <ArchFrame gold={url('gold')} golden={unlocked('goldArch')} className={arrive('goldArch')} />)}
   </svg>;
 }
 
@@ -345,9 +377,16 @@ function FlowerHeads({ tint, prefix }: { tint: Tint; prefix: string }) {
 
 const LEAF_TONES = ['#5c774c', '#6b8657', '#7b9463', '#8ba571'];
 
-function Olive({ tree, tint, growth, ratio, sprayRef, blossom, firstLeaves }: {
+const MANGO_TONES = ['#2f5f2c', '#3b6f33', '#467d3a', '#558b44'];
+const MANGO_LEAF = 'M0 0 C2 -3.4 2 -10 0 -13.5 C-2 -10 -2 -3.4 0 0 Z';
+
+function Olive({ tree, tint, growth, ratio, sprayRef, blossom, firstLeaves, kind = 'olive', age = 0 }: {
   tree: Tree; tint: Tint; growth: number; ratio: number; sprayRef: string; blossom: string; firstLeaves: number;
+  kind?: 'olive' | 'mango';
+  /** Marks of age on a tree kept long past full growth: a nest, a hollow, a golden crown. */
+  age?: number;
 }) {
+  const tones = kind === 'mango' ? MANGO_TONES : LEAF_TONES;
   const scale = 0.62 + 0.4 * growth;
   const width = 0.22 + 0.78 * Math.pow(growth, 1.2);
   const grown = tree.branches.map((branch) => branchGrowth(branch, growth, tree.maxDepth));
@@ -371,13 +410,24 @@ function Olive({ tree, tint, growth, ratio, sprayRef, blossom, firstLeaves }: {
       {/* Bark: the twisting grain of old olive wood */}
       {tree.branches.slice(0, 4).map((branch, i) => grown[i] > 0.2 && <path key={i} d={`M${branch.x0 - 2} ${branch.y0} Q${branch.cx - 1} ${branch.cy} ${lerp(branch.x0, branch.x1, grown[i]) - 1} ${lerp(branch.y0, branch.y1, grown[i])}`} stroke={tint('#4d3f33')} strokeWidth={1.2 * width + 0.3} fill="none" opacity=".55" />)}
       {tree.branches.slice(0, 2).map((branch, i) => grown[i] > 0.3 && <path key={i} d={`M${branch.x0 + 3 * width} ${branch.y0} Q${branch.cx + 2} ${branch.cy} ${lerp(branch.x0, branch.x1, grown[i]) + 2} ${lerp(branch.y0, branch.y1, grown[i])}`} stroke={tint('#93806a')} strokeWidth={0.9 * width + 0.2} fill="none" opacity=".45" />)}
-      {young && [0, 1, 2, 3].map((i) => <g key={`sprout${i}`} transform={`translate(${tip.x} ${tip.y}) rotate(${-60 + i * 40}) scale(.8)`}><use href={`#${sprayRef}${i % 3}`} className="lg-leaf" style={{ color: tint(LEAF_TONES[i]) }} /></g>)}
+      {age >= 3 && <circle cx={(tree.branches[0].x1).toFixed(1)} cy={(tree.branches[0].y1 - 40).toFixed(1)} r="70" fill="#ffd66b" opacity=".16" className="lg-bloom" />}
+      {age >= 2 && grown[0] >= 1 && <ellipse cx={(tree.branches[0].cx * 0.6).toFixed(1)} cy={(tree.branches[0].cy).toFixed(1)} rx={2.6 * width + 1} ry={4.2 * width + 1.4} fill={tint('#3a2c22')} opacity=".85" />}
+      {age >= 1 && (() => {
+        const fork = tree.branches.find((branch) => branch.depth === 2 && branch.x1 < 0) ?? tree.branches[1];
+        return grown[tree.branches.indexOf(fork)] >= 1 && <g transform={`translate(${fork.x1.toFixed(1)} ${(fork.y1 + 1).toFixed(1)})`}>
+          <ellipse rx="6" ry="2.6" fill={tint('#7a5a3a')} /><path d="M-6 -.4 C-3 -2.4 3 -2.4 6 -.4" stroke={tint('#5a4028')} strokeWidth=".8" fill="none" />
+          <circle cx="-1.6" cy="-1.4" r="1.1" fill="#e9e2d0" /><circle cx="1" cy="-1.6" r="1.1" fill="#dcd2bd" />
+        </g>;
+      })()}
+      {young && [0, 1, 2, 3].map((i) => <g key={`sprout${i}`} transform={`translate(${tip.x} ${tip.y}) rotate(${-60 + i * 40}) scale(.8)`}><use href={`#${sprayRef}${i % 3}`} className="lg-leaf" style={{ color: tint(tones[i]) }} /></g>)}
       {showing.map((anchor) => <g key={anchor.order} transform={`translate(${anchor.x.toFixed(1)} ${anchor.y.toFixed(1)}) rotate(${anchor.rotate.toFixed(0)}) scale(${anchor.scale.toFixed(2)})`}>
-        <use href={`#${sprayRef}${anchor.variant}`} className="lg-leaf" style={{ color: tint(LEAF_TONES[anchor.tone]), animationDelay: anchor.order < firstLeaves ? `${Math.round((anchor.order / Math.max(firstLeaves, 1)) * 900)}ms` : '0ms' }} />
+        <use href={`#${sprayRef}${anchor.variant}`} className="lg-leaf" style={{ color: tint(tones[anchor.tone]), animationDelay: anchor.order < firstLeaves ? `${Math.round((anchor.order / Math.max(firstLeaves, 1)) * 900)}ms` : '0ms' }} />
       </g>)}
       {flowering.slice(0, blossoms).map((anchor) => <g key={`b${anchor.order}`} transform={`translate(${(anchor.x + 3).toFixed(1)} ${(anchor.y - 2).toFixed(1)})`}><use href={`#${blossom}`} className="lg-pop" /></g>)}
       {fruiting.slice(0, fruit).map((anchor) => <g key={`f${anchor.order}`} transform={`translate(${(anchor.x - 2).toFixed(1)} ${(anchor.y + 3).toFixed(1)})`}>
-        <g className="lg-pop"><ellipse rx="1.9" ry="2.5" fill={tint(ripe ? '#3b2940' : '#7f8f3a')} /><ellipse cx="-.6" cy="-.9" rx=".5" ry=".8" fill="#fff" opacity=".45" /></g>
+        {kind === 'mango'
+          ? <g className="lg-pop"><path d="M0 -3.4 C2.6 -3.4 3.2 0 2.4 2.4 C1.6 4.2 -1.6 4.4 -2.4 2.2 C-3 .2 -2.2 -3.4 0 -3.4 Z" fill={tint(ripe ? '#f2a33a' : '#8fb04a')} /><ellipse cx="-.8" cy="-1" rx=".6" ry="1" fill="#fff" opacity=".4" /></g>
+          : <g className="lg-pop"><ellipse rx="1.9" ry="2.5" fill={tint(ripe ? '#3b2940' : '#7f8f3a')} /><ellipse cx="-.6" cy="-.9" rx=".5" ry=".8" fill="#fff" opacity=".45" /></g>}
       </g>)}
     </g>
   </g>;
@@ -488,9 +538,9 @@ function FlyingBird({ bird, flip, delay, duration, path }: { bird: string; flip:
   </g>;
 }
 
-function Birds({ bird, resident, visitors, arriving, growth }: { bird: string; resident: boolean; visitors: boolean; arriving: boolean; growth: number }) {
+function Birds({ tree, bird, resident, visitors, arriving, growth }: { tree: Tree; bird: string; resident: boolean; visitors: boolean; arriving: boolean; growth: number }) {
   const scale = 0.62 + 0.4 * growth;
-  const limbs = OLIVE.branches.filter((branch) => branch.depth === 3 && branchGrowth(branch, growth, OLIVE.maxDepth) >= 1);
+  const limbs = tree.branches.filter((branch) => branch.depth === 3 && branchGrowth(branch, growth, tree.maxDepth) >= 1);
   const perch = (index: number) => {
     // Too young to hold a bird: they wait on the wall beside it instead.
     if (!limbs.length) return { x: TREE_BASE.x + (index - 1) * 26 + (index % 2 ? 10 : -10), y: 193 };
@@ -642,11 +692,11 @@ function zoomTo(box: Box) {
 }
 
 /** A square view around the tree as it stands, crown and trunk, for the small window beside the counter. */
-function crownView(growth: number) {
+function crownView(growth: number, tree: Tree = OLIVE) {
   const scale = 0.62 + 0.4 * growth;
   let top = 0; let left = 0; let right = 0;
-  OLIVE.branches.forEach((branch) => {
-    const grown = branchGrowth(branch, growth, OLIVE.maxDepth);
+  tree.branches.forEach((branch) => {
+    const grown = branchGrowth(branch, growth, tree.maxDepth);
     if (grown <= 0) return;
     const end = pointOn(branch, grown);
     top = Math.min(top, end.y - 12); left = Math.min(left, end.x - 12); right = Math.max(right, end.x + 12);
@@ -665,17 +715,19 @@ const ORCHARD_SLOTS: Record<Exclude<OrchardId, 'rose'>, number[]> = (() => {
   const kinds = ['palm', 'fig', 'cypress', 'olive'] as const;
   const random = seeded(77);
   const xs = Array.from({ length: 20 }, (_, i) => 14 + i * 19.4 + (random() - 0.5) * 6);
-  return Object.fromEntries(kinds.map((kind, k) => [kind, [0, 1, 2, 3, 4].map((n) => xs[(n * 4 + k * 3 + n) % 20])])) as Record<Exclude<OrchardId, 'rose'>, number[]>;
+  // The first four of each kind interleave; the fifth takes one of the four places left over.
+  return Object.fromEntries(kinds.map((kind, k) => [kind, [0, 1, 2, 3, 4].map((n) => xs[n === 4 ? 2 + k * 5 : (n * 5 + k * 3) % 20])])) as Record<Exclude<OrchardId, 'rose'>, number[]>;
 })();
 
-function Orchard({ orchard, fresh, tint }: { orchard: Partial<Record<OrchardId, number>>; fresh: readonly OrchardId[]; tint: Tint }) {
+function Orchard({ orchard, tiers = {}, fresh, tint }: { orchard: Partial<Record<OrchardId, number>>; tiers?: Partial<Record<OrchardId, number>>; fresh: readonly OrchardId[]; tint: Tint }) {
   const trees: { kind: Exclude<OrchardId, 'rose'>; x: number; newest: boolean }[] = [];
   for (const { id } of ORCHARD) {
     if (id === 'rose') continue;
     const count = orchard[id] ?? 0;
     ORCHARD_SLOTS[id].slice(0, count).forEach((x, n) => trees.push({ kind: id, x, newest: fresh.includes(id) && n === count - 1 }));
   }
-  return <g className="lg-orchard">{trees.sort((a, b) => a.x - b.x).map(({ kind, x, newest }) => <g key={`${kind}${x}`} transform={`translate(${x.toFixed(1)} 197)`}>
+  // Each lifetime milestone a phrase passes makes its trees a little taller and older.
+  return <g className="lg-orchard">{trees.sort((a, b) => a.x - b.x).map(({ kind, x, newest }) => <g key={`${kind}${x}`} transform={`translate(${x.toFixed(1)} 197) scale(${(1 + 0.13 * (tiers[kind] ?? 0)).toFixed(2)})`}>
     <g className={`lg-flower slow${newest ? ' lg-arrive' : ''}`}>
       {kind === 'palm' && <g>
         <path d="M0 0 C-1 -10 1 -20 4 -28 L5.5 -27.6 C3 -20 1.6 -10 1.8 0 Z" fill={tint('#8a6d4a')} />
