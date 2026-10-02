@@ -125,7 +125,7 @@ describe('gardens kept over hundreds of days', () => {
   });
 
   it('gives every garden something new as often as the first, ending in a golden frame', () => {
-    const golden = { andalusia: 'goldArch', kampung: 'goldFrame', damascus: 'goldLintel', medina: 'goldPosts', ottoman: 'goldTiles' } as const;
+    const golden = { andalusia: 'goldArch', kampung: 'goldFrame', damascus: 'goldLintel', medina: 'goldPosts', ottoman: 'goldTiles', xian: 'goldMoonGate', agra: 'goldPietra', samarkand: 'goldMajolica', djenne: 'goldPinnacles' } as const;
     for (const biome of BIOMES) {
       expect(nextUnlock(0, biome)?.id).toBe('firstBloom');
       expect(unlocksFor(biome).map((unlock) => unlock.day)).toEqual(UNLOCKS.map((unlock) => unlock.day));

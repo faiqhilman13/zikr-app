@@ -122,10 +122,104 @@ export const OTTOMAN_UNLOCKS = [
   { id: 'goldTiles', day: 100 }
 ] as const;
 
+/** The Xi'an garden: a Chinese courtyard by the Great Mosque, seen through a moon gate. */
+export const XIAN_UNLOCKS = [
+  { id: 'firstBloom', day: 1 },
+  { id: 'hexPavers', day: 3 },
+  { id: 'peonies', day: 5 },
+  { id: 'koiPond', day: 7 },
+  { id: 'butterflies', day: 9 },
+  { id: 'taihuRocks', day: 12 },
+  { id: 'redLanterns', day: 14 },
+  { id: 'zigzagBridge', day: 17 },
+  { id: 'stele', day: 21 },
+  { id: 'pailou', day: 24 },
+  { id: 'xianBamboo', day: 28 },
+  { id: 'songbirds', day: 35 },
+  { id: 'cranes', day: 42 },
+  { id: 'tingPavilion', day: 49 },
+  { id: 'pondLotus', day: 56 },
+  { id: 'wisteria', day: 63 },
+  { id: 'fireflies', day: 70 },
+  { id: 'shootingStars', day: 84 },
+  { id: 'goldMoonGate', day: 100 }
+] as const;
+
+/** The Mughal garden before the Taj Mahal: a charbagh of water, cypress and flowers. */
+export const AGRA_UNLOCKS = [
+  { id: 'firstBloom', day: 1 },
+  { id: 'channelWater', day: 3 },
+  { id: 'fountainJets', day: 5 },
+  { id: 'cypressAvenue', day: 7 },
+  { id: 'butterflies', day: 9 },
+  { id: 'chhatri', day: 12 },
+  { id: 'diyas', day: 14 },
+  { id: 'peacock', day: 17 },
+  { id: 'lotusBasin', day: 21 },
+  { id: 'marbleBench', day: 24 },
+  { id: 'parakeets', day: 28 },
+  { id: 'songbirds', day: 35 },
+  { id: 'jaali', day: 42 },
+  { id: 'roseParterre', day: 49 },
+  { id: 'reflection', day: 56 },
+  { id: 'champa', day: 63 },
+  { id: 'fireflies', day: 70 },
+  { id: 'shootingStars', day: 84 },
+  { id: 'goldPietra', day: 100 }
+] as const;
+
+/** The Samarkand garden below the Registan: an orchard with a tapchan to sit on. */
+export const SAMARKAND_UNLOCKS = [
+  { id: 'firstBloom', day: 1 },
+  { id: 'ariq', day: 3 },
+  { id: 'roseRows', day: 5 },
+  { id: 'tapchan', day: 7 },
+  { id: 'butterflies', day: 9 },
+  { id: 'choynak', day: 12 },
+  { id: 'suzani', day: 14 },
+  { id: 'grapeTrellis', day: 17 },
+  { id: 'melons', day: 21 },
+  { id: 'anor', day: 24 },
+  { id: 'hoopoe', day: 28 },
+  { id: 'songbirds', day: 35 },
+  { id: 'uzbekLanterns', day: 42 },
+  { id: 'mulberry', day: 49 },
+  { id: 'ceramics', day: 56 },
+  { id: 'illumination', day: 63 },
+  { id: 'fireflies', day: 70 },
+  { id: 'shootingStars', day: 84 },
+  { id: 'goldMajolica', day: 100 }
+] as const;
+
+/** The Djenné garden: a Sahel garden beneath the Great Mosque of mud. */
+export const DJENNE_UNLOCKS = [
+  { id: 'firstBloom', day: 1 },
+  { id: 'canari', day: 3 },
+  { id: 'bissap', day: 5 },
+  { id: 'granary', day: 7 },
+  { id: 'butterflies', day: 9 },
+  { id: 'acacia', day: 12 },
+  { id: 'calabash', day: 14 },
+  { id: 'pirogue', day: 17 },
+  { id: 'weaverNests', day: 21 },
+  { id: 'millet', day: 24 },
+  { id: 'bogolan', day: 28 },
+  { id: 'songbirds', day: 35 },
+  { id: 'sahelLamps', day: 42 },
+  { id: 'sahelMango', day: 49 },
+  { id: 'guineaFowl', day: 56 },
+  { id: 'waterLilies', day: 63 },
+  { id: 'fireflies', day: 70 },
+  { id: 'shootingStars', day: 84 },
+  { id: 'goldPinnacles', day: 100 }
+] as const;
+
 export type UnlockId = (typeof UNLOCKS)[number]['id'] | (typeof KAMPUNG_UNLOCKS)[number]['id'] | (typeof DAMASCUS_UNLOCKS)[number]['id']
-  | (typeof MEDINA_UNLOCKS)[number]['id'] | (typeof OTTOMAN_UNLOCKS)[number]['id'];
+  | (typeof MEDINA_UNLOCKS)[number]['id'] | (typeof OTTOMAN_UNLOCKS)[number]['id'] | (typeof XIAN_UNLOCKS)[number]['id']
+  | (typeof AGRA_UNLOCKS)[number]['id'] | (typeof SAMARKAND_UNLOCKS)[number]['id'] | (typeof DJENNE_UNLOCKS)[number]['id'];
 type Unlock = { id: UnlockId; day: number };
-const BY_BIOME: Record<BiomeId, readonly Unlock[]> = { andalusia: UNLOCKS, kampung: KAMPUNG_UNLOCKS, damascus: DAMASCUS_UNLOCKS, medina: MEDINA_UNLOCKS, ottoman: OTTOMAN_UNLOCKS };
+const BY_BIOME: Record<BiomeId, readonly Unlock[]> = { andalusia: UNLOCKS, kampung: KAMPUNG_UNLOCKS, damascus: DAMASCUS_UNLOCKS, medina: MEDINA_UNLOCKS, ottoman: OTTOMAN_UNLOCKS,
+  xian: XIAN_UNLOCKS, agra: AGRA_UNLOCKS, samarkand: SAMARKAND_UNLOCKS, djenne: DJENNE_UNLOCKS };
 export const unlocksFor = (biome: BiomeId = 'andalusia'): readonly Unlock[] => BY_BIOME[biome] ?? UNLOCKS;
 
 /** One flower is planted for every completed day, up to the beds' capacity. */

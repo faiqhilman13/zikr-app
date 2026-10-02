@@ -73,7 +73,7 @@ export interface AnalyticsEvent {
   metadata?: Record<string, string | number | boolean>;
 }
 
-export type BiomeId = 'andalusia' | 'kampung' | 'damascus' | 'medina' | 'ottoman';
+export type BiomeId = 'andalusia' | 'kampung' | 'damascus' | 'medina' | 'ottoman' | 'xian' | 'agra' | 'samarkand' | 'djenne';
 
 export interface GardenChapter {
   biome: BiomeId;

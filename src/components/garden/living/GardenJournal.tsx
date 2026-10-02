@@ -1,4 +1,4 @@
-import { Bean, Bird as BirdIcon, Fence as FenceIcon, Fish, Flame, Frame, House, Images, Leaf, Armchair, Bird, Citrus, Droplets, Flower, Flower2, Footprints, Grape, Lamp, LampWallDown, Lock, Moon, Sparkle, Sparkles, Sprout, TreeDeciduous, TreePalm, TreePine, Waves, X, Grid3x3, Sofa, Coffee, Landmark, Sailboat, Tent, Cherry, Feather, Columns3, Sun, Gem, ShoppingBasket, Trees, Droplet, Rose, Amphora, LampCeiling, type LucideIcon } from 'lucide-react';
+import { Bean, Bird as BirdIcon, Fence as FenceIcon, Fish, Flame, Frame, House, Images, Leaf, Armchair, Bird, Citrus, Droplets, Flower, Flower2, Footprints, Grape, Lamp, LampWallDown, Lock, Moon, Sparkle, Sparkles, Sprout, TreeDeciduous, TreePalm, TreePine, Waves, X, Grid3x3, Sofa, Coffee, Landmark, Sailboat, Tent, Cherry, Feather, Columns3, Sun, Gem, ShoppingBasket, Trees, Droplet, Rose, Amphora, LampCeiling, Mountain, Ship, Wheat, Shell, Fan, Landmark as Gate, Bean as Seed, type LucideIcon } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { BiomeId, DhikrPreset } from '../../../domain/types';
@@ -18,7 +18,15 @@ const ICONS: Record<UnlockId, LucideIcon> = {
   channels: Waves, mint: Leaf, well: Droplet, youngPalms: TreePalm, fanous: Lamp, camel: Tent, arish: Tent, dallah: Coffee, medinaDoves: BirdIcon,
   wallLamps: Flame, dateBaskets: ShoppingBasket, taifRoses: Rose, grove: Trees, goldPosts: Frame,
   boxHedges: FenceIcon, hyacinths: Sprout, cesme: Droplets, kiosk: Landmark, caiques: Sailboat, carnations: Amphora, havuz: Waves, divan: Sofa,
-  cypressRow: TreePine, tulipLamps: Flame, storks: Feather, ottomanRoses: Rose, erguvan: Gem, goldTiles: Frame
+  cypressRow: TreePine, tulipLamps: Flame, storks: Feather, ottomanRoses: Rose, erguvan: Gem, goldTiles: Frame,
+  hexPavers: Footprints, peonies: Flower, koiPond: Fish, taihuRocks: Mountain, redLanterns: Lamp, zigzagBridge: Waves, stele: Landmark, pailou: Gate,
+  xianBamboo: FenceIcon, cranes: BirdIcon, tingPavilion: Tent, pondLotus: Flower2, wisteria: Grape, goldMoonGate: Frame,
+  channelWater: Waves, fountainJets: Droplets, cypressAvenue: TreePine, chhatri: Landmark, diyas: Flame, peacock: Feather, lotusBasin: Flower2,
+  marbleBench: Armchair, parakeets: BirdIcon, jaali: Grid3x3, roseParterre: Rose, reflection: Sun, champa: Flower, goldPietra: Frame,
+  ariq: Waves, roseRows: Rose, tapchan: Sofa, choynak: Coffee, suzani: Fan, grapeTrellis: Grape, melons: Seed, anor: Cherry, hoopoe: BirdIcon,
+  uzbekLanterns: LampCeiling, mulberry: TreeDeciduous, ceramics: Amphora, illumination: Sparkles, goldMajolica: Frame,
+  canari: Amphora, bissap: Flower, granary: House, acacia: TreeDeciduous, calabash: Shell, pirogue: Ship, weaverNests: BirdIcon, millet: Wheat,
+  bogolan: Grid3x3, sahelLamps: Flame, sahelMango: TreeDeciduous, guineaFowl: BirdIcon, waterLilies: Flower2, goldPinnacles: Frame
 };
 
 /** Everything the garden holds and everything still to come: the collection that brings people back. */

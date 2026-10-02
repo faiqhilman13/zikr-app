@@ -20,6 +20,8 @@ type Look = {
   leaf: string; tones: string[]; bark: [string, string]; grain: string;
   /** Leaves per spray, and how far they fan. */
   per: number; fan: number;
+  /** Leaf sprays drawn larger, for big-leaved or clumped trees. */
+  leafScale?: number;
   /** A paler leaf mixed in, such as the silver underside of an olive. */
   pale?: string;
   blossom: string; fruit: (ripe: boolean, tint: Tint) => ReactNode;
@@ -45,6 +47,26 @@ const LOOKS: Record<Exclude<HeroKind, 'palm'>, Look> = {
     leaf: 'M0 0 L-.8 -2.6 L-4.6 -3.4 L-3 -5.4 L-5.4 -8.4 L-1.8 -7.8 L0 -11.4 L1.8 -7.8 L5.4 -8.4 L3 -5.4 L4.6 -3.4 L.8 -2.6 Z',
     tones: ['#4c7f33', '#5a8d3b', '#679944', '#76a64c'], bark: ['#8d8170', '#a19582'], grain: '#6e6352', per: 6, fan: 1.1, blossom: '#c9d68a',
     fruit: (ripe, tint) => <><path d="M0 -4 V0" stroke={tint('#6e5a3e')} strokeWidth=".4" /><circle r="1.9" fill={tint(ripe ? '#a8804a' : '#9fb35a')} /><circle r="1.9" fill="none" stroke={tint('#6e5a3e')} strokeWidth=".3" strokeDasharray=".4 .5" /></>
+  },
+  plum: {
+    leaf: 'M0 0 C1.8 -2 1.9 -5.6 0 -7.6 C-1.9 -5.6 -1.8 -2 0 0 Z', tones: ['#5a8a3c', '#679646', '#4f7d36', '#73a24e'],
+    bark: ['#3e2f2a', '#4a3830'], grain: '#2a1f1b', per: 5, fan: 1.2, blossom: '#f7c2d4',
+    fruit: (ripe, tint) => <><circle r="2" fill={tint(ripe ? '#e8b832' : '#b8c24a')} /><circle cx="-.6" cy="-.7" r=".6" fill="#fff" opacity=".4" /></>
+  },
+  pomegranate: {
+    leaf: 'M0 0 C1.4 -2.6 1.5 -7.4 0 -10 C-1.5 -7.4 -1.4 -2.6 0 0 Z', tones: ['#2f6a2c', '#3a7634', '#46823c', '#2a5e28'],
+    bark: ['#7a5b45', '#835f47'], grain: '#5a4030', per: 6, fan: 0.9, pale: '#5d9a48', blossom: '#e8452c',
+    fruit: (ripe, tint) => <><circle r="2.8" fill={tint(ripe ? '#c3262f' : '#c9a24a')} /><path d="M-1 -2.6 L0 -4 L1 -2.6" fill={tint('#8c1a22')} /><circle cx="-.9" cy="-.9" r=".8" fill="#fff" opacity=".3" /></>
+  },
+  apricot: {
+    leaf: 'M0 0 C3 -1.6 3.6 -6.4 0 -8.6 C-3.6 -6.4 -3 -1.6 0 0 Z', tones: ['#5f8f3a', '#6c9c42', '#78a84a', '#557f34'],
+    bark: ['#6a4e3c', '#755744'], grain: '#4a3426', per: 5, fan: 1, blossom: '#fbe0e6',
+    fruit: (ripe, tint) => <><circle r="2.4" fill={tint(ripe ? '#f29a3a' : '#b9c255')} /><path d="M0 -2.4 C.6 -1 .6 1 0 2.4" stroke={tint(ripe ? '#d07a22' : '#9aa83c')} strokeWidth=".4" fill="none" /></>
+  },
+  baobab: {
+    leaf: 'M0 0 L-3 -4 L-1 -4.4 L-.8 -7 L0 -5 L.8 -7 L1 -4.4 L3 -4 Z', tones: ['#6f9a3c', '#7da646', '#628c34', '#89b052'],
+    bark: ['#9a8d80', '#a89a8c'], grain: '#7a6e62', per: 5, fan: 1.2, blossom: '#fbf6ea', leafScale: 1.9,
+    fruit: (ripe, tint) => <><path d="M0 -5 V-1" stroke={tint('#6e6458')} strokeWidth=".5" /><ellipse cy="2" rx="2" ry="3.4" fill={tint(ripe ? '#9c907e' : '#8a9a6a')} /><ellipse cx="-.6" cy="1" rx=".5" ry="1.4" fill="#fff" opacity=".25" /></>
   }
 };
 
@@ -112,6 +134,15 @@ function BranchingTree({ kind, tint, growth, ratio, prefix, firstLeaves, age }: 
     <g className="lg-sway">
       {growth > 0.3 && <path d={`M-${9 * width} 1 C-${16 * width} 4 -${22 * width} 3 -${26 * width} 5 L-${5 * width} 3 Z M${9 * width} 1 C${15 * width} 3 ${20 * width} 3 ${24 * width} 5 L${5 * width} 3 Z`} fill={tint('#56463a')} />}
       {tree.branches.map((branch, i) => grown[i] > 0 && <path key={i} d={branchOutline(branch, grown[i], width)} fill={tint(branch.depth < 2 ? look.bark[0] : look.bark[1])} />)}
+      {kind === 'baobab' && grown[0] > 0 && (() => {
+        // The baobab's trunk swells like a bottle, holding water through the dry season.
+        const base = 30 * width + 3; const top = 12 * width + 2; const h = -tip.y;
+        return <g>
+          <path d={`M${-base} 0 C${-base * 1.3} ${-h * 0.32} ${tip.x - top * 1.5} ${-h * 0.72} ${tip.x - top} ${tip.y} L${tip.x + top} ${tip.y} C${tip.x + top * 1.5} ${-h * 0.72} ${base * 1.3} ${-h * 0.32} ${base} 0 Z`} fill={tint(look.bark[0])} />
+          {[-0.6, -0.25, 0.1, 0.45].map((k) => <path key={k} d={`M${(base * k).toFixed(1)} 0 C${(base * k * 1.3).toFixed(1)} ${(-h * 0.35).toFixed(1)} ${(tip.x + top * k * 1.2).toFixed(1)} ${(-h * 0.7).toFixed(1)} ${(tip.x + top * k).toFixed(1)} ${tip.y.toFixed(1)}`} stroke={tint(look.grain)} strokeWidth={0.8 * width + 0.3} fill="none" opacity=".5" />)}
+          <path d={`M${base * 0.4} 0 C${base * 0.7} ${-h * 0.3} ${tip.x + top * 0.9} ${-h * 0.7} ${tip.x + top * 0.6} ${tip.y}`} stroke={tint('#bfb3a6')} strokeWidth={2.2 * width + 0.4} fill="none" opacity=".35" />
+        </g>;
+      })()}
       {/* Bark: the grain of old wood; a plane tree's peels in pale patches instead. */}
       {tree.branches.slice(0, 4).map((branch, i) => grown[i] > 0.2 && <path key={i} d={`M${branch.x0 - 2} ${branch.y0} Q${branch.cx - 1} ${branch.cy} ${lerp(branch.x0, branch.x1, grown[i]) - 1} ${lerp(branch.y0, branch.y1, grown[i])}`} stroke={tint(look.grain)} strokeWidth={1.2 * width + 0.3} fill="none" opacity=".55" />)}
       {kind === 'plane' && grown[0] > 0.5 && [0.2, 0.42, 0.66, 0.84].map((t, i) => { const at = pointOn(trunk, t * grown[0]); return <ellipse key={`p${i}`} cx={(at.x + (i % 2 ? 3 : -4) * width).toFixed(1)} cy={at.y.toFixed(1)} rx={3.4 * width + 0.5} ry={2.2 * width + 0.4} fill={tint(i % 2 ? '#c9c0a4' : '#b7ae92')} opacity=".8" />; })}
@@ -123,7 +154,7 @@ function BranchingTree({ kind, tint, growth, ratio, prefix, firstLeaves, age }: 
         return grown[tree.branches.indexOf(fork)] >= 1 && <Nest at={{ x: fork.x1, y: fork.y1 + 1 }} tint={tint} />;
       })()}
       {young && [0, 1, 2, 3].map((i) => <g key={`sprout${i}`} transform={`translate(${tip.x} ${tip.y}) rotate(${-60 + i * 40}) scale(.8)`}><use href={`#${spray}${i % 3}`} className="lg-leaf" style={{ color: tint(tones[i]) }} /></g>)}
-      {showing.map((anchor) => <g key={anchor.order} transform={`translate(${anchor.x.toFixed(1)} ${anchor.y.toFixed(1)}) rotate(${anchor.rotate.toFixed(0)}) scale(${anchor.scale.toFixed(2)})`}>
+      {showing.map((anchor) => <g key={anchor.order} transform={`translate(${anchor.x.toFixed(1)} ${anchor.y.toFixed(1)}) rotate(${anchor.rotate.toFixed(0)}) scale(${(anchor.scale * (look.leafScale ?? 1)).toFixed(2)})`}>
         <use href={`#${spray}${anchor.variant}`} className="lg-leaf" style={{ color: tint(tones[anchor.tone]), animationDelay: anchor.order < firstLeaves ? `${Math.round((anchor.order / Math.max(firstLeaves, 1)) * 900)}ms` : '0ms' }} />
       </g>)}
       {flowering.slice(0, blossoms).map((anchor) => <g key={`b${anchor.order}`} transform={`translate(${(anchor.x + 3).toFixed(1)} ${(anchor.y - 2).toFixed(1)})`}><use href={`#${prefix}blossom`} className="lg-pop" /></g>)}

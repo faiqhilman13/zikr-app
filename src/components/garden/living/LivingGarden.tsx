@@ -264,12 +264,18 @@ const ORCHARD_SLOTS: Record<Exclude<OrchardId, 'rose'>, number[]> = (() => {
   return Object.fromEntries(kinds.map((kind, k) => [kind, [0, 1, 2, 3, 4].map((n) => xs[n === 4 ? 2 + k * 5 : (n * 5 + k * 3) % 20])])) as Record<Exclude<OrchardId, 'rose'>, number[]>;
 })();
 
-function Orchard({ orchard, tiers = {}, fresh, tint, at }: { orchard: Partial<Record<OrchardId, number>>; tiers?: Partial<Record<OrchardId, number>>; fresh: readonly OrchardId[]; tint: Tint; at: { y: number; scale: number } }) {
+function Orchard({ orchard, tiers = {}, fresh, tint, at }: { orchard: Partial<Record<OrchardId, number>>; tiers?: Partial<Record<OrchardId, number>>; fresh: readonly OrchardId[]; tint: Tint; at: { y: number; scale: number; avoid?: [number, number] } }) {
   const trees: { kind: Exclude<OrchardId, 'rose'>; x: number; newest: boolean }[] = [];
+  // Where a garden's landmark stands, the orchard keeps to either side of it.
+  const place = (x: number) => {
+    if (!at.avoid) return x;
+    const [a, b] = at.avoid; const open = a + (400 - b); const p = (x / 400) * open;
+    return p < a ? p : b + (p - a);
+  };
   for (const { id } of ORCHARD) {
     if (id === 'rose') continue;
     const count = orchard[id] ?? 0;
-    ORCHARD_SLOTS[id].slice(0, count).forEach((x, n) => trees.push({ kind: id, x, newest: fresh.includes(id) && n === count - 1 }));
+    ORCHARD_SLOTS[id].slice(0, count).forEach((x, n) => trees.push({ kind: id, x: place(x), newest: fresh.includes(id) && n === count - 1 }));
   }
   // Each lifetime milestone a phrase passes makes its trees a little taller and older.
   return <g className="lg-orchard">{trees.sort((a, b) => a.x - b.x).map(({ kind, x, newest }) => <g key={`${kind}${x}`} transform={`translate(${x.toFixed(1)} ${at.y}) scale(${(at.scale * (1 + 0.13 * (tiers[kind] ?? 0))).toFixed(2)})`}>

@@ -81,6 +81,67 @@ const OTTOMAN_BEDS = rows(191, [0, 1, 2, 3, 4, 5].flatMap((row) => {
   ];
 }));
 
+
+/* Xi'an: a moon gate; a walk of hexagonal pavers to the archway; peonies; a koi pond. */
+export const MOON_GATE = 'M10 180 A190 190 0 1 1 390 180 A190 190 0 1 1 10 180 Z';
+export const XIAN_POND = { x: 300, y: 250, rx: 70, ry: 15 };
+export const xianPath = (y: number) => { const t = Math.max(0, (y - 205) / 95); return { x: lerp(178, 200, t), half: lerp(9, 24, t) }; };
+const inMoon = (x: number, y: number, inset = 8) => (x - 200) ** 2 + (y - 180) ** 2 < (190 - inset) ** 2;
+const XIAN_BEDS = scatter(211, (x, y) => {
+  if (!inMoon(x, y, 12)) return false;
+  if (Math.abs(x - 96) < 9 && y < 282) return false;
+  const left = y > 258 && x > lerp(26, 18, (y - 254) / 46) && x < lerp(154, 164, (y - 254) / 46);
+  const right = y > 280 && x > lerp(244, 236, (y - 276) / 24) && x < 390;
+  return left || right;
+}, { x0: 18, x1: 392, y0: 258, y1: 298 }, (y) => lerp(0.9, 1.25, (y - 256) / 42), 8);
+
+/* Agra: a cusped arch; the channel down the middle with sandstone walks; beds in the quarters. */
+export const agraChannel = (y: number) => { const t = Math.max(0, (y - 206) / 94); return { half: lerp(2.4, 20, t), walk: lerp(5, 34, t) }; };
+export const CUSPED = (() => {
+  const bez = (t: number, p: number[][]) => { const u = 1 - t; return [0, 1].map((k) => u * u * u * p[0][k] + 3 * u * u * t * p[1][k] + 3 * u * t * t * p[2][k] + t * t * t * p[3][k]); };
+  const left = [[16, 126], [16, 64], [120, 36], [200, 12]];
+  const pts = Array.from({ length: 11 }, (_, i) => bez(i / 10, left));
+  const lobes = (list: number[][]) => list.slice(1).map(([x, y]) => `A7 7 0 0 1 ${x.toFixed(1)} ${y.toFixed(1)}`).join(' ');
+  const right = [...pts].reverse().map(([x, y]) => [400 - x, y]);
+  return `M16 300 L16 126 ${lobes(pts)} ${lobes(right)} L384 300 Z`;
+})();
+const AGRA_BEDS = scatter(223, (x, y) => {
+  const c = agraChannel(y); const d = Math.abs(x - 200);
+  if (d < c.half + c.walk + 6 || d > lerp(150, 196, (y - 222) / 78) - 5) return false;
+  if (x < 24 || x > 376) return false;
+  if (Math.abs(x - 70) < 9 && y < 288) return false;
+  if (x > 326 && y < 272) return false;
+  return y > 228;
+}, { x0: 20, x1: 380, y0: 228, y1: 298 }, (y) => lerp(0.75, 1.25, (y - 226) / 72), 8.4);
+
+/* Samarkand: a Timurid arch; a brick walk down from the square; beds below the ariq. */
+export const TIMURID = 'M24 300 V124 C24 66 138 36 200 16 C262 36 376 66 376 124 V300 Z';
+export const samarkandPath = (y: number) => { const t = Math.max(0, (y - 228) / 72); return { x: lerp(196, 186, t), half: lerp(8, 22, t) }; };
+const SAMARKAND_BEDS = scatter(233, (x, y) => {
+  const p = samarkandPath(y);
+  if (Math.abs(x - p.x) < p.half + 5) return false;
+  if (x > 266 && x < 374 && y < 286) return false;
+  if (x > 210 && x < 270 && y > 270) return false;
+  if (x < 50 && y > 262) return false;
+  if (Math.abs(x - 102) < 9 && y < 290) return false;
+  return x > 30 && x < 370;
+}, { x0: 30, x1: 370, y0: 250, y1: 298 }, (y) => lerp(0.85, 1.25, (y - 248) / 50), 8);
+
+/* Djenné: a window in a mud wall; a footpath down to the floodwater; beds of earth. */
+export const MUD_FRAME = 'M16 300 V34 Q16 26 24 26 H376 Q384 26 384 34 V300 Z';
+export const djennePath = (y: number) => { const t = Math.max(0, (y - 226) / 74); return { x: lerp(236, 214, t), half: lerp(6, 18, t) }; };
+const DJENNE_BEDS = scatter(241, (x, y) => {
+  const p = djennePath(y);
+  if (Math.abs(x - p.x) < p.half + 5) return false;
+  if (Math.abs(x - 98) < 15 && y < 292) return false;
+  if (x > 150 && x < 202 && y < 268) return false;
+  if (x > 312 && y < 254) return false;
+  if (x > 206 && x < 280 && y < 252) return false;
+  if (x > 246 && x < 296 && y > 278) return false;
+  if (x > 204 && x < 242 && y > 260 && y < 282) return false;
+  return [[24, 262], [168, 268], [372, 274]].every(([bx, by]) => Math.hypot(x - bx, (y - by) * 1.4) > 12);
+}, { x0: 22, x1: 378, y0: 242, y1: 298 }, (y) => lerp(0.85, 1.25, (y - 240) / 58), 8);
+
 export const LAYOUTS: Record<BiomeId, Layout> = {
   andalusia: {
     frame: ARCH,
@@ -236,6 +297,134 @@ export const LAYOUTS: Record<BiomeId, Layout> = {
         case 'storks': return { x: 300, y: 100, w: 80, h: 70 };
         case 'ottomanRoses': return { x: 300, y: 250, w: 100, h: 50 };
         case 'erguvan': return { x: 100, y: 140, w: 300, h: 60 };
+        case 'fireflies': return { x: 80, y: 130, w: 240, h: 140 };
+        case 'shootingStars': return { x: 100, y: 10, w: 240, h: 110 };
+        default: return null;
+      }
+    }
+  },
+  xian: {
+    frame: MOON_GATE,
+    hero: { kind: 'plum', x: 96, y: 276, scale: 1.05 },
+    slots: XIAN_BEDS,
+    orchard: { y: 186, scale: 0.6, avoid: [142, 400] },
+    ledge: 181,
+    roses: [24, 130, 70, 104, 46].map((x) => ({ x, y: 204 })),
+    seasonY: 32,
+    focus: (id) => {
+      switch (id) {
+        case 'firstBloom': return first(XIAN_BEDS);
+        case 'hexPavers': return { x: 130, y: 205, w: 120, h: 95 };
+        case 'peonies': return { x: 10, y: 235, w: 180, h: 60 };
+        case 'koiPond': return { x: 220, y: 225, w: 160, h: 50 };
+        case 'butterflies': return { x: 30, y: 205, w: 140, h: 90 };
+        case 'taihuRocks': return { x: 200, y: 215, w: 200, h: 60 };
+        case 'redLanterns': return { x: 20, y: 160, w: 360, h: 60 };
+        case 'zigzagBridge': return { x: 220, y: 225, w: 160, h: 50 };
+        case 'stele': return { x: 118, y: 190, w: 64, h: 50 };
+        case 'pailou': return { x: 130, y: 150, w: 90, h: 65 };
+        case 'xianBamboo': return { x: 330, y: 100, w: 70, h: 110 };
+        case 'songbirds': return { x: 16, y: 90, w: 160, h: 110 };
+        case 'cranes': return { x: 210, y: 225, w: 60, h: 50 };
+        case 'tingPavilion': return { x: 320, y: 180, w: 70, h: 55 };
+        case 'pondLotus': return { x: 220, y: 225, w: 160, h: 50 };
+        case 'wisteria': return { x: 40, y: 0, w: 320, h: 90 };
+        case 'fireflies': return { x: 80, y: 130, w: 240, h: 140 };
+        case 'shootingStars': return { x: 100, y: 10, w: 240, h: 110 };
+        default: return null;
+      }
+    }
+  },
+  agra: {
+    frame: CUSPED,
+    hero: { kind: 'pomegranate', x: 70, y: 282, scale: 1.08 },
+    slots: AGRA_BEDS,
+    orchard: { y: 206, scale: 0.45, avoid: [84, 316] },
+    ledge: 206,
+    roses: [20, 380, 50, 350, 76].map((x) => ({ x, y: 206 })),
+    seasonY: 64,
+    focus: (id, { limb }) => {
+      switch (id) {
+        case 'firstBloom': return first(AGRA_BEDS);
+        case 'channelWater': return { x: 140, y: 200, w: 120, h: 100 };
+        case 'fountainJets': return { x: 150, y: 196, w: 100, h: 80 };
+        case 'cypressAvenue': return { x: 110, y: 180, w: 180, h: 100 };
+        case 'butterflies': return { x: 30, y: 205, w: 140, h: 90 };
+        case 'chhatri': return { x: 316, y: 196, w: 80, h: 75 };
+        case 'diyas': return { x: 150, y: 220, w: 100, h: 70 };
+        case 'peacock': return { x: 250, y: 245, w: 70, h: 40 };
+        case 'lotusBasin': return { x: 150, y: 215, w: 100, h: 40 };
+        case 'marbleBench': return { x: 230, y: 228, w: 60, h: 30 };
+        case 'parakeets': return around(limb('right', 0.8));
+        case 'songbirds': return { x: 0, y: 90, w: 160, h: 110 };
+        case 'jaali': return { x: 0, y: 200, w: 400, h: 100 };
+        case 'roseParterre': return { x: 60, y: 210, w: 280, h: 90 };
+        case 'reflection': return { x: 130, y: 196, w: 140, h: 104 };
+        case 'champa': return { x: 0, y: 160, w: 400, h: 70 };
+        case 'fireflies': return { x: 80, y: 130, w: 240, h: 140 };
+        case 'shootingStars': return { x: 100, y: 10, w: 240, h: 110 };
+        default: return null;
+      }
+    }
+  },
+  samarkand: {
+    frame: TIMURID,
+    hero: { kind: 'apricot', x: 102, y: 280, scale: 1 },
+    slots: SAMARKAND_BEDS,
+    orchard: { y: 228, scale: 0.5, avoid: [150, 270] },
+    ledge: 228,
+    roses: [40, 360, 140, 250, 90].map((x) => ({ x, y: 236 })),
+    seasonY: 52,
+    focus: (id) => {
+      switch (id) {
+        case 'firstBloom': return first(SAMARKAND_BEDS);
+        case 'ariq': return { x: 0, y: 220, w: 400, h: 40 };
+        case 'roseRows': return { x: 0, y: 210, w: 400, h: 45 };
+        case 'tapchan': return { x: 266, y: 220, w: 110, h: 60 };
+        case 'butterflies': return { x: 30, y: 205, w: 140, h: 90 };
+        case 'choynak': return { x: 290, y: 236, w: 60, h: 30 };
+        case 'suzani': return { x: 280, y: 228, w: 80, h: 30 };
+        case 'grapeTrellis': return { x: 260, y: 190, w: 120, h: 90 };
+        case 'melons': return { x: 205, y: 265, w: 70, h: 35 };
+        case 'anor': return { x: 5, y: 250, w: 60, h: 45 };
+        case 'hoopoe': return { x: 170, y: 240, w: 45, h: 30 };
+        case 'songbirds': return { x: 20, y: 90, w: 160, h: 110 };
+        case 'uzbekLanterns': return { x: 270, y: 200, w: 100, h: 50 };
+        case 'mulberry': return { x: 340, y: 170, w: 60, h: 70 };
+        case 'ceramics': return { x: 236, y: 230, w: 110, h: 70 };
+        case 'illumination': return { x: 0, y: 60, w: 400, h: 150 };
+        case 'fireflies': return { x: 80, y: 130, w: 240, h: 140 };
+        case 'shootingStars': return { x: 100, y: 10, w: 240, h: 110 };
+        default: return null;
+      }
+    }
+  },
+  djenne: {
+    frame: MUD_FRAME,
+    hero: { kind: 'baobab', x: 98, y: 284, scale: 0.92 },
+    slots: DJENNE_BEDS,
+    orchard: { y: 206, scale: 0.5, avoid: [56, 344] },
+    ledge: 230,
+    roses: [24, 376, 40, 360, 56].map((x) => ({ x, y: 206 })),
+    seasonY: 46,
+    focus: (id) => {
+      switch (id) {
+        case 'firstBloom': return first(DJENNE_BEDS);
+        case 'canari': return { x: 145, y: 225, w: 70, h: 45 };
+        case 'bissap': return { x: 0, y: 225, w: 400, h: 75 };
+        case 'granary': return { x: 306, y: 186, w: 94, h: 70 };
+        case 'butterflies': return { x: 30, y: 205, w: 140, h: 90 };
+        case 'acacia': return { x: 300, y: 150, w: 100, h: 75 };
+        case 'calabash': return { x: 240, y: 260, w: 60, h: 40 };
+        case 'pirogue': return { x: 200, y: 180, w: 100, h: 50 };
+        case 'weaverNests': return { x: 310, y: 160, w: 90, h: 50 };
+        case 'millet': return { x: 0, y: 190, w: 80, h: 60 };
+        case 'bogolan': return { x: 200, y: 215, w: 90, h: 40 };
+        case 'songbirds': return { x: 10, y: 80, w: 160, h: 110 };
+        case 'sahelLamps': return { x: 180, y: 220, w: 90, h: 70 };
+        case 'sahelMango': return { x: 0, y: 160, w: 70, h: 70 };
+        case 'guineaFowl': return { x: 195, y: 250, w: 60, h: 35 };
+        case 'waterLilies': return { x: 20, y: 200, w: 360, h: 35 };
         case 'fireflies': return { x: 80, y: 130, w: 240, h: 140 };
         case 'shootingStars': return { x: 100, y: 10, w: 240, h: 110 };
         default: return null;

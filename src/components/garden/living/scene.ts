@@ -16,7 +16,7 @@ export const H = 300;
 export type Box = { x: number; y: number; w: number; h: number };
 export type Point = { x: number; y: number };
 export type Slot = { x: number; y: number; species: number; height: number; planted: number; sway: number; scale: number };
-export type HeroKind = 'olive' | 'mango' | 'orange' | 'plane' | 'palm';
+export type HeroKind = 'olive' | 'mango' | 'orange' | 'plane' | 'palm' | 'plum' | 'pomegranate' | 'apricot' | 'baobab';
 
 /** What every part of a scene is drawn with. */
 export interface Ctx {
@@ -46,7 +46,7 @@ export interface Layout {
   hero: { kind: HeroKind; x: number; y: number; scale: number };
   slots: Slot[];
   /** Where the orchard of the phrases stands, and how far away it is. */
-  orchard: { y: number; scale: number };
+  orchard: { y: number; scale: number; avoid?: [number, number] };
   /** Where birds wait while the tree is too young to hold them. */
   ledge: number;
   /** Where salawat's climbing roses grow. */
@@ -78,7 +78,11 @@ export const TREES: Record<Exclude<HeroKind, 'palm'>, Tree> = {
   olive: growOlive(11, 6),
   mango: growOlive(53, 6),
   orange: growOlive(37, 5, { trunk: 40, width: 18, spread: 0.82, outward: -0.04, reach: 1.02 }),
-  plane: growOlive(71, 6, { trunk: 66, width: 30, spread: 0.92, outward: 0.04, reach: 1.04 })
+  plane: growOlive(71, 6, { trunk: 66, width: 30, spread: 0.92, outward: 0.04, reach: 1.04 }),
+  plum: growOlive(91, 5, { trunk: 32, width: 20, spread: 1.08, outward: 0.17, reach: 1.02 }),
+  pomegranate: growOlive(29, 5, { trunk: 30, width: 16, spread: 0.92, outward: 0, reach: 0.98 }),
+  apricot: growOlive(83, 5, { trunk: 40, width: 20, spread: 0.95, outward: 0.06, reach: 1 }),
+  baobab: growOlive(13, 4, { trunk: 60, width: 58, spread: 1.15, outward: 0.14, reach: 0.6 })
 };
 
 /** How many leaves (or fronds) are out when the garden first appears, so they can fill in with a stagger. */
