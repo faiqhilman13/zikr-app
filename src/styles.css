@@ -831,3 +831,6 @@ button.calendar-day { border: 0; font: inherit; cursor: pointer; background: col
 button.calendar-day:focus-visible { outline: 3px solid var(--focus); outline-offset: 1px; }
 .living-garden .lg-koi { animation: lg-koi 16s linear infinite; }
 @keyframes lg-koi { 0% { transform: translate(-26px, 1px) scaleX(1); } 48% { transform: translate(24px, -1px) scaleX(1); } 50% { transform: translate(26px, -1px) scaleX(-1); } 98% { transform: translate(-24px, 1px) scaleX(-1); } 100% { transform: translate(-26px, 1px) scaleX(1); } }
+
+.lg-hijri { margin: 2px 0 0; font-size: .82rem; color: var(--muted); }
+.lg-hijri.in-season strong { color: var(--gold-text); font-weight: 650; }

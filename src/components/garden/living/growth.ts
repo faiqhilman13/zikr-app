@@ -53,9 +53,80 @@ export const KAMPUNG_UNLOCKS = [
   { id: 'goldFrame', day: 100 }
 ] as const;
 
-export type UnlockId = (typeof UNLOCKS)[number]['id'] | (typeof KAMPUNG_UNLOCKS)[number]['id'];
+/** The Damascus courtyard: a house turned inward around its fountain and its bitter orange. */
+export const DAMASCUS_UNLOCKS = [
+  { id: 'firstBloom', day: 1 },
+  { id: 'inlaidFloor', day: 3 },
+  { id: 'jasmine', day: 5 },
+  { id: 'bahra', day: 7 },
+  { id: 'butterflies', day: 9 },
+  { id: 'citrusPots', day: 12 },
+  { id: 'brassLantern', day: 14 },
+  { id: 'damaskRoses', day: 17 },
+  { id: 'iwanCushions', day: 21 },
+  { id: 'mashrabiya', day: 24 },
+  { id: 'grapeArbor', day: 28 },
+  { id: 'songbirds', day: 35 },
+  { id: 'qamariyya', day: 42 },
+  { id: 'doves', day: 49 },
+  { id: 'teaTray', day: 56 },
+  { id: 'apricot', day: 63 },
+  { id: 'fireflies', day: 70 },
+  { id: 'shootingStars', day: 84 },
+  { id: 'goldLintel', day: 100 }
+] as const;
+
+/** The Medina date grove: palms watered by channels, beneath Uhud. */
+export const MEDINA_UNLOCKS = [
+  { id: 'firstBloom', day: 1 },
+  { id: 'channels', day: 3 },
+  { id: 'mint', day: 5 },
+  { id: 'well', day: 7 },
+  { id: 'butterflies', day: 9 },
+  { id: 'youngPalms', day: 12 },
+  { id: 'fanous', day: 14 },
+  { id: 'camel', day: 17 },
+  { id: 'arish', day: 21 },
+  { id: 'dallah', day: 24 },
+  { id: 'medinaDoves', day: 28 },
+  { id: 'songbirds', day: 35 },
+  { id: 'wallLamps', day: 42 },
+  { id: 'dateBaskets', day: 49 },
+  { id: 'taifRoses', day: 56 },
+  { id: 'grove', day: 63 },
+  { id: 'fireflies', day: 70 },
+  { id: 'shootingStars', day: 84 },
+  { id: 'goldPosts', day: 100 }
+] as const;
+
+/** The Ottoman tulip garden: a plane tree, a kiosk and the Bosphorus beyond the balustrade. */
+export const OTTOMAN_UNLOCKS = [
+  { id: 'firstBloom', day: 1 },
+  { id: 'boxHedges', day: 3 },
+  { id: 'hyacinths', day: 5 },
+  { id: 'cesme', day: 7 },
+  { id: 'butterflies', day: 9 },
+  { id: 'kiosk', day: 12 },
+  { id: 'caiques', day: 14 },
+  { id: 'carnations', day: 17 },
+  { id: 'havuz', day: 21 },
+  { id: 'divan', day: 24 },
+  { id: 'cypressRow', day: 28 },
+  { id: 'songbirds', day: 35 },
+  { id: 'tulipLamps', day: 42 },
+  { id: 'storks', day: 49 },
+  { id: 'ottomanRoses', day: 56 },
+  { id: 'erguvan', day: 63 },
+  { id: 'fireflies', day: 70 },
+  { id: 'shootingStars', day: 84 },
+  { id: 'goldTiles', day: 100 }
+] as const;
+
+export type UnlockId = (typeof UNLOCKS)[number]['id'] | (typeof KAMPUNG_UNLOCKS)[number]['id'] | (typeof DAMASCUS_UNLOCKS)[number]['id']
+  | (typeof MEDINA_UNLOCKS)[number]['id'] | (typeof OTTOMAN_UNLOCKS)[number]['id'];
 type Unlock = { id: UnlockId; day: number };
-export const unlocksFor = (biome: BiomeId = 'andalusia'): readonly Unlock[] => (biome === 'kampung' ? KAMPUNG_UNLOCKS : UNLOCKS);
+const BY_BIOME: Record<BiomeId, readonly Unlock[]> = { andalusia: UNLOCKS, kampung: KAMPUNG_UNLOCKS, damascus: DAMASCUS_UNLOCKS, medina: MEDINA_UNLOCKS, ottoman: OTTOMAN_UNLOCKS };
+export const unlocksFor = (biome: BiomeId = 'andalusia'): readonly Unlock[] => BY_BIOME[biome] ?? UNLOCKS;
 
 /** One flower is planted for every completed day, up to the beds' capacity. */
 export const FLOWER_SLOTS = 72;

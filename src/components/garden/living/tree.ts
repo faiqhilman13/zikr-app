@@ -29,7 +29,11 @@ const point = (b: Branch, t: number) => {
   return { x: u * u * b.x0 + 2 * u * t * b.cx + t * t * b.x1, y: u * u * b.y0 + 2 * u * t * b.cy + t * t * b.y1 };
 };
 
-export function growOlive(seed = 7, maxDepth = 6): Tree {
+/** How a kind of tree carries itself: trunk length and girth, how wide its limbs spread and lean. */
+export interface Habit { trunk?: number; width?: number; spread?: number; outward?: number; reach?: number }
+
+export function growOlive(seed = 7, maxDepth = 6, habit: Habit = {}): Tree {
+  const { trunk = 50, width: girth = 24, spread: spreadBy = 1, outward = 0.1, reach = 1 } = habit;
   const random = seeded(seed);
   const branches: Branch[] = [];
   const anchors: Omit<Anchor, 'order'>[] = [];
@@ -61,19 +65,19 @@ export function growOlive(seed = 7, maxDepth = 6): Tree {
 
     if (depth >= maxDepth) return;
     const count = depth === 0 ? 3 : random() < 0.3 ? 3 : 2;
-    const spread = depth === 0 ? 0.95 : depth === 1 ? 0.8 : 0.62;
+    const spread = (depth === 0 ? 0.95 : depth === 1 ? 0.8 : 0.62) * spreadBy;
     for (let i = 0; i < count; i++) {
       const share = i / (count - 1);
       let child = angle + lerp(-spread, spread, share) + (random() - 0.5) * 0.35;
       // The crown of an olive is broad rather than tall: outer limbs lean out and settle.
-      if (depth >= 2) child += Math.sign(child || 1) * 0.1 * (depth - 1);
+      if (depth >= 2) child += Math.sign(child || 1) * outward * (depth - 1);
       child = Math.max(-1.75, Math.min(1.75, child));
-      const factor = depth === 0 ? 0.78 : lerp(0.7, 0.86, random());
+      const factor = (depth === 0 ? 0.78 : lerp(0.7, 0.86, random())) * reach;
       grow(x1, y1, child, length * factor, width * (depth === 0 ? 0.7 : 0.64), depth + 1);
     }
   };
 
-  grow(0, 0, (random() - 0.5) * 0.2, 50, 24, 0);
+  grow(0, 0, (random() - 0.5) * 0.2, trunk, girth, 0);
 
   // Leaves arrive in a shuffled order so the crown fills evenly rather than branch by branch.
   const order = anchors.map((_, index) => index);

@@ -180,7 +180,7 @@ export const sanitizeState = (value: unknown): ZikrState => {
   });
 };
 
-export const BIOMES: BiomeId[] = ['andalusia', 'kampung'];
+export const BIOMES: BiomeId[] = ['andalusia', 'kampung', 'damascus', 'medina', 'ottoman'];
 
 /** Later gardens, in the order begun: known kinds only, real dates, each after the last. */
 function sanitizeGardens(raw: unknown): { gardens?: GardenChapter[] } {

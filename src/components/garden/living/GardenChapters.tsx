@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Lock, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BIOMES } from '../../../domain/state';
@@ -8,8 +8,6 @@ import { formatDays } from '../../streak/format';
 import { flowerCount, type Chapter } from './growth';
 import { LivingGarden } from './LivingGarden';
 
-/** Gardens still being made, shown so people know there is more ahead. */
-const COMING = ['damascus', 'medina', 'ottoman'] as const;
 const NOON = new Date(2026, 0, 1, 12, 0);
 
 function Preview({ biome, tended, full, label }: { biome: BiomeId; tended: number; full: number; label: string }) {
@@ -34,13 +32,6 @@ export function GardenChooser({ current, onChoose, onClose }: { current: BiomeId
             <strong>{t(`biome_${biome}`)}{biome === current && <small> · {t('biomeAgain')}</small>}</strong>
             <span>{t(`biome_${biome}_body`)}</span>
           </button>
-        </li>)}
-        {COMING.map((biome) => <li key={biome} className="biome-coming">
-          <span className="biome-option" aria-disabled="true">
-            <span className="biome-preview locked" aria-hidden="true"><Lock /></span>
-            <strong>{t(`biome_${biome}`)}</strong>
-            <span>{t('biomeComing')}</span>
-          </span>
         </li>)}
       </ul>
     </section>

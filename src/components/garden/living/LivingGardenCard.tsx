@@ -10,6 +10,7 @@ import { GardenChooser, GardenGallery } from './GardenChapters';
 import { GardenJournal } from './GardenJournal';
 import { gardenCard, shareFile } from './shareGarden';
 import type { BiomeId } from '../../../domain/types';
+import { hijriLabel, hijriOf, seasonOf } from './seasons';
 import { CHAPTER_DAYS, chaptersOf, daysAway, flowerCount, nextUnlock, ORCHARD, orchardOf, orchardTier, tendedDates, todayStage, unlocksFor, type OrchardId, type UnlockId } from './growth';
 import { LivingGarden } from './LivingGarden';
 import { GARDEN_ANCHOR, scrollToGarden, useGarden } from './useGarden';
@@ -158,12 +159,16 @@ export function LivingGardenCard({ state, onSaveNote, onStartGarden }: { state: 
   const pill = toast || (rain ? t('gardenWelcomeBack') : firstSeed ? t('gardenFirstSeed') : newest ? t('gardenNew', { item: t(`gardenUnlock_${newest}`) })
     : freshOrchard.length ? t('orchardNew', { item: t(`orchard_${freshOrchard[freshOrchard.length - 1]}`) }) : '');
 
+  const hijri = hijriOf(now);
+  const season = seasonOf(hijri);
+  const hijriDate = hijriLabel(now, i18n.language);
+
   const label = t('gardenLivingAria', { stage: t(`gardenToday${stage}`), summary, tended: t('gardenTended', { days: formatDays(tended, i18n.language) }) });
 
   return <section ref={card} id={GARDEN_ANCHOR} className={`living-garden-card${revealing ? ' lg-reveal' : ''}`} aria-labelledby="garden-title">
     <div className="lg-stage" ref={stageRef}>
       <LivingGarden ratio={ratio} tended={tended} full={full} now={now} celebrate={celebrate} motion={motion} fresh={fresh} freshFlower={freshFlower} focus={focus} label={label}
-        biome={biome} orchardTiers={tiers} orchard={plants} freshOrchard={freshOrchard} rain={rain} onFlower={(rank) => { const date = dateOfFlower(rank); if (date) setMemory(date); }} />
+        biome={biome} season={season} orchardTiers={tiers} orchard={plants} freshOrchard={freshOrchard} rain={rain} onFlower={(rank) => { const date = dateOfFlower(rank); if (date) setMemory(date); }} />
       {pill && <p key={pill} className="lg-new-pill" role="status">{pill}</p>}
     </div>
     {offer && <div className="lg-offer" role="status">
@@ -174,7 +179,8 @@ export function LivingGardenCard({ state, onSaveNote, onStartGarden }: { state: 
       </div>
     </div>}
     <div className="lg-info">
-      <div><p className="eyebrow">{t('garden')}</p><h2 id="garden-title">{t(`gardenToday${stage}`)}</h2></div>
+      <div><p className="eyebrow">{t('garden')}</p><h2 id="garden-title">{t(`gardenToday${stage}`)}</h2>
+        {hijriDate && <p className={`lg-hijri${season ? ' in-season' : ''}`}>{season ? <><strong>{t(`season_${season}`)}</strong> · </> : null}{hijriDate}</p>}</div>
       <div className="lg-actions">
         <button type="button" className={`quiet-button lg-icon-button${sound ? ' on' : ''}`} aria-pressed={sound} aria-label={t('gardenSounds')} title={t('gardenSounds')} onClick={() => setGardenSound(!sound)}>{sound ? <Volume2 aria-hidden="true" /> : <VolumeX aria-hidden="true" />}</button>
         <button type="button" className="quiet-button lg-icon-button" aria-label={t('shareGarden')} title={t('shareGarden')} onClick={() => void share()}><Share2 aria-hidden="true" /></button>

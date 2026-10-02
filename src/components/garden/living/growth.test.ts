@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { ageMarks, blossomShare, chaptersOf, currentChapter, dayRatio, gardenDays, flowerCount, FLOWER_SLOTS, fruitShare, KAMPUNG_UNLOCKS, leafShare, maturity, nextMilestone, nextUnlock, orchardTier, timeOfDay, todayStage, treeStage, unlockedIds, UNLOCKS } from './growth';
+import { ageMarks, blossomShare, chaptersOf, currentChapter, dayRatio, gardenDays, flowerCount, FLOWER_SLOTS, fruitShare, KAMPUNG_UNLOCKS, leafShare, maturity, nextMilestone, nextUnlock, orchardTier, timeOfDay, unlocksFor, todayStage, treeStage, unlockedIds, UNLOCKS } from './growth';
 import { branchGrowth, growOlive } from './tree';
+import { BIOMES } from '../../../domain/state';
+import { resources } from '../../../i18n';
+import { LAYOUTS } from './layouts';
+import { hijriOf, seasonOf } from './seasons';
 
 describe('the living garden over time', () => {
   it('counts a day tended at half its intention, and grows the tree only on full days', () => {
@@ -120,12 +124,26 @@ describe('gardens kept over hundreds of days', () => {
     expect(chapters.reduce((sum, c) => sum + c.logs.length, 0)).toBe(logs.length);
   });
 
-  it('gives the kampung garden something new as often as the first', () => {
-    expect(nextUnlock(0, 'kampung')?.id).toBe('firstBloom');
-    const kampung = KAMPUNG_UNLOCKS.map((unlock) => unlock.day);
-    expect(kampung).toEqual(UNLOCKS.map((unlock) => unlock.day));
-    expect(nextUnlock(99, 'kampung')?.id).toBe('goldFrame');
-    expect(unlockedIds(100, 'kampung')).toHaveLength(KAMPUNG_UNLOCKS.length);
+  it('gives every garden something new as often as the first, ending in a golden frame', () => {
+    const golden = { andalusia: 'goldArch', kampung: 'goldFrame', damascus: 'goldLintel', medina: 'goldPosts', ottoman: 'goldTiles' } as const;
+    for (const biome of BIOMES) {
+      expect(nextUnlock(0, biome)?.id).toBe('firstBloom');
+      expect(unlocksFor(biome).map((unlock) => unlock.day)).toEqual(UNLOCKS.map((unlock) => unlock.day));
+      expect(nextUnlock(99, biome)?.id).toBe(golden[biome]);
+      expect(unlockedIds(100, biome)).toHaveLength(unlocksFor(biome).length);
+      // Every piece has a name in every language.
+      for (const { id } of unlocksFor(biome)) for (const language of Object.values(resources)) expect((language.translation as Record<string, string>)[`gardenUnlock_${id}`], `${biome} ${id}`).toBeTruthy();
+    }
+    expect(KAMPUNG_UNLOCKS).toHaveLength(UNLOCKS.length);
+  });
+
+  it('has a place for every flower in every garden, each within the scene', () => {
+    for (const biome of BIOMES) {
+      const { slots } = LAYOUTS[biome];
+      expect(slots).toHaveLength(FLOWER_SLOTS);
+      expect(new Set(slots.map((slot) => slot.planted)).size).toBe(FLOWER_SLOTS);
+      slots.forEach((slot) => { expect(slot.x).toBeGreaterThan(0); expect(slot.x).toBeLessThan(400); expect(slot.y).toBeLessThanOrEqual(300); });
+    }
   });
 
   it('marks lifetime milestones for each phrase and age on an old tree', () => {
@@ -133,5 +151,21 @@ describe('gardens kept over hundreds of days', () => {
     expect(nextMilestone(1200)).toBe(5000);
     expect(nextMilestone(100000)).toBeNull();
     expect([100, 150, 199, 200, 365, 900].map(ageMarks)).toEqual([0, 1, 1, 2, 3, 3]);
+  });
+});
+
+describe('the Hijri year in the garden', () => {
+  it('reads the Umm al-Qura date', () => {
+    expect(hijriOf(new Date(2026, 1, 18, 12))).toEqual({ day: 1, month: 9, year: 1447 });
+    expect(hijriOf(new Date(2026, 5, 16, 12))).toEqual({ day: 1, month: 1, year: 1448 });
+  });
+
+  it('marks the seasons of the year', () => {
+    const at = (month: number, day: number) => seasonOf({ day, month, year: 1447 });
+    expect([at(9, 1), at(9, 20), at(9, 21), at(9, 30)]).toEqual(['ramadan', 'ramadan', 'lastTen', 'lastTen']);
+    expect([at(10, 1), at(10, 3), at(10, 4)]).toEqual(['eidFitr', 'eidFitr', null]);
+    expect([at(12, 1), at(12, 8), at(12, 9), at(12, 10), at(12, 13), at(12, 14)]).toEqual(['dhulHijjah', 'dhulHijjah', 'arafah', 'eidAdha', 'eidAdha', null]);
+    expect([at(1, 1), at(1, 4), at(1, 10), at(4, 21)]).toEqual(['newYear', null, 'ashura', null]);
+    expect(seasonOf(null)).toBeNull();
   });
 });
