@@ -1,0 +1,20 @@
+{
+  "name": "usage-band",
+  "version": "0.1.0",
+  "description": "Rate limits, token totals and cost as pills above the prompt.",
+  "types": "./types/index.d.ts",
+  "userConfig": {
+    "idleMinutes": {
+      "type": "number",
+      "title": "Compact nudge: idle minutes",
+      "description": "Offer to compact once the session has been idle this long (past the prompt cache's lifetime).",
+      "default": 60
+    },
+    "minPercent": {
+      "type": "number",
+      "title": "Compact nudge: minimum context %",
+      "description": "Only offer to compact when the context window is at least this full.",
+      "default": 40
+    }
+  }
+}
