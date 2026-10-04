@@ -61,6 +61,9 @@ export interface ZikrState {
   settings: UserSettings;
   activeTimer: ActiveTimer | null;
   lastUpdatedAt: number;
+  /** The garden chosen while onboarding, which holds every day before the first of `gardens`.
+   * Absent means Andalusia, the garden everyone began with before there was a choice. */
+  firstGarden?: BiomeId;
   /** Gardens begun after the first, each from the day it was chosen. Absent means the
    * first garden is still the only one. */
   gardens?: GardenChapter[];

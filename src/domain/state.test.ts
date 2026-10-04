@@ -269,6 +269,19 @@ describe('notes on a day', () => {
   });
 });
 
+describe('first garden', () => {
+  it('is absent until onboarding chooses one, which older backups never carried', () => {
+    expect(initialState().firstGarden).toBeUndefined();
+    expect(sanitizeState(JSON.parse(JSON.stringify(initialState()))).firstGarden).toBeUndefined();
+  });
+
+  it('survives a backup round trip, and an unknown garden falls back rather than failing the restore', () => {
+    expect(sanitizeState(JSON.parse(JSON.stringify({ ...initialState(), firstGarden: 'djenne' }))).firstGarden).toBe('djenne');
+    expect(sanitizeState({ ...initialState(), firstGarden: 'mars' }).firstGarden).toBeUndefined();
+    expect(sanitizeState({ ...initialState(), firstGarden: 7 }).firstGarden).toBeUndefined();
+  });
+});
+
 describe('gardens begun', () => {
   it('keeps only known gardens on real dates, each after the last', () => {
     const state = sanitizeState({ ...initialState(), gardens: [

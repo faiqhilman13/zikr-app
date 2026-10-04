@@ -116,6 +116,14 @@ describe('gardens kept over hundreds of days', () => {
     expect(chapters[0]).toMatchObject({ index: 0, biome: 'andalusia', startedOn: null, endedBefore: null, tended: 120, full: 120 });
   });
 
+  it('begins with the garden chosen in onboarding, and carries it into the chapters after it', () => {
+    const logs = days('2026-01-01', 130);
+    expect(chaptersOf({ logs, presets, firstGarden: 'samarkand' })[0]).toMatchObject({ biome: 'samarkand', startedOn: null, tended: 130 });
+    const chapters = chaptersOf({ logs, presets, firstGarden: 'samarkand', gardens: [{ biome: 'kampung', startedOn: '2026-04-11' }] });
+    expect(chapters.map((c) => [c.biome, c.tended])).toEqual([['samarkand', 100], ['kampung', 30]]);
+    expect(currentChapter({ logs, presets, firstGarden: 'samarkand' }).biome).toBe('samarkand');
+  });
+
   it('splits the days between gardens at the day each began', () => {
     const logs = days('2026-01-01', 130);
     const chapters = chaptersOf({ logs, presets, gardens: [{ biome: 'kampung', startedOn: '2026-04-11' }] });

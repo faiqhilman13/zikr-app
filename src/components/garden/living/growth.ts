@@ -363,8 +363,8 @@ export interface Chapter {
 }
 
 /** Every garden kept so far, oldest first; the last is the one in progress. */
-export function chaptersOf(state: Pick<ZikrState, 'logs' | 'presets' | 'gardens'>): Chapter[] {
-  const starts: { biome: BiomeId; startedOn: string | null }[] = [{ biome: 'andalusia', startedOn: null }, ...(state.gardens ?? [])];
+export function chaptersOf(state: Pick<ZikrState, 'logs' | 'presets' | 'gardens' | 'firstGarden'>): Chapter[] {
+  const starts: { biome: BiomeId; startedOn: string | null }[] = [{ biome: state.firstGarden ?? 'andalusia', startedOn: null }, ...(state.gardens ?? [])];
   return starts.map((start, index) => {
     const endedBefore = starts[index + 1]?.startedOn ?? null;
     const logs = state.logs.filter((log) => (start.startedOn === null || log.date >= start.startedOn) && (endedBefore === null || log.date < endedBefore));
@@ -372,4 +372,4 @@ export function chaptersOf(state: Pick<ZikrState, 'logs' | 'presets' | 'gardens'
   });
 }
 
-export const currentChapter = (state: Pick<ZikrState, 'logs' | 'presets' | 'gardens'>) => chaptersOf(state).at(-1)!;
+export const currentChapter = (state: Pick<ZikrState, 'logs' | 'presets' | 'gardens' | 'firstGarden'>) => chaptersOf(state).at(-1)!;

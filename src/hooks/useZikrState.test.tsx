@@ -101,3 +101,17 @@ it('records the language and analytics choice when onboarding completes', async 
   expect(stored.state.settings.language).toBe('tr');
   expect(stored.state.settings.analyticsOptIn).toBe(true);
 });
+
+it('starts the first garden as the one chosen while onboarding', async () => {
+  const hook = renderHook(useZikrState);
+  await waitFor(() => expect(hook.result.current.ready).toBe(true));
+  await act(async () => { expect(await hook.result.current.completeOnboarding('tasbih', 33, 'en', false, 'xian')).toBe(true); });
+  expect((await loadState()).state.firstGarden).toBe('xian');
+});
+
+it('starts in Andalusia when onboarding is completed without a choice', async () => {
+  const hook = renderHook(useZikrState);
+  await waitFor(() => expect(hook.result.current.ready).toBe(true));
+  await act(async () => { expect(await hook.result.current.completeOnboarding('tasbih', 33, 'en', false)).toBe(true); });
+  expect((await loadState()).state.firstGarden).toBe('andalusia');
+});

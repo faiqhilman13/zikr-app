@@ -1,6 +1,6 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { starterPresets } from '../domain/state';
+import { BIOMES, starterPresets } from '../domain/state';
 import { Onboarding } from './Onboarding';
 
 const IPHONE = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1';
@@ -21,7 +21,23 @@ describe('Onboarding', () => {
     fireEvent.click(analytics);
     fireEvent.change(screen.getByRole('slider', { name: /daily target/i }), { target: { value: '50' } });
     fireEvent.click(screen.getByRole('button', { name: /start counting/i }));
-    expect(complete).toHaveBeenCalledWith('tasbih', 50, true);
+    expect(complete).toHaveBeenCalledWith('tasbih', 50, true, 'andalusia');
+  });
+
+  it('lets the person choose which garden to begin with, rather than handing them one', () => {
+    const complete = vi.fn();
+    render(<Onboarding presets={starterPresets} analyticsEnabled={false} onComplete={complete} onClose={vi.fn()} />);
+    const garden = screen.getByRole('group', { name: /your first garden/i });
+    // Every garden the app ships is on offer, with Andalusia ready for anyone who does not mind.
+    expect(within(garden).getAllByRole('button')).toHaveLength(BIOMES.length);
+    expect(within(garden).getByRole('button', { name: /andalusian/i })).toHaveAttribute('aria-pressed', 'true');
+
+    const kampung = within(garden).getByRole('button', { name: /kampung/i });
+    fireEvent.click(kampung);
+    expect(kampung).toHaveAttribute('aria-pressed', 'true');
+    expect(within(garden).getByRole('button', { name: /andalusian/i })).toHaveAttribute('aria-pressed', 'false');
+    fireEvent.click(screen.getByRole('button', { name: /start counting/i }));
+    expect(complete).toHaveBeenCalledWith('tasbih', 33, false, 'kampung');
   });
 
   it('reflects consent already given on the landing page', () => {

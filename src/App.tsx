@@ -165,7 +165,7 @@ export function App() {
     <Landing onBegin={() => setShowOnboarding(true)} analyticsChoice={
       <AnalyticsChoice enabled={analyticsOptIn} onEnable={() => controller.patchSettings({ analyticsOptIn: true })} />
     } />
-    {showOnboarding && <Onboarding presets={controller.state.presets} analyticsEnabled={analyticsOptIn} onClose={() => setShowOnboarding(false)} onComplete={(id, target, shareUsage) => { controller.completeOnboarding(id, target, language, shareUsage); void requestDurableStorage(); }} />}
+    {showOnboarding && <Onboarding presets={controller.state.presets} analyticsEnabled={analyticsOptIn} onClose={() => setShowOnboarding(false)} onComplete={(id, target, shareUsage, biome) => { controller.completeOnboarding(id, target, language, shareUsage, biome); void requestDurableStorage(); }} />}
   </>;
 
   // From the streak sheet straight to the switch that turns reminders on. Settings mounts

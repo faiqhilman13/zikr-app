@@ -176,11 +176,17 @@ export const sanitizeState = (value: unknown): ZikrState => {
     },
     activeTimer,
     lastUpdatedAt: finiteCount(value.lastUpdatedAt) ?? Date.now(),
+    ...sanitizeFirstGarden(value.firstGarden),
     ...sanitizeGardens(value.gardens)
   });
 };
 
 export const BIOMES: BiomeId[] = ['andalusia', 'kampung', 'damascus', 'medina', 'ottoman', 'xian', 'agra', 'samarkand', 'djenne'];
+
+/** The garden chosen in onboarding, kept only if it is one the app ships. */
+function sanitizeFirstGarden(raw: unknown): { firstGarden?: BiomeId } {
+  return BIOMES.includes(raw as BiomeId) ? { firstGarden: raw as BiomeId } : {};
+}
 
 /** Later gardens, in the order begun: known kinds only, real dates, each after the last. */
 function sanitizeGardens(raw: unknown): { gardens?: GardenChapter[] } {

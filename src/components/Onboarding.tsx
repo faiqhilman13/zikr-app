@@ -1,13 +1,15 @@
 import { Bell, Check, ShieldCheck, Smartphone } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { BIOMES } from '../domain/state';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useInstallPrompt } from '../hooks/useInstallPrompt';
 import { isAndroid } from '../services/platform';
+import { GardenPreview } from './garden/living/GardenChapters';
 import { InstallSteps } from './InstallCard';
-import type { DhikrPreset } from '../domain/types';
+import type { BiomeId, DhikrPreset } from '../domain/types';
 
-export function Onboarding({ presets, analyticsEnabled, onComplete, onClose }: { presets: DhikrPreset[]; analyticsEnabled: boolean; onComplete: (id: string, target: number, analyticsEnabled: boolean) => void; onClose: () => void }) {
+export function Onboarding({ presets, analyticsEnabled, onComplete, onClose }: { presets: DhikrPreset[]; analyticsEnabled: boolean; onComplete: (id: string, target: number, analyticsEnabled: boolean, biome: BiomeId) => void; onClose: () => void }) {
   const { t } = useTranslation();
   const install = useInstallPrompt();
   // A phone reading Zikr in a browser tab is asked to add it to the Home Screen before
@@ -17,6 +19,7 @@ export function Onboarding({ presets, analyticsEnabled, onComplete, onClose }: {
   const [inBrowser, setInBrowser] = useState(false);
   const [selected, setSelected] = useState(presets[0].id);
   const [target, setTarget] = useState(presets[0].target);
+  const [garden, setGarden] = useState<BiomeId>(BIOMES[0]);
   const [shareUsage, setShareUsage] = useState(analyticsEnabled);
   const trapRef = useFocusTrap<HTMLElement>(onClose);
   const titleRef = useRef<HTMLHeadingElement>(null);
@@ -58,13 +61,25 @@ export function Onboarding({ presets, analyticsEnabled, onComplete, onClose }: {
           </button>)}
         </div></fieldset>
         <label className="target-control"><span>{t('dailyTarget')}</span><output>{target}</output><input aria-label={t('dailyTarget')} type="range" min="10" max="500" step="1" value={target} onChange={(e) => setTarget(Number(e.target.value))} /></label>
+        {/* One garden is painted at a time, the chosen one. Painting all nine side by side puts
+            tens of thousands of nodes on the first screen, and the slider above stutters. */}
+        <fieldset className="garden-picker"><legend>{t('firstGardenLegend')}</legend>
+          <p className="fine-print">{t('firstGardenHint')}</p>
+          <span className="biome-preview garden-picker-preview" aria-hidden="true"><GardenPreview biome={garden} tended={60} full={60} label="" /></span>
+          <div className="garden-picker-options">
+            {BIOMES.map((biome) => <button type="button" key={biome} className={`garden-choice ${garden === biome ? 'selected' : ''}`} aria-pressed={garden === biome} onClick={() => setGarden(biome)}>
+              {t(`biome_${biome}`)}{garden === biome && <Check aria-hidden="true" />}
+            </button>)}
+          </div>
+          <p className="garden-picker-body" aria-live="polite">{t(`biome_${garden}_body`)}</p>
+        </fieldset>
         <section className="onboarding-analytics" aria-labelledby="onboarding-analytics-title">
           <div className="onboarding-analytics-heading"><ShieldCheck aria-hidden="true" /><div><p className="eyebrow">{t('usageEyebrow')}</p><h3 id="onboarding-analytics-title">{t('usageTitle')}</h3></div></div>
           <p>{t('usageBody')}</p>
           <label className="toggle-row"><span>{t('analyticsToggle')}</span><input type="checkbox" checked={shareUsage} onChange={(event) => setShareUsage(event.target.checked)} /><i aria-hidden="true" /></label>
           <a className="text-link" href="/privacy">{t('privacy')}</a>
         </section>
-        <button className="button full" onClick={() => onComplete(selected, target, shareUsage)}>{t('startCounting')}</button>
+        <button className="button full" onClick={() => onComplete(selected, target, shareUsage, garden)}>{t('startCounting')}</button>
         {inBrowser && <p className="fine-print install-later">{t('installLater')}</p>}
       </>}
     </section>

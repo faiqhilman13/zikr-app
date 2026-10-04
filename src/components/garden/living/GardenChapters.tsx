@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BIOMES } from '../../../domain/state';
 import type { BiomeId } from '../../../domain/types';
@@ -10,9 +10,12 @@ import { LivingGarden } from './LivingGarden';
 
 const NOON = new Date(2026, 0, 1, 12, 0);
 
-function Preview({ biome, tended, full, label }: { biome: BiomeId; tended: number; full: number; label: string }) {
+/** A garden painted still, at noon, for choosing between them or looking back. Memoised
+ * because a scene is costly to draw and a still one never changes: a picker re-rendering
+ * for a slider or a selection must not paint every garden again. */
+export const GardenPreview = memo(function GardenPreview({ biome, tended, full, label }: { biome: BiomeId; tended: number; full: number; label: string }) {
   return <LivingGarden biome={biome} ratio={1} tended={tended} full={full} now={NOON} celebrate={false} motion={false} fresh={[]} freshFlower={false} label={label} />;
-}
+});
 
 /** Offered when a garden is complete: the person chooses where to plant next. */
 export function GardenChooser({ current, onChoose, onClose }: { current: BiomeId; onChoose: (biome: BiomeId) => void; onClose: () => void }) {
@@ -28,7 +31,7 @@ export function GardenChooser({ current, onChoose, onClose }: { current: BiomeId
       <ul className="biome-list">
         {BIOMES.map((biome) => <li key={biome}>
           <button type="button" className="biome-option" onClick={() => onChoose(biome)}>
-            <span className="biome-preview"><Preview biome={biome} tended={60} full={60} label={t(`biome_${biome}`)} /></span>
+            <span className="biome-preview"><GardenPreview biome={biome} tended={60} full={60} label={t(`biome_${biome}`)} /></span>
             <strong>{t(`biome_${biome}`)}{biome === current && <small> · {t('biomeAgain')}</small>}</strong>
             <span>{t(`biome_${biome}_body`)}</span>
           </button>
@@ -58,7 +61,7 @@ export function GardenGallery({ chapters, onClose }: { chapters: Chapter[]; onCl
       <h2 id="garden-gallery-title">{t('galleryTitle')}</h2>
       <ul className="gallery-list">
         {[...chapters].reverse().map((chapter) => <li key={chapter.index} className={chapter.endedBefore ? undefined : 'current'}>
-          <span className="gallery-painting"><Preview biome={chapter.biome} tended={chapter.tended} full={chapter.full} label={t(`biome_${chapter.biome}`)} /></span>
+          <span className="gallery-painting"><GardenPreview biome={chapter.biome} tended={chapter.tended} full={chapter.full} label={t(`biome_${chapter.biome}`)} /></span>
           <div>
             <strong>{t('galleryNumber', { number: chapter.index + 1 })} · {t(`biome_${chapter.biome}`)}</strong>
             <small>{span(chapter)}</small>
