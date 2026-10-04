@@ -1,4 +1,4 @@
-import { defineConfig } from 'vitest/config';
+import { configDefaults, defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import { localePages } from './scripts/locale-pages';
@@ -34,6 +34,9 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
+    // The Claude Code mods under .claude/ test against that tool's own harness
+    // ("claude-code/testing"), which this project does not install, so they cannot run here.
+    exclude: [...configDefaults.exclude, '.claude/**'],
     css: true
   }
 });
